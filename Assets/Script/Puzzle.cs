@@ -4,22 +4,13 @@ using UnityEngine;
 
 public class Puzzle : MonoBehaviour {
 
-    public Vector2 imageSize = new Vector2(640, 480);
     public Vector2 pieceSize = new Vector2(6,4);
 
     public GameObject piecePrefab;
 
 
-    public static Puzzle instance;
-
 	// Use this for initialization
 	void Start () {
-        if (instance == null)
-            instance = this;
-        if (instance != null && instance != this)
-            DestroyObject(gameObject);
-
-        DontDestroyOnLoad(gameObject);
 
         MakePuzzle();
 	}
@@ -32,6 +23,7 @@ public class Puzzle : MonoBehaviour {
 
     public void MakePuzzle()
     {
+
         int x = (int)pieceSize.x;
         int y = (int)pieceSize.y;
 
@@ -42,20 +34,24 @@ public class Puzzle : MonoBehaviour {
                 CreatePiece(i,j);
             }
         }
+
     }
 
     void CreatePiece(int x,int y)
     {
         GameObject piece = NGUITools.AddChild(gameObject, piecePrefab);
+
+        // 设置大小
         piece.transform.localScale = new Vector3(100 / pieceSize.x, 100 / pieceSize.y, 1);
-        piece.GetComponent<UIDragObject>().contentRect = gameObject.GetComponent<UIRect>();
-
-
+        //piece.transform.GetComponent<
+        // 设置材质
         float scaleX = 1 / pieceSize.x;
         float scaleY = 1 / pieceSize.y;
         piece.GetComponent<Renderer>().material.mainTextureScale = 
             new Vector2(scaleX, scaleY);
         piece.GetComponent<Renderer>().material.mainTextureOffset = 
             new Vector2(x*scaleX,y*scaleY);
+
+        piece.GetComponent<Piece>().Init(x,y);
     }
 }

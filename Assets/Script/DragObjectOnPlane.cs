@@ -10,8 +10,8 @@ public class DragObjectOnPlane : MonoBehaviour
     #endregion
 
     #region static
-    static GameObject   activeObject;
-    static Vector3      activePoint;
+    protected static GameObject   activeObject;
+    protected static Vector3 activePoint;
     #endregion
 
     #region unity callback

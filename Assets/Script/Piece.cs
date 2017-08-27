@@ -6,7 +6,7 @@ public class Piece : DragObjectOnPlane {
 
 
     static int maxDepth = 0;
-    static GameObject topGameObject;
+    static GameObject topGameObject = null;
     static bool GameStarted = false;
 
 
@@ -17,7 +17,6 @@ public class Piece : DragObjectOnPlane {
     List<GameObject> neighbors = new List<GameObject>();
 
     #region unity callback
-    
     
 
 
@@ -36,20 +35,28 @@ public class Piece : DragObjectOnPlane {
     #endregion
 
     #region base callback
-     void OnPress(bool isPressed)
-    {
-        
-        GameStarted = true;
-
-        // 是否是最顶的对象
-        if(topGameObject != gameObject)
-        {
-            topGameObject = gameObject;
-            sprite.sortingOrder = ++maxDepth;
-        }
-    }
-
     
+     protected override void ActiveObject()
+     {
+         GameStarted = true;
+
+         // 是否是最顶的对象
+         if (topGameObject != activeObject)
+         {
+             topGameObject = activeObject;
+             topGameObject.GetComponent<SpriteRenderer>().sortingOrder = ++maxDepth;
+         }
+     }
+
+     protected override void DeactiveObject()
+     {
+
+     }
+
+     protected override void MoveObject(Vector3 delta)
+     {
+         
+     }
 
 
     #endregion

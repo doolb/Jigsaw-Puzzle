@@ -38,6 +38,30 @@ public class Piece : MonoBehaviour {
 
     #endregion
 
+    #region callback
+    public void OnActive()
+    {
+        GameStarted = true;
+
+        // 是否是最顶的对象
+        if (topGameObject != gameObject)
+        {
+            topGameObject = gameObject;
+            sprite.sortingOrder = ++maxDepth;
+        }
+    }
+
+    public void OnMove(Vector3 delta)
+    {
+        print("move " + pid);
+        foreach (GameObject nb in neighbors)
+            nb.transform.localPosition += delta;
+    }
+
+
+    #endregion
+
+
     #region function
 
     public void Init(int x,int y)
@@ -69,7 +93,9 @@ public class Piece : MonoBehaviour {
         if (topGameObject == gameObject)
         {
             Vector3 pos = Vector3.zero;
-            float sizeY = 120, sizeX = 108;
+            float sizeY = Puzzle.instance.pieceSize.y;
+            float sizeX = Puzzle.instance.pieceSize.x;
+
             switch(type)
             {
                 case NeighborType.Top:

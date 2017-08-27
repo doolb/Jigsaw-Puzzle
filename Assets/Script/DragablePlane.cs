@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class DragablePlane : MonoBehaviour
 {
-    #region vary 
+    #region public 
     public LayerMask childLayerMask;
+    public bool dragEnd;
     #endregion
 
     #region class only
@@ -41,6 +42,7 @@ public class DragablePlane : MonoBehaviour
         // 是否按下按钮
         if(Input.GetButton("Fire1"))
         {
+            dragEnd = false;
             Ray ray = Camera.main.ScreenPointToRay(pos);
 
             // 没有活动的对象，从所有的对象中选择一个
@@ -83,6 +85,7 @@ public class DragablePlane : MonoBehaviour
                 //print("Deactive Object : " + activeObject);
                 DeactiveObject(activeObject);
                 activeObject = null;
+                dragEnd = true;
             }
         }
 

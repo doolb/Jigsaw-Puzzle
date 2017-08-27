@@ -2,24 +2,68 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Puzzle : MonoBehaviour {
+public class Puzzle : DragablePlane {
 
     [Header("Piece")]
     public Vector2 pieceSize = new Vector2(6,4);
-    public int pieceLayer = 31;
     public GameObject piecePrefab;
 
 
+    public static Puzzle instance;
+
 	// Use this for initialization
-	void Start () {
+	protected void Start () {
+
+        // 启动单实例
+        if (instance == null)
+            instance = this;
+        if (instance != null && instance != this)
+            DestroyObject(gameObject);
+
+        DontDestroyOnLoad(gameObject);
+
+        base.Start();
 
         MakePuzzle();
 	}
 	
 	// Update is called once per frame
-	void Update () {
-		
+    protected void Update()
+    {
+        base.Update();
 	}
+
+
+    #region base callback
+    /*
+    protected override void ActiveObject()
+    {
+        GameStarted = true;
+
+        // 是否是最顶的对象
+        if (topGameObject != gameObject)
+        {
+            topGameObject = gameObject;
+            topGameObject.GetComponent<SpriteRenderer>().sortingOrder = ++maxDepth;
+        }
+    }
+
+    protected override void DeactiveObject()
+    {
+
+    }
+
+    protected override void MoveObject(Vector3 delta)
+    {
+        print("move " + pid);
+        foreach (GameObject nb in neighbors)
+            nb.transform.localPosition += delta;
+    }
+
+    */
+    #endregion
+
+
 
 
     public void MakePuzzle()
@@ -53,8 +97,7 @@ public class Puzzle : MonoBehaviour {
         piece.GetComponent<Renderer>().material.mainTextureOffset = 
             new Vector2(x*scaleX,y*scaleY);
 
-        piece.layer = pieceLayer;
-        piece.GetComponent<Piece>().planeCollider = GetComponent<Collider>();
+        piece.layer = childLayer;
         piece.GetComponent<Piece>().Init(x,y);
     }
 }

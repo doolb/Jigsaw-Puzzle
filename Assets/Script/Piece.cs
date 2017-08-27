@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Piece : DragObjectOnPlane {
+public class Piece : MonoBehaviour {
 
 
     static int maxDepth = 0;
@@ -18,6 +18,10 @@ public class Piece : DragObjectOnPlane {
 
     #region unity callback
     
+    void Start()
+    {
+        sprite = GetComponent<SpriteRenderer>();
+    }
 
 
     void OnTriggerEnter(Collider other)
@@ -31,33 +35,6 @@ public class Piece : DragObjectOnPlane {
         AddNeighbor(other.gameObject);
         
     }
-
-    #endregion
-
-    #region base callback
-    
-     protected override void ActiveObject()
-     {
-         GameStarted = true;
-
-         // 是否是最顶的对象
-         if (topGameObject != activeObject)
-         {
-             topGameObject = activeObject;
-             topGameObject.GetComponent<SpriteRenderer>().sortingOrder = ++maxDepth;
-         }
-     }
-
-     protected override void DeactiveObject()
-     {
-
-     }
-
-     protected override void MoveObject(Vector3 delta)
-     {
-         
-     }
-
 
     #endregion
 
@@ -85,7 +62,7 @@ public class Piece : DragObjectOnPlane {
         if (type == NeighborType.None) return;
 
         print("Neighbor is at " + type);
-
+        print("my :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
         neighbors.Add(other.gameObject);
         
         // 移动到当前选择

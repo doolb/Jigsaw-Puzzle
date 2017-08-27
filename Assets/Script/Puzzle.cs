@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class Puzzle : MonoBehaviour {
 
+    [Header("Piece")]
     public Vector2 pieceSize = new Vector2(6,4);
-
+    public int pieceLayer = 31;
     public GameObject piecePrefab;
 
 
@@ -39,7 +40,7 @@ public class Puzzle : MonoBehaviour {
 
     void CreatePiece(int x,int y)
     {
-        GameObject piece = NGUITools.AddChild(gameObject, piecePrefab);
+        GameObject piece = Instantiate(piecePrefab, gameObject.transform);
 
         // 设置大小
         piece.transform.localScale = new Vector3(100 / pieceSize.x, 100 / pieceSize.y, 1);
@@ -52,6 +53,8 @@ public class Puzzle : MonoBehaviour {
         piece.GetComponent<Renderer>().material.mainTextureOffset = 
             new Vector2(x*scaleX,y*scaleY);
 
+        piece.layer = pieceLayer;
+        piece.GetComponent<Piece>().planeCollider = GetComponent<Collider>();
         piece.GetComponent<Piece>().Init(x,y);
     }
 }

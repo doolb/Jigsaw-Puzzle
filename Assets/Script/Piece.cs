@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Piece : UIDragDropItem {
+public class Piece : DragObjectOnPlane {
 
 
     static int maxDepth = 0;
@@ -18,12 +18,7 @@ public class Piece : UIDragDropItem {
 
     #region unity callback
     
-    protected override void Start()
-    {
-        base.Start();
-        sprite = GetComponent<SpriteRenderer>();
-
-    }
+    
 
 
     void OnTriggerEnter(Collider other)
@@ -40,11 +35,10 @@ public class Piece : UIDragDropItem {
 
     #endregion
 
-    #region ngui callback
-    protected override void OnPress(bool isPressed)
+    #region base callback
+     void OnPress(bool isPressed)
     {
-        base.OnPress(isPressed);
-
+        
         GameStarted = true;
 
         // 是否是最顶的对象
@@ -55,45 +49,7 @@ public class Piece : UIDragDropItem {
         }
     }
 
-    public void DragStart()
-    {
-        base.OnDragDropStart();
-    }
-
-    public void DragMove(Vector3 delta)
-    {
-        base.OnDragDropMove(delta);
-    }
-
-    public void DragRelease(GameObject surface)
-    {
-        base.OnDragDropRelease(surface);
-    }
-
-    protected override void OnDragDropMove(Vector3 delta)
-    {
-        base.OnDragDropMove(delta);
-
-        foreach (GameObject go in neighbors)
-            go.GetComponent<Piece>().DragMove(delta);
-    }
-
-
-    protected override void OnDragDropStart()
-    {
-        base.OnDragDropStart();
-
-        foreach (GameObject go in neighbors)
-            go.GetComponent<Piece>().DragStart();
-    }
-
-    protected override void OnDragDropRelease(GameObject surface)
-    {
-        base.OnDragDropRelease(surface);
-
-        foreach (GameObject go in neighbors)
-            go.GetComponent<Piece>().DragRelease(surface);
-    }
+    
 
 
     #endregion

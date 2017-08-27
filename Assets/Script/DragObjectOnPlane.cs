@@ -7,7 +7,6 @@ public class DragObjectOnPlane : MonoBehaviour
 
     #region public 
     public Collider  planeCollider;
-    public LayerMask objectMarsk;
     #endregion
 
     #region static
@@ -23,6 +22,7 @@ public class DragObjectOnPlane : MonoBehaviour
         float maxDis =Vector3.Distance (Camera.main.transform.position ,
             planeCollider.transform.position) * 2;
 
+
         // 是否按下按钮
         if(Input.GetButton("Fire1"))
         {
@@ -32,14 +32,14 @@ public class DragObjectOnPlane : MonoBehaviour
             if (activeObject == null)
             {
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, maxDis, objectMarsk);
+                Physics.Raycast(ray, out hit, maxDis, 1 << gameObject.layer);
                 if (hit.transform != null)
                 {
                     // 选中当前的
                     activeObject = hit.transform.gameObject;
                     activePoint = hit.point;
 
-                    ActiveObject(hit.transform.gameObject);
+                    ActiveObject();
                     //print("Active Object : " + activeObject + "at " + activePoint);
                 }
             }
@@ -53,6 +53,7 @@ public class DragObjectOnPlane : MonoBehaviour
                     activePoint = hit.point;
                     
                     activeObject.transform.localPosition += d;
+                    MoveObject(d);
                 }
                 else
                     activeObject = null; // 已经移出了平面
@@ -65,7 +66,7 @@ public class DragObjectOnPlane : MonoBehaviour
             if (activeObject != null)
             {
                 //print("Deactive Object : " + activeObject);
-                DeactiveObject(activeObject);
+                DeactiveObject();
                 activeObject = null;
             }
         }
@@ -75,12 +76,17 @@ public class DragObjectOnPlane : MonoBehaviour
 
 
     #region virtual function
-    protected virtual void ActiveObject(GameObject go)
+    protected virtual void ActiveObject()
     {
 
     }
 
-    protected virtual void DeactiveObject(GameObject go)
+    protected virtual void DeactiveObject()
+    {
+
+    }
+
+    protected virtual void MoveObject(Vector3 delta)
     {
 
     }

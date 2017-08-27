@@ -55,7 +55,45 @@ public class Piece : UIDragDropItem {
         }
     }
 
+    public void DragStart()
+    {
+        base.OnDragDropStart();
+    }
 
+    public void DragMove(Vector3 delta)
+    {
+        base.OnDragDropMove(delta);
+    }
+
+    public void DragRelease(GameObject surface)
+    {
+        base.OnDragDropRelease(surface);
+    }
+
+    protected override void OnDragDropMove(Vector3 delta)
+    {
+        base.OnDragDropMove(delta);
+
+        foreach (GameObject go in neighbors)
+            go.GetComponent<Piece>().DragMove(delta);
+    }
+
+
+    protected override void OnDragDropStart()
+    {
+        base.OnDragDropStart();
+
+        foreach (GameObject go in neighbors)
+            go.GetComponent<Piece>().DragStart();
+    }
+
+    protected override void OnDragDropRelease(GameObject surface)
+    {
+        base.OnDragDropRelease(surface);
+
+        foreach (GameObject go in neighbors)
+            go.GetComponent<Piece>().DragRelease(surface);
+    }
 
 
     #endregion

@@ -66,7 +66,7 @@ public class Puzzle : DragablePlane {
 
     protected override int RaycastHitOrder(GameObject go)
     {
-        return go.GetComponent<Piece>().RaycastHitOrder();
+        return go.GetComponent<Piece>().order;
     }
 
 
@@ -115,7 +115,7 @@ public class Puzzle : DragablePlane {
         piece.layer = childLayer;
         piece.GetComponent<Piece>().connectedPieces = new List<GameObject>(x * y);
         piece.GetComponent<Piece>().Init(x,y);
-        return;
+        
         // 随机位置
         piece.transform.localPosition = new Vector3(
                                         Random.Range(-0.15f,0.15f) * collider.size.x ,

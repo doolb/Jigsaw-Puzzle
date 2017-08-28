@@ -7,7 +7,11 @@ public interface IPiece
 {
     void Init(int x, int y);
 
-    int RaycastHitOrder();
+    int order
+    {
+        get;
+        set;
+    }
 }
 
 
@@ -18,12 +22,30 @@ public class Piece : MonoBehaviour,IPiece {
     static GameObject topGameObject = null;
     static bool GameStarted = false;
     public static List<GameObject> pieceCache ;
+    
 
 
     PieceID pid;
     SpriteRenderer sprite;
 
     public List<GameObject> connectedPieces ;
+
+    public int order
+    {
+        get 
+        {
+            if (sprite != null) return sprite.sortingOrder;
+            else return -1;
+        }
+
+        set 
+        { 
+            if (sprite != null) sprite.sortingOrder = value;
+            foreach (GameObject go in connectedPieces)
+                go.GetComponent<SpriteRenderer>().sortingOrder = value;
+        }
+    }
+
 
     #region unity callback
     
@@ -68,7 +90,7 @@ public class Piece : MonoBehaviour,IPiece {
         if (topGameObject != gameObject)
         {
             topGameObject = gameObject;
-            sprite.sortingOrder = ++maxDepth;
+            order = ++maxDepth;
         }
     }
 
@@ -117,6 +139,9 @@ public class Piece : MonoBehaviour,IPiece {
         other.GetComponent<Piece>().MoveConnectedPiece(offset);
 
         print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
+
+        // 设置 order
+        RebuildOrder(other);
 
         // 把所有块连接起来
         GetAllConnected(other);
@@ -195,7 +220,10 @@ public class Piece : MonoBehaviour,IPiece {
     }
 
     
-
+    /// <summary>
+    /// 把所有可以连接的对象添加到缓存中
+    /// </summary>
+    /// <param name="other"></param>
     void GetAllConnected(GameObject other)
     {
         pieceCache.Clear();
@@ -234,14 +262,23 @@ public class Piece : MonoBehaviour,IPiece {
         
     }
 
+    /// <summary>
+    /// 重建 raycast 的 order
+    /// </summary>
+    void RebuildOrder(GameObject other)
+    {
+        int order = other.GetComponent<Piece>().order;
+        if (this.order > order)
+            order = this.order;
+
+        other.GetComponent<Piece>().order = order;
+        
+
+    }
+
     #endregion
 
 
-
-    public int RaycastHitOrder()
-    {
-        return sprite.sortingOrder;
-    }
 }
 
 

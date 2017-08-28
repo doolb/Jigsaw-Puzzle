@@ -80,30 +80,48 @@ public class Piece : MonoBehaviour {
 
     #region function
 
-    
+    bool AddNeighbor(GameObject other)
+    {
+
+        // 是否是相临的两块
+        NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);
+        if (type == NeighborType.None) return false;
+        // 是否足够接近
+        if (!IsClosed(other, type)) return false;
+
+        // 计算要移动的偏移,移动所有相连的块
+        Vector3 offset = GetNeighborOffset(other, type);
+        other.transform.localPosition += offset;
+        other.GetComponent<Piece>().MoveConnectedPiece(offset);
+
+        print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
+
+        // 把所有块连接起来
+        GetAllConnected(other);
+        ConnectPiece();
+
+
+        return true;
+    }
 
     Vector3 GetNeighborOffset(GameObject other, NeighborType type)
     {
-        float sizeY = Puzzle.instance.pieceSize.y;
-        float sizeX = Puzzle.instance.pieceSize.x;
+        Vector3 offsetY = new Vector3(0, Puzzle.instance.pieceSize.y, 0);
+        Vector3 offsetX = new Vector3(Puzzle.instance.pieceSize.x, 0, 0);
         Vector3 pos = Vector3.zero;
         switch (type)
         {
             case NeighborType.Top:
-                pos = gameObject.transform.localPosition +
-                    new Vector3(0, sizeY, 0);
+                pos = gameObject.transform.localPosition + offsetY;
                 break;
             case NeighborType.Bottom:
-                pos = gameObject.transform.localPosition -
-                    new Vector3(0, sizeY, 0);
+                pos = gameObject.transform.localPosition - offsetY;
                 break;
             case NeighborType.Left:
-                pos = gameObject.transform.localPosition -
-                    new Vector3(sizeX, 0, 0);
+                pos = gameObject.transform.localPosition - offsetX;
                 break;
             case NeighborType.Right:
-                pos = gameObject.transform.localPosition +
-                    new Vector3(sizeX, 0, 0);
+                pos = gameObject.transform.localPosition + offsetX;
                 break;
             default:
                 print("Neighbor type error: " + type);
@@ -115,6 +133,37 @@ public class Piece : MonoBehaviour {
    
     }
 
+    bool IsClosed(GameObject other,NeighborType type)
+    {
+        Vector3 offsetY = new Vector3(0, Puzzle.instance.pieceSize.y / 2 , 0);
+        Vector3 offsetX = new Vector3(Puzzle.instance.pieceSize.x / 2, 0, 0);
+        Vector3 a, b;
+        switch (type)
+        {
+            case NeighborType.Top:
+                a = gameObject.transform.localPosition + offsetY;
+                b = other.transform.localPosition - offsetY;
+                break;
+            case NeighborType.Bottom:
+                a = gameObject.transform.localPosition - offsetY;
+                b = other.transform.localPosition + offsetY;
+                break;
+            case NeighborType.Left:
+                a = gameObject.transform.localPosition - offsetX;
+                b = other.transform.localPosition + offsetX;
+                break;
+            case NeighborType.Right:
+                a = gameObject.transform.localPosition + offsetX;
+                b = other.transform.localPosition - offsetX;
+                break;
+            default:
+                print("Neighbor type error: " + type);
+                return false;
+        }
+
+        return Vector3.Distance(a, b) < Puzzle.instance.largestSize;
+    }
+
     void MoveConnectedPiece(Vector3 offset)
     {
         foreach (GameObject piece in gameObject.GetComponent<Piece>().connectedPieces)
@@ -123,25 +172,7 @@ public class Piece : MonoBehaviour {
         }
     }
 
-    bool AddNeighbor(GameObject other)
-    {
-
-        // 是否是相临的两块
-        NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);
-        if (type == NeighborType.None) return false;
-
-        Vector3 offset = GetNeighborOffset(other, type);
-        other.transform.localPosition += offset;
-        other.GetComponent<Piece>().MoveConnectedPiece(offset);
-
-        print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
-
-        GetAllConnected(other);
-        ConnectPiece();
-
-
-        return true;
-    }
+    
 
     void GetAllConnected(GameObject other)
     {

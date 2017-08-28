@@ -9,6 +9,9 @@ public class Puzzle : DragablePlane {
     public GameObject piecePrefab;
     public Texture image;
 
+    public float largestSize = 10.0f;
+
+
     [HideInInspector]
     public Vector2 pieceSize;
     public static Puzzle instance;

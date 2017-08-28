@@ -10,3 +10,4 @@
 
 ### 2017.8.28
 * can add all connected piece
+* only move to correct position 

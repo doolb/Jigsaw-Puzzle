@@ -12,4 +12,5 @@
 * can add all connected piece
 * only move to correct position 
 * only select the top object
-* all connected piece have the same order
+* all connected piece have the same orde
+* now can dispaly puzzle piece

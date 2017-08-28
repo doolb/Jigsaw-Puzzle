@@ -52,7 +52,8 @@ public class Piece : MonoBehaviour,IPiece {
     void Start()
     {
         sprite = GetComponent<SpriteRenderer>();
-        sprite.sortingOrder = pid.order;
+        sprite.sortingOrder = pid == null ? 0 : pid.order;
+        
     }
 
 
@@ -107,6 +108,10 @@ public class Piece : MonoBehaviour,IPiece {
     {
         pid = new PieceID(x, y);
         gameObject.name = ToString();
+
+        // 设置 拼图 mark 材质
+        Renderer rend = GetComponent<Renderer>();
+        rend.material.SetTextureOffset("_MarkTex", pid.markOffset);
     }
 
     public override string ToString()
@@ -292,15 +297,29 @@ enum NeighborType
     Max
 };
 
+enum PiecePositionMark
+{
+    Corner = 1,
+    Edge = 2,
+    Other = 4
+}
+
 
 class PieceID
 {
     int x;
     int y;
+
+
+    PiecePositionMark mark;
+    public Vector2 markOffset;
+
     public PieceID(int x, int y)
     {
         this.x = x;
         this.y = y;
+
+        CalcMarkOffset();
     }
 
     public int order
@@ -318,7 +337,7 @@ class PieceID
     public NeighborType IsNeighbor(PieceID other)
     {
         NeighborType type = NeighborType.None;
-
+        if (other == null) return NeighborType.None;
         // 同一列
         if(x == other.x)
         {
@@ -334,5 +353,61 @@ class PieceID
         }
 
         return type;
+    }
+
+    void CalcMarkOffset()
+    {
+        int countX = (int)Puzzle.instance.pieceCount.x;
+        int countY = (int)Puzzle.instance.pieceCount.y;
+
+        float offsetX= 0,offsetY = 0;
+        // 左边界
+        if(x==0)
+        {
+            // 左下角
+            if (y == 0) goto _end_;
+            // 左上角
+            if (y == countY -1 ) { offsetY = 0.25f; goto _end_; };
+
+            offsetX = 0.25f;
+            offsetY = y % 2 == 1 ? 0.25f : 0.0f;
+        }
+        // 右边界
+        else if(x== countX -1 )
+        {
+
+            // 右下角
+            if (y == 0) { offsetY = 0.5f; goto _end_; }
+            // 右上角
+            if (y == countY - 1) { offsetY = 0.75f; goto _end_; };
+
+            offsetX = 0.25f;
+            offsetY = y % 2 == 1 ? 0.75f : 0.5f;
+        }
+        // 不用判断角落了
+        // 下边界
+        else if(y==0)
+        {
+            offsetX = 0.5f;
+            offsetY = x % 2 == 1 ? 0.25f : 0f;
+        }
+        // 上边界
+        else if(y== countY -1)
+        {
+            offsetX = 0.5f;
+            offsetY = x % 2 == 1 ? 0.75f : 0.5f;
+        }
+        // 其它地方
+        else 
+        {
+            offsetX = 0.75f;
+            offsetY = x % 2 == 1 ? 0.25f : 0f;
+            offsetY += y % 2 == 1 ? 0f : 0.5f;
+        }
+
+
+
+        _end_:
+            markOffset = new Vector2(offsetX,offsetY);
     }
 }

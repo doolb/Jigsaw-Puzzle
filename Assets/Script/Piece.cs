@@ -12,7 +12,6 @@ public class Piece : MonoBehaviour {
 
 
     PieceID pid;
-
     SpriteRenderer sprite;
 
     public List<GameObject> connectedPieces ;
@@ -116,27 +115,32 @@ public class Piece : MonoBehaviour {
         }
     }
 
-    void AddNeighbor(GameObject other)
+    bool AddNeighbor(GameObject other)
     {
         //connectedPieces.Add(other.gameObject);
 
         // 是否是相临的两块
         NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);
-        if (type == NeighborType.None) return;
-
-        print("Neighbor is at " + type);
+        if (type == NeighborType.None) return false;
 
 
-        GetAllConnected(other);
-        ConnectPiece();
 
         if(topGameObject == gameObject)
         {
             Vector3 offset = GetNeighborOffset(other, type);
-            MoveConnectedPiece(offset);
+            other.transform.localPosition += offset;
+            other.GetComponent<Piece>().MoveConnectedPiece(offset);
+
+            print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
+
+            GetAllConnected(other);
+            ConnectPiece();
         }
 
+        
 
+
+        return true;
     }
 
     void GetAllConnected(GameObject other)

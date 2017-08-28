@@ -68,7 +68,7 @@ public class Puzzle : DragablePlane {
         int y = (int)pieceCount.y;
         pieceSize = new Vector2(image.width / x, image.height / y);
 
-
+        Piece.pieceCache = new List<GameObject>(x * y);
 
         for(int i=0;i< x; i++)
         {
@@ -96,6 +96,7 @@ public class Puzzle : DragablePlane {
             new Vector2(x*scaleX,y*scaleY);
 
         piece.layer = childLayer;
+        piece.GetComponent<Piece>().connectedPieces = new List<GameObject>(x * y);
         piece.GetComponent<Piece>().Init(x,y);
     }
 }

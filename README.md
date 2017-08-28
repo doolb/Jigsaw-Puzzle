@@ -7,3 +7,6 @@
 
 ### 2017.8.27
 * add a dragable object script in world space
+
+### 2017.8.28
+* can add all connected piece

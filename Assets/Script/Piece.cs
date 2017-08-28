@@ -8,13 +8,14 @@ public class Piece : MonoBehaviour {
     static int maxDepth = 0;
     static GameObject topGameObject = null;
     static bool GameStarted = false;
+    public static List<GameObject> pieceCache ;
 
 
     PieceID pid;
 
     SpriteRenderer sprite;
 
-    List<GameObject> neighbors = new List<GameObject>();
+    public List<GameObject> connectedPieces ;
 
     #region unity callback
     
@@ -29,11 +30,7 @@ public class Piece : MonoBehaviour {
         if (other.gameObject == null) return;
         if (!GameStarted) return;
 
-
-        print("OnTriggerEnter " + other.gameObject.GetComponent<Piece>());
-
         AddNeighbor(other.gameObject);
-        
     }
 
     #endregion
@@ -53,25 +50,17 @@ public class Piece : MonoBehaviour {
 
     public void OnMove(Vector3 delta)
     {
-        print("move " + pid);
-        foreach (GameObject nb in neighbors)
-            nb.transform.localPosition += delta;
+        MoveConnectedPiece(delta);
     }
 
 
     #endregion
 
-
-    #region function
-
-    public void Init(int x,int y)
-    {
-        SetID(x, y);
-        gameObject.name = ToString();
-    }
-    void SetID(int x,int y)
+    #region public function
+    public void Init(int x, int y)
     {
         pid = new PieceID(x, y);
+        gameObject.name = ToString();
     }
 
     public override string ToString()
@@ -79,47 +68,113 @@ public class Piece : MonoBehaviour {
         return "Piece " + pid.ToString();
     }
 
+    #endregion
+
+
+    #region function
+
+    
+
+    Vector3 GetNeighborOffset(GameObject other, NeighborType type)
+    {
+        float sizeY = Puzzle.instance.pieceSize.y;
+        float sizeX = Puzzle.instance.pieceSize.x;
+        Vector3 pos = Vector3.zero;
+        switch (type)
+        {
+            case NeighborType.Top:
+                pos = gameObject.transform.localPosition +
+                    new Vector3(0, sizeY, 0);
+                break;
+            case NeighborType.Bottom:
+                pos = gameObject.transform.localPosition -
+                    new Vector3(0, sizeY, 0);
+                break;
+            case NeighborType.Left:
+                pos = gameObject.transform.localPosition -
+                    new Vector3(sizeX, 0, 0);
+                break;
+            case NeighborType.Right:
+                pos = gameObject.transform.localPosition +
+                    new Vector3(sizeX, 0, 0);
+                break;
+            default:
+                print("Neighbor type error: " + type);
+                break;
+        }
+        Vector3 d = pos - other.gameObject.transform.localPosition ;
+
+        return d;
+   
+    }
+
+    void MoveConnectedPiece(Vector3 offset)
+    {
+        foreach (GameObject piece in gameObject.GetComponent<Piece>().connectedPieces)
+        {
+            piece.transform.localPosition += offset;
+        }
+    }
+
     void AddNeighbor(GameObject other)
     {
+        //connectedPieces.Add(other.gameObject);
+
         // 是否是相临的两块
         NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);
         if (type == NeighborType.None) return;
 
         print("Neighbor is at " + type);
-        print("my :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
-        neighbors.Add(other.gameObject);
-        
-        // 移动到当前选择
-        if (topGameObject == gameObject)
-        {
-            Vector3 pos = Vector3.zero;
-            float sizeY = Puzzle.instance.pieceSize.y;
-            float sizeX = Puzzle.instance.pieceSize.x;
 
-            switch(type)
-            {
-                case NeighborType.Top:
-                    pos = gameObject.transform.localPosition + 
-                        new Vector3(0, sizeY, 0);
-                    break;
-                case NeighborType.Bottom:
-                    pos = gameObject.transform.localPosition -
-                        new Vector3(0, sizeY, 0);
-                    break;
-                case NeighborType.Left:
-                    pos = gameObject.transform.localPosition -
-                        new Vector3(sizeX, 0, 0);
-                    break;
-                case NeighborType.Right:
-                    pos = gameObject.transform.localPosition +
-                        new Vector3(sizeX, 0, 0);
-                    break;
-                default:
-                    print("Neighbor type error: " + type);
-                    break;
-            }
-            other.gameObject.transform.localPosition = pos;
+
+        GetAllConnected(other);
+        ConnectPiece();
+
+        if(topGameObject == gameObject)
+        {
+            Vector3 offset = GetNeighborOffset(other, type);
+            MoveConnectedPiece(offset);
         }
+
+
+    }
+
+    void GetAllConnected(GameObject other)
+    {
+        pieceCache.Clear();
+
+        pieceCache.Add(gameObject);
+        pieceCache.Add(other);
+
+        // 添加所有己连接的到缓存中
+        foreach (GameObject piece in GetComponent<Piece>().connectedPieces)
+            pieceCache.Add(piece);
+        foreach (GameObject piece in other.GetComponent<Piece>().connectedPieces)
+            pieceCache.Add(piece);
+
+    }
+
+
+    void ConnectPiece()
+    {
+
+        foreach(GameObject a in pieceCache)
+        {
+            foreach (GameObject b in pieceCache)
+            {
+                // 是否是同一个
+                if (a == b) continue;
+                // 是否已经加入
+                Piece p = a.GetComponent<Piece>();
+                if (a.GetComponent<Piece>().connectedPieces.Find(x => x == b)) continue;
+
+                p.connectedPieces.Add(b);
+
+            }
+            
+        }
+
+        
     }
 
     #endregion
@@ -160,14 +215,15 @@ class PieceID
         // 同一列
         if(x == other.x)
         {
-            type = y < other.y ? NeighborType.Top :
-                                 NeighborType.Bottom;
+            if (y + 1 == other.y) type = NeighborType.Top;
+            if (y - 1 == other.y) type = NeighborType.Bottom;
+            
         }
         // 同一行
         else if(y == other.y)
         {
-            type = x < other.x ? NeighborType.Right :
-                                 NeighborType.Left;
+            if (x + 1 == other.x) type = NeighborType.Right;
+            if (x - 1 == other.x) type = NeighborType.Left;
         }
 
         return type;

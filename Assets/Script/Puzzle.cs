@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Puzzle : DragablePlane {
 
     [Header("Piece")]
@@ -15,6 +16,12 @@ public class Puzzle : DragablePlane {
     [HideInInspector]
     public Vector2 pieceSize;
     public static Puzzle instance;
+
+    protected override int raycastHitCacheSize
+    {
+        get { return ((int)pieceCount.x) * ((int)pieceCount.y); }
+    }
+
 
 	// Use this for initialization
 	protected void Start () {
@@ -57,6 +64,12 @@ public class Puzzle : DragablePlane {
         
     }
 
+    protected override int RaycastHitOrder(GameObject go)
+    {
+        return go.GetComponent<Piece>().RaycastHitOrder();
+    }
+
+
     
     #endregion
 
@@ -71,6 +84,7 @@ public class Puzzle : DragablePlane {
         int y = (int)pieceCount.y;
         pieceSize = new Vector2(image.width / x, image.height / y);
 
+        Piece.maxDepth = (int)pieceCount.x * (int)pieceCount.y + 1;
         Piece.pieceCache = new List<GameObject>(x * y);
 
         for(int i=0;i< x; i++)
@@ -101,5 +115,13 @@ public class Puzzle : DragablePlane {
         piece.layer = childLayer;
         piece.GetComponent<Piece>().connectedPieces = new List<GameObject>(x * y);
         piece.GetComponent<Piece>().Init(x,y);
+        return;
+        // 随机位置
+        piece.transform.localPosition = new Vector3(
+                                        Random.Range(-0.15f,0.15f) * collider.size.x ,
+                                        Random.Range(-0.15f,0.15f) * collider.size.y ,
+                                        0);
     }
+
+
 }

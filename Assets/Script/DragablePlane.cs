@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(BoxCollider))]
 public class DragablePlane : MonoBehaviour
 {
     #region public 
@@ -10,12 +11,18 @@ public class DragablePlane : MonoBehaviour
     #endregion
 
     #region class only
-    protected Collider  collider;
+    protected BoxCollider collider;
 
     protected GameObject    activeObject;
     protected Vector3       activePoint;
 
     protected int childLayer;
+
+    protected RaycastHit[] raycastHitCache;
+    protected virtual int raycastHitCacheSize 
+    {
+        get {return 100;}
+    }
 
 
     #endregion
@@ -26,8 +33,9 @@ public class DragablePlane : MonoBehaviour
 
     protected virtual void Start()
     {
-        collider = GetComponent<Collider>();
+        collider = GetComponent<BoxCollider>();
         childLayer = childLayerMask.MaskToLayer();
+        raycastHitCache = new RaycastHit[raycastHitCacheSize];
     }
 
 
@@ -49,8 +57,7 @@ public class DragablePlane : MonoBehaviour
             if (activeObject == null)
             {
                 RaycastHit hit;
-                Physics.Raycast(ray, out hit, maxDis, 1 << childLayer);
-                if (hit.transform != null)
+                if(FindAClosetChild(out hit,ray,maxDis))
                 {
                     // 选中当前的
                     activeObject = hit.transform.gameObject;
@@ -108,6 +115,36 @@ public class DragablePlane : MonoBehaviour
     {
 
     }
+
+    protected virtual int RaycastHitOrder(GameObject go)
+    {
+        return 1;
+    }
+
+    #endregion
+
+    #region function
+
+    bool FindAClosetChild(out RaycastHit hit,Ray ray,float maxDistance)
+    {
+        hit = default(RaycastHit);
+        int n = Physics.RaycastNonAlloc(ray, raycastHitCache, maxDistance, 1 << childLayer);
+        if (n == 0) return false;
+
+        int max = 0, maxOrder = 0;
+        for(int i=0;i<n;i++)
+        {
+            int newOrder = RaycastHitOrder(raycastHitCache[i].transform.gameObject);
+            if (newOrder > maxOrder)
+            {
+                maxOrder = newOrder;
+                max = i;
+            }
+        }
+        hit = raycastHitCache[max];
+        return true;
+    }
+
 
     #endregion
 }

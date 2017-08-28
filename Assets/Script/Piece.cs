@@ -2,10 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Piece : MonoBehaviour {
+
+public interface IPiece
+{
+    void Init(int x, int y);
+
+    int RaycastHitOrder();
+}
 
 
-    static int maxDepth = 0;
+public class Piece : MonoBehaviour,IPiece {
+
+
+    public static int maxDepth = 0;
     static GameObject topGameObject = null;
     static bool GameStarted = false;
     public static List<GameObject> pieceCache ;
@@ -21,6 +30,7 @@ public class Piece : MonoBehaviour {
     void Start()
     {
         sprite = GetComponent<SpriteRenderer>();
+        sprite.sortingOrder = pid.order;
     }
 
 
@@ -45,6 +55,7 @@ public class Piece : MonoBehaviour {
             topGameObject.GetComponent<Piece>().IsConnected(gameObject))
             AddNeighbor(other.gameObject);
     }
+
 
     #endregion
 
@@ -225,6 +236,12 @@ public class Piece : MonoBehaviour {
 
     #endregion
 
+
+
+    public int RaycastHitOrder()
+    {
+        return sprite.sortingOrder;
+    }
 }
 
 
@@ -249,10 +266,17 @@ class PieceID
         this.y = y;
     }
 
+    public int order
+    {
+        get { return x * (int)Puzzle.instance.pieceCount.y + y; }
+    }
+
     public override string ToString()
     {
         return x + ":" + y;
     }
+
+    
 
     public NeighborType IsNeighbor(PieceID other)
     {

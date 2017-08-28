@@ -35,6 +35,17 @@ public class Piece : MonoBehaviour {
             AddNeighbor(other.gameObject);
     }
 
+    void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject == null) return;
+        if (!GameStarted) return;
+
+        // 只有当前选中的，或者和当前选中的相连的才能继续执行
+        if (topGameObject == gameObject ||
+            topGameObject.GetComponent<Piece>().IsConnected(gameObject))
+            AddNeighbor(other.gameObject);
+    }
+
     #endregion
 
     #region callback

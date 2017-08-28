@@ -29,7 +29,10 @@ public class Piece : MonoBehaviour {
         if (other.gameObject == null) return;
         if (!GameStarted) return;
 
-        AddNeighbor(other.gameObject);
+        // 只有当前选中的，或者和当前选中的相连的才能继续执行
+        if (topGameObject == gameObject ||
+            topGameObject.GetComponent<Piece>().IsConnected(gameObject))
+            AddNeighbor(other.gameObject);
     }
 
     #endregion
@@ -65,6 +68,11 @@ public class Piece : MonoBehaviour {
     public override string ToString()
     {
         return "Piece " + pid.ToString();
+    }
+
+    public bool IsConnected(GameObject piece)
+    {
+        return connectedPieces.Find(x => x == piece);
     }
 
     #endregion
@@ -117,27 +125,19 @@ public class Piece : MonoBehaviour {
 
     bool AddNeighbor(GameObject other)
     {
-        //connectedPieces.Add(other.gameObject);
 
         // 是否是相临的两块
         NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);
         if (type == NeighborType.None) return false;
 
+        Vector3 offset = GetNeighborOffset(other, type);
+        other.transform.localPosition += offset;
+        other.GetComponent<Piece>().MoveConnectedPiece(offset);
 
+        print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
 
-        if(topGameObject == gameObject)
-        {
-            Vector3 offset = GetNeighborOffset(other, type);
-            other.transform.localPosition += offset;
-            other.GetComponent<Piece>().MoveConnectedPiece(offset);
-
-            print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
-
-            GetAllConnected(other);
-            ConnectPiece();
-        }
-
-        
+        GetAllConnected(other);
+        ConnectPiece();
 
 
         return true;

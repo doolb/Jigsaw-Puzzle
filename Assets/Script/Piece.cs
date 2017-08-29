@@ -297,13 +297,6 @@ enum NeighborType
     Max
 };
 
-enum PiecePositionMark
-{
-    Corner = 1,
-    Edge = 2,
-    Other = 4
-}
-
 
 class PieceID
 {
@@ -311,7 +304,7 @@ class PieceID
     int y;
 
 
-    PiecePositionMark mark;
+    bool isAtEdge;
     public Vector2 markOffset;
 
     public PieceID(int x, int y)
@@ -357,6 +350,8 @@ class PieceID
 
     void CalcMarkOffset()
     {
+        isAtEdge = true;
+
         int countX = (int)Puzzle.instance.pieceCount.x;
         int countY = (int)Puzzle.instance.pieceCount.y;
 
@@ -403,6 +398,8 @@ class PieceID
             offsetX = 0.75f;
             offsetY = x % 2 == 1 ? 0.25f : 0f;
             offsetY += y % 2 == 1 ? 0f : 0.5f;
+
+            isAtEdge = false;
         }
 
 

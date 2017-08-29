@@ -14,3 +14,6 @@
 * only select the top object
 * all connected piece have the same orde
 * now can dispaly puzzle piece
+
+### 2017.8.29 
+* rebuild puzzle mark image

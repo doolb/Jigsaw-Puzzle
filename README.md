@@ -1,5 +1,8 @@
 # Jigsaw Puzzle
 
+## [document](Note/puzzle8.md)
+
+
 ## update
 ### 2017.8.26
 * split image to piece
@@ -19,3 +22,4 @@
 * rebuild puzzle mark image
 * fix image uv offset
 * add highligt and shadow
+* build arch and corner puzzle mark,also has some awesome effect

@@ -102,15 +102,17 @@ public class Puzzle : DragablePlane {
         GameObject piece = Instantiate(piecePrefab, gameObject.transform);
 
         // 设置大小
-        piece.transform.localScale = new Vector3(100 / pieceCount.x, 100 / pieceCount.y, 1);
+        piece.transform.localScale = new Vector3(100 / pieceCount.x * 2, 100 / pieceCount.y * 2, 1);
         
         // 设置材质
         float scaleX = 1 / pieceCount.x;
         float scaleY = 1 / pieceCount.y;
+        float offsetX = scaleX / 2f;
+        float offsetY = scaleY / 2f;
         piece.GetComponent<Renderer>().material.mainTextureScale = 
-            new Vector2(scaleX, scaleY);
-        piece.GetComponent<Renderer>().material.mainTextureOffset = 
-            new Vector2(x*scaleX,y*scaleY);
+            new Vector2(scaleX * 2, scaleY * 2);
+        piece.GetComponent<Renderer>().material.mainTextureOffset =
+            new Vector2(x * scaleX - offsetX, y * scaleY - offsetY);
 
         piece.layer = childLayer;
         piece.GetComponent<Piece>().connectedPieces = new List<GameObject>(x * y);

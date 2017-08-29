@@ -4,6 +4,9 @@
 		_MainTex ("Main Texture", 2D) = "white" {}
 
 		_MarkTex("Puzzle Mark Texture", 2D) = "white"{}
+
+		_HighLight("High Light Value ", Float) = .8
+		_Shadow("Shadow Value ",Float) = 0.3
 	}
 	SubShader 
 	{
@@ -46,19 +49,26 @@
 		sampler2D _MainTex;
 		sampler2D _MarkTex;
 		fixed4 _Color;
+		float _HighLight;
+		float _Shadow;
+		
 		fixed4  frag(v2f i) : SV_TARGET
 		{
 			fixed4 col;
 
 			// image
-			// offset uv from (0,1) -> (-0.5,1.5)
-			//i.uv = (i.uv - 0.5f)*2 + 0.5f;
 			col.rgb = tex2D(_MainTex,i.uv);
 			col.rgb *= _Color;
 
 			// mark
 			fixed4 mark = tex2D(_MarkTex,i.muv);
 			col.a = mark.a;
+			
+			col.rgb -= mark.b * _Shadow;
+			col.rgb += mark.g * _HighLight;
+			
+			
+
 
 			return col;
 		}

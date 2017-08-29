@@ -18,3 +18,4 @@
 ### 2017.8.29 
 * rebuild puzzle mark image
 * fix image uv offset
+* add highligt and shadow

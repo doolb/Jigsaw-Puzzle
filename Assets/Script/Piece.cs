@@ -27,7 +27,7 @@ public class Piece : MonoBehaviour,IPiece {
     
 
 
-    PieceID pid;
+    public PieceID pid;
     SpriteRenderer sprite;
 
     public List<GameObject> connectedPieces ;
@@ -291,7 +291,7 @@ public class Piece : MonoBehaviour,IPiece {
 }
 
 
-enum NeighborType
+public enum NeighborType
 {
     None,
     Top,
@@ -302,13 +302,13 @@ enum NeighborType
 };
 
 
-class PieceID
+public class PieceID
 {
     int x;
     int y;
 
 
-    bool isAtEdge;
+    public bool isAtEdge;
     public Vector2 markOffset;
 
     public PieceID(int x, int y)

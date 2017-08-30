@@ -38,11 +38,6 @@ public class Puzzle : DragablePlane {
 
 	}
 	
-	// Update is called once per frame
-    protected override void Update()
-    {
-        base.Update();
-	}
 
 
     #region base callback

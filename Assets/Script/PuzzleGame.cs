@@ -7,22 +7,36 @@ using UnityEngine;
 /// </summary>
 public class PuzzleGame : Puzzle {
 
+    
+    public UIPlayAnimation menuButtonPlayAnimation;
+
+
 	// Use this for initialization
     protected override void Start()
     {
         base.Start();
-	}
-	
-	// Update is called once per frame
-    protected override void Update()
-    {
-        base.Update();
+        Time.timeScale = 0f;
     }
+	
 
     #region public function
     public void StartGame()
     {
+        if (Piece.GameStarted) return;
         MakePuzzle();
+    }
+
+    public void ShowControlPanel()
+    {
+        menuButtonPlayAnimation.enabled = false;
+        Time.timeScale = 0f;
+    }
+
+    public void HideControlPanel()
+    {
+        menuButtonPlayAnimation.enabled = true;
+        Time.timeScale = 1f;
+
     }
 
     #endregion

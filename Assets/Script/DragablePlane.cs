@@ -43,7 +43,7 @@ public class DragablePlane : MonoBehaviour
 
 
     // Update is called once per frame
-	protected virtual void Update()
+    protected virtual void FixedUpdate()
     {
         Vector3 pos = Input.mousePosition;
         float maxDis =Vector3.Distance (

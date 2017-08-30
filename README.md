@@ -26,3 +26,4 @@
 
 ### 2017.8.30
 * use puzzle mark texture red channel to render special color
+* build a basic ui

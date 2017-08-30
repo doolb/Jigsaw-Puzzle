@@ -22,7 +22,7 @@ public class Piece : MonoBehaviour,IPiece {
 
     public static int maxDepth = 0;
     static GameObject topGameObject = null;
-    static bool GameStarted = false;
+    public static bool GameStarted = false;
     public static List<GameObject> pieceCache ;
     
 
@@ -63,6 +63,7 @@ public class Piece : MonoBehaviour,IPiece {
     {
         if (other.gameObject == null) return;
         if (!GameStarted) return;
+        if (other.gameObject.tag != "Piece") return;
 
         // 只有当前选中的，或者和当前选中的相连的才能继续执行
         if (topGameObject == gameObject ||
@@ -74,6 +75,7 @@ public class Piece : MonoBehaviour,IPiece {
     {
         if (other.gameObject == null) return;
         if (!GameStarted) return;
+        if (other.gameObject.tag != "Piece") return;
 
         // 只有当前选中的，或者和当前选中的相连的才能继续执行
         if (topGameObject == gameObject ||

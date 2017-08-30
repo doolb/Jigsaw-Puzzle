@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 这个提供了一个可拖拽对象的容器
+/// </summary>
 [RequireComponent(typeof(BoxCollider))]
 public class DragablePlane : MonoBehaviour
 {

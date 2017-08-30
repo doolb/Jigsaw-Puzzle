@@ -14,7 +14,9 @@ public interface IPiece
     }
 }
 
-
+/// <summary>
+/// 这个用于拼图的每个块的具体逻辑
+/// </summary>
 public class Piece : MonoBehaviour,IPiece {
 
 

@@ -24,7 +24,7 @@ public class Puzzle : DragablePlane {
 
 
 	// Use this for initialization
-	protected void Start () {
+	protected override void Start () {
 
         // 启动单实例
         if (instance == null)
@@ -36,11 +36,10 @@ public class Puzzle : DragablePlane {
 
         base.Start();
 
-        MakePuzzle();
 	}
 	
 	// Update is called once per frame
-    protected void Update()
+    protected override void Update()
     {
         base.Update();
 	}

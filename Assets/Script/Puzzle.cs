@@ -75,7 +75,7 @@ public class Puzzle : DragablePlane {
 
 
 
-    public void MakePuzzle()
+    protected void MakePuzzle()
     {
 
 

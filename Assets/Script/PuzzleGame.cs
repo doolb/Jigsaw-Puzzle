@@ -11,9 +11,6 @@ public class PuzzleGame : Puzzle {
     protected override void Start()
     {
         base.Start();
-
-        print("start game");
-        MakePuzzle();
 	}
 	
 	// Update is called once per frame

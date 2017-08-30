@@ -1,6 +1,6 @@
 # Jigsaw Puzzle
 
-## [document](Note/puzzle8.md)
+## [Puzzle document](Note/puzzle8.md)
 
 
 ## update
@@ -23,3 +23,6 @@
 * fix image uv offset
 * add highligt and shadow
 * build arch and corner puzzle mark,also has some awesome effect
+
+### 2017.8.30
+* use puzzle mark texture red channel to render special color

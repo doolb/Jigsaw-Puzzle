@@ -7,6 +7,7 @@
 
 		_HighLight("High Light Value ", Float) = .8
 		_Shadow("Shadow Value ",Float) = 0.3
+		_Special("Special Color",Color) = (1,1,1,1)
 	}
 	SubShader 
 	{
@@ -48,10 +49,10 @@
 
 		sampler2D _MainTex;
 		sampler2D _MarkTex;
-		fixed4 _Color;
-		float _HighLight;
-		float _Shadow;
-		
+		fixed4 	_Color;
+		float 	_HighLight;
+		float 	_Shadow;
+		float4 	_Special;
 		fixed4  frag(v2f i) : SV_TARGET
 		{
 			fixed4 col;
@@ -66,6 +67,8 @@
 			
 			col.rgb -= mark.b * _Shadow;
 			col.rgb += mark.g * _HighLight;
+			col.rgb += mark.r * _Special;
+
 			
 			
 

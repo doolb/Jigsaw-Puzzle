@@ -22,8 +22,8 @@ public class Piece : MonoBehaviour,IPiece {
 
     public static int maxDepth = 0;
     static GameObject topGameObject = null;
-    public static bool GameStarted = false;
-    public static List<GameObject> pieceCache ;
+    public static bool theFirstRun = false;
+    public static List<GameObject> pieceCache;
     
 
 
@@ -62,7 +62,7 @@ public class Piece : MonoBehaviour,IPiece {
     void OnTriggerEnter(Collider other)
     {
         if (other.gameObject == null) return;
-        if (!GameStarted) return;
+        if (!theFirstRun) return;
         if (other.gameObject.tag != "Piece") return;
 
         // 只有当前选中的，或者和当前选中的相连的才能继续执行
@@ -74,7 +74,7 @@ public class Piece : MonoBehaviour,IPiece {
     void OnTriggerExit(Collider other)
     {
         if (other.gameObject == null) return;
-        if (!GameStarted) return;
+        if (!theFirstRun) return;
         if (other.gameObject.tag != "Piece") return;
 
         // 只有当前选中的，或者和当前选中的相连的才能继续执行
@@ -89,7 +89,7 @@ public class Piece : MonoBehaviour,IPiece {
     #region callback
     public void OnActive()
     {
-        GameStarted = true;
+        theFirstRun = true;
 
         // 是否是最顶的对象
         if (topGameObject != gameObject)

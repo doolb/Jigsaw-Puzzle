@@ -20,6 +20,9 @@ public class PuzzleGame : Puzzle {
     List<int> randomBuffer = new List<int>();
     bool isPieceCountChange;
     Vector2 newPieceCount;
+
+    int moveCount = 0;
+
 	// Use this for initialization
     protected override void Start()
     {
@@ -28,7 +31,27 @@ public class PuzzleGame : Puzzle {
         tileBottomOrigin = transform.GetChild(1).localPosition;
         tileTopOrigin = transform.GetChild(2).localPosition;
     }
-	
+
+
+    #region virtual function
+    protected override void ActiveObject(GameObject go)
+    {
+        base.ActiveObject(go);
+
+        moveCount++;
+    }
+
+    protected override void DeactiveObject(GameObject go)
+    {
+        // 是否和所有块相连
+        Piece piece = go.GetComponent<Piece>();
+        if(piece.connectedPieces.Count == (int)(pieceCount.x * pieceCount.y) - 1)
+        {
+            print("finish.");
+        }
+    }
+
+    #endregion
 
     #region public function
     public void StartGame()
@@ -50,6 +73,7 @@ public class PuzzleGame : Puzzle {
             pieceCreated = true;
             Piece.theFirstRun = false;
             startButtonLabel.text = "继续";
+            moveCount = 0;
         }
 
     }

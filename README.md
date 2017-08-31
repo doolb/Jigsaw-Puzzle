@@ -33,3 +33,4 @@
 * change piece shape and cout in runtime
 * display information when game finish
 * can rotate piece
+* can piece image

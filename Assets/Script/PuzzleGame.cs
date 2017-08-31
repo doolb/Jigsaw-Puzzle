@@ -200,7 +200,7 @@ public class PuzzleGame : Puzzle {
 
     public void SetPieceShape()
     {
-        string markName = "Image/puzzle mark/" + GetShapeMarkFromName(UIPopupList.current.value);
+        string markName = "Image/puzzle mark/" + UIPopupList.current.value;
         markImage = Resources.Load<Texture>(markName);
         if (pieceCreated) UpdatePieceMark();
     }
@@ -223,6 +223,15 @@ public class PuzzleGame : Puzzle {
         {
             startButtonLabel.text = "继续";
         }
+
+    }
+
+    public void SetPieceImage()
+    {
+        string name = "Image/" + UIPopupList.current.value;
+        pieceImage = Resources.Load<Sprite>(name);
+        transform.GetChild(0).gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", pieceImage.texture);
+        if (pieceCreated) UpdatePieceImage();
 
     }
 
@@ -260,18 +269,6 @@ public class PuzzleGame : Puzzle {
         }
     }
 
-    string GetShapeMarkFromName(string name)
-    {
-        // 标准 角型 弧型
-        switch(name.Trim())
-        {
-            case "标准": return "normal";
-            case "角型": return "angle";
-            case "弧型": return "arc";
-        }
-
-        return "normal";
-    }
 
     void UpdatePieceMark()
     {
@@ -279,6 +276,15 @@ public class PuzzleGame : Puzzle {
         {
             Renderer rend = transform.GetChild(i).gameObject.GetComponent<Renderer>();
             rend.material.SetTexture("_MarkTex", markImage);
+        }
+    }
+
+    void UpdatePieceImage()
+    {
+        for (int i = firstPieceIndex; i < transform.childCount; i++)
+        {
+            SpriteRenderer rend = transform.GetChild(i).gameObject.GetComponent<SpriteRenderer>();
+            rend.sprite = pieceImage;
         }
     }
 

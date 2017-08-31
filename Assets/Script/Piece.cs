@@ -12,6 +12,8 @@ public interface IPiece
         get;
         set;
     }
+
+
 }
 
 /// <summary>

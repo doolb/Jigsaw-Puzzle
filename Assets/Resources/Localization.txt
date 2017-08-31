@@ -1,0 +1,9 @@
+KEY,English
+
+normal, 标准
+arc,	弧型
+angle,	角型
+
+img, 果桨
+img1,小猫和鲜花
+img2,水果和蔬菜

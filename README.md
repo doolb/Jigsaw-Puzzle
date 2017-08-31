@@ -28,3 +28,7 @@
 * use puzzle mark texture red channel to render special color
 * build a basic ui
 * add tile piece support
+
+### 2017.8.31
+* change piece shape and cout in runtime
+* display information when game finish

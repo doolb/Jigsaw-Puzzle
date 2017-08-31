@@ -12,6 +12,10 @@ public class PuzzleGame : Puzzle {
     
     public UIPlayAnimation menuButtonPlayAnimation;
     public UILabel startButtonLabel;
+    public GameObject finishGamePanel;
+
+    public GameObject   controlPanel;
+    public string       controlPanelAnimName;
 
     Vector3 tileBottomOrigin, tileTopOrigin;
 
@@ -21,9 +25,17 @@ public class PuzzleGame : Puzzle {
     bool isPieceCountChange;
     Vector2 newPieceCount;
 
-    int moveCount = 0;
 
-	// Use this for initialization
+    // 统计信息
+    bool gameFinish;
+    int moveCount = 0;
+    float startTime;
+
+
+    #region virtual function
+
+
+    // Use this for initialization
     protected override void Start()
     {
         base.Start();
@@ -32,8 +44,6 @@ public class PuzzleGame : Puzzle {
         tileTopOrigin = transform.GetChild(2).localPosition;
     }
 
-
-    #region virtual function
     protected override void ActiveObject(GameObject go)
     {
         base.ActiveObject(go);
@@ -43,11 +53,22 @@ public class PuzzleGame : Puzzle {
 
     protected override void DeactiveObject(GameObject go)
     {
+        if (gameFinish) return;
+
         // 是否和所有块相连
         Piece piece = go.GetComponent<Piece>();
         if(piece.connectedPieces.Count == (int)(pieceCount.x * pieceCount.y) - 1)
         {
-            print("finish.");
+            finishGamePanel.SetActive(true);
+            GameObject child = finishGamePanel.transform.Find("Label - Information").gameObject;
+            if (child != null)
+            {
+                child.GetComponent<UILabel>().text = "移动次数 ： " + moveCount + 
+                                                        "\n使用时间 ： " + (Time.fixedTime - startTime);
+
+                startButtonLabel.text = "开始";
+                gameFinish = true;
+            }
         }
     }
 
@@ -67,6 +88,11 @@ public class PuzzleGame : Puzzle {
                 pieceCount = newPieceCount;
                 ClearPiece();
             }
+            if(gameFinish)
+            {
+                ClearPiece();
+                gameFinish = false;
+            }
             MakePuzzle();
             ShowAllOrNot(isShowAll);
 
@@ -74,15 +100,24 @@ public class PuzzleGame : Puzzle {
             Piece.theFirstRun = false;
             startButtonLabel.text = "继续";
             moveCount = 0;
+            startTime = Time.fixedTime;
         }
 
     }
 
+    public void DisplayControlPanel()
+    {
+        finishGamePanel.SetActive(false);
+        Animation anim = controlPanel.GetComponent<Animation>();
+        ActiveAnimation.Play(anim, controlPanelAnimName, AnimationOrTween.Direction.Reverse);
+    }
+
     public void ShowAllPieceOrNot()
     {
-        if (!pieceCreated) return;
-
         isShowAll = UIToggle.current.value;
+
+
+        if (!pieceCreated) return;
         ShowAllOrNot(isShowAll);
     }
 
@@ -240,6 +275,7 @@ public class PuzzleGame : Puzzle {
             Destroy(go);
         }
     }
+
 
     #endregion
 }

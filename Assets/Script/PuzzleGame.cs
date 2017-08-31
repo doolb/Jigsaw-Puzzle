@@ -9,6 +9,11 @@ public class PuzzleGame : Puzzle {
 
     public int firstPieceIndex = 3;
 
+    [Header("旋转个数")]
+    public int minCount = 1;
+    public int maxCount = 5;
+    public static bool isRotate;
+
     
     public UIPlayAnimation menuButtonPlayAnimation;
     public UILabel startButtonLabel;
@@ -19,6 +24,8 @@ public class PuzzleGame : Puzzle {
 
     Vector3 tileBottomOrigin, tileTopOrigin;
 
+    // 设置
+    bool newIsRotate;
     bool isShowAll;
     bool pieceCreated;
     List<int> randomBuffer = new List<int>();
@@ -93,8 +100,14 @@ public class PuzzleGame : Puzzle {
                 ClearPiece();
                 gameFinish = false;
             }
+
+            if (newIsRotate != isRotate)
+                ClearPiece();
+
+
             MakePuzzle();
             ShowAllOrNot(isShowAll);
+            RotatePiece();
 
             pieceCreated = true;
             Piece.theFirstRun = false;
@@ -192,6 +205,27 @@ public class PuzzleGame : Puzzle {
         if (pieceCreated) UpdatePieceMark();
     }
 
+
+    public void IsRotatePiece()
+    {
+        newIsRotate = UIToggle.current.value;
+        if (!pieceCreated)
+        {
+            isRotate = newIsRotate;
+            return;
+        }
+
+        if (newIsRotate != isRotate)
+        {
+            startButtonLabel.text = "开始";
+        }
+        else
+        {
+            startButtonLabel.text = "继续";
+        }
+
+    }
+
     #endregion
 
     #region function
@@ -276,6 +310,26 @@ public class PuzzleGame : Puzzle {
         }
     }
 
+    void RotatePiece()
+    {
+        if (isRotate != newIsRotate)
+            isRotate = newIsRotate;
+        if (!isRotate) return;
+
+        // 随机选择个数
+        int count = Random.Range(minCount,maxCount);
+        for(int i=0;i<count;i++)
+        {
+            // 随机角度
+            float angle = Random.Range(1, 4) * 90;
+            // 随机元素
+            int index = Random.Range(firstPieceIndex, transform.childCount);
+
+            GameObject child = transform.GetChild(index).gameObject;
+            child.transform.localEulerAngles = new Vector3(0, 0, angle);
+            print(child.GetComponent<Piece>() + " " + angle);
+        }
+    }
 
     #endregion
 }

@@ -21,16 +21,15 @@ public class Piece : MonoBehaviour,IPiece {
 
 
     public static int maxDepth = 0;
-    static GameObject topGameObject = null;
     public static bool theFirstRun = false;
     public static List<GameObject> pieceCache;
     
 
 
     public PieceID pid;
-    SpriteRenderer sprite;
 
-    public List<GameObject> connectedPieces ;
+    public List<GameObject> connectedPieces;
+
 
     public int order
     {
@@ -48,6 +47,10 @@ public class Piece : MonoBehaviour,IPiece {
         }
     }
 
+    static GameObject topGameObject = null;
+
+
+    SpriteRenderer sprite;
 
     #region unity callback
     
@@ -97,6 +100,12 @@ public class Piece : MonoBehaviour,IPiece {
             topGameObject = gameObject;
             order = ++maxDepth;
         }
+
+        // 是否旋转，是否按下按钮
+        if(PuzzleGame.isRotate && Input.GetButton("Fire2"))
+        {
+            transform.localEulerAngles -= new Vector3(0, 0, 90);
+        }
     }
 
     public void OnMove(Vector3 delta)
@@ -135,6 +144,10 @@ public class Piece : MonoBehaviour,IPiece {
 
     bool AddNeighbor(GameObject other)
     {
+        // 是否旋转角度为 0
+        if (System.Math.Abs(transform.localEulerAngles.z) > 1 ||
+            System.Math.Abs(other.transform.localEulerAngles.z) > 1) return false;
+
 
         // 是否是相临的两块
         NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);

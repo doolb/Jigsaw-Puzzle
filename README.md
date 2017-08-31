@@ -32,3 +32,4 @@
 ### 2017.8.31
 * change piece shape and cout in runtime
 * display information when game finish
+* can rotate piece

@@ -64,6 +64,7 @@ public class PuzzleGame : Puzzle {
         for (int i = firstPieceIndex; i < transform.childCount; i++)
         {
             GameObject child = transform.GetChild(randomBuffer[i - firstPieceIndex]).gameObject;
+            if (!child.active) continue;
             if (child.GetComponent<Piece>().connectedPieces.Count == 0)
             {
 
@@ -79,7 +80,6 @@ public class PuzzleGame : Puzzle {
         }
     }
 
-
     public void ShowControlPanel()
     {
         menuButtonPlayAnimation.enabled = false;
@@ -91,6 +91,18 @@ public class PuzzleGame : Puzzle {
         menuButtonPlayAnimation.enabled = true;
         Time.timeScale = 1f;
 
+    }
+
+    public void SetPieceCount()
+    {
+        print(UIPopupList.current.value);
+    }
+
+    public void SetPieceShape()
+    {
+        string markName = "Image/puzzle mark/" + GetShapeMarkFromName(UIPopupList.current.value);
+        markImage = Resources.Load<Texture>(markName);
+        if (pieceCreated) UpdatePieceMark();
     }
 
     #endregion
@@ -111,6 +123,28 @@ public class PuzzleGame : Puzzle {
             int temp = randomBuffer[i];
             randomBuffer[i] = randomBuffer[index];
             randomBuffer[index] = temp;
+        }
+    }
+
+    string GetShapeMarkFromName(string name)
+    {
+        // 标准 角型 弧型
+        switch(name.Trim())
+        {
+            case "标准": return "normal";
+            case "角型": return "angle";
+            case "弧型": return "arc";
+        }
+
+        return "normal";
+    }
+
+    void UpdatePieceMark()
+    {
+        for (int i = firstPieceIndex; i < transform.childCount; i++)
+        {
+            Renderer rend = transform.GetChild(i).gameObject.GetComponent<Renderer>();
+            rend.material.SetTexture("_MarkTex", markImage);
         }
     }
 

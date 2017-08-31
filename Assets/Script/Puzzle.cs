@@ -9,6 +9,7 @@ public class Puzzle : DragablePlane {
     public Vector2 pieceCount = new Vector2(6,4);
     public GameObject piecePrefab;
     public Texture image;
+    public Texture markImage;
 
     public float largestSize = 10.0f;
 
@@ -103,10 +104,15 @@ public class Puzzle : DragablePlane {
         float scaleY = 1 / pieceCount.y;
         float offsetX = scaleX / 2f;
         float offsetY = scaleY / 2f;
-        piece.GetComponent<Renderer>().material.mainTextureScale = 
+        Renderer rend = piece.GetComponent<Renderer>();
+        rend.material.mainTextureScale = 
             new Vector2(scaleX * 2, scaleY * 2);
-        piece.GetComponent<Renderer>().material.mainTextureOffset =
+        rend.material.mainTextureOffset =
             new Vector2(x * scaleX - offsetX, y * scaleY - offsetY);
+
+        rend.material.SetTexture("_MarkTex", markImage);
+
+
 
         piece.layer = childLayer;
         piece.GetComponent<Piece>().connectedPieces = new List<GameObject>(x * y);

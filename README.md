@@ -37,3 +37,4 @@
 
 ### 2017.9.1
 * can change piece style
+* add a changeable background

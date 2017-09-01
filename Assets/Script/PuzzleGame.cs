@@ -201,6 +201,10 @@ public class PuzzleGame : Puzzle {
     public void SetPieceShape()
     {
         string markName = "Image/puzzle mark/" + UIPopupList.current.value;
+        // 是否包含风格
+        if(markImage != null && markImage.name.IndexOf('-') != -1)
+            markName += "-" + markImage.name.Split('-')[1];
+
         markImage = Resources.Load<Texture>(markName);
         if (pieceCreated) UpdatePieceMark();
     }
@@ -233,6 +237,24 @@ public class PuzzleGame : Puzzle {
         transform.GetChild(0).gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", pieceImage.texture);
         if (pieceCreated) UpdatePieceImage();
 
+    }
+
+    public void SetPieceStyle()
+    {
+        string name = UIPopupList.current.value;
+
+        // 禁用风格
+        if (name == "none")
+            name = markImage.name.Split('-')[0];
+        else
+            name = markImage.name.Split('-')[0] + "-" + name;
+
+        if (name != markImage.name)
+        {
+            markImage = Resources.Load<Texture>("Image/puzzle mark/" + name);
+
+            if (pieceCreated) UpdatePieceMark();
+        }
     }
 
     #endregion

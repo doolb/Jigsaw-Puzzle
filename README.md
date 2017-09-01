@@ -34,3 +34,6 @@
 * display information when game finish
 * can rotate piece
 * can piece image
+
+### 2017.9.1
+* can change piece style

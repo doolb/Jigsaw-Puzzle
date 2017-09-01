@@ -67,7 +67,9 @@
 			
 			col.rgb -= mark.b * _Shadow;
 			col.rgb += mark.g * _HighLight;
-			col.rgb += mark.r * _Special;
+			
+			if(mark.r > 0.2)
+				col.rgb = mark.r * _Special;
 
 			
 			

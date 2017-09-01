@@ -7,3 +7,6 @@ angle,	角型
 img, 果桨
 img1,小猫和鲜花
 img2,水果和蔬菜
+
+none,	普通
+a,		特效1

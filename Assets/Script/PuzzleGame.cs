@@ -22,7 +22,7 @@ public class PuzzleGame : Puzzle {
     public GameObject   controlPanel;
     public string       controlPanelAnimName;
 
-    Vector3 tileBottomOrigin, tileTopOrigin;
+    Vector3 tileOrigin, tileTopOrigin;
 
     // 设置
     bool newIsRotate;
@@ -48,8 +48,7 @@ public class PuzzleGame : Puzzle {
     {
         base.Start();
         Time.timeScale = 0f;
-        tileBottomOrigin = transform.GetChild(1).localPosition;
-        tileTopOrigin = transform.GetChild(2).localPosition;
+        tileOrigin = transform.GetChild(1).localPosition;
     }
 
     protected override void ActiveObject(GameObject go)
@@ -135,8 +134,8 @@ public class PuzzleGame : Puzzle {
 
         BuildRandomBuffer(firstPieceIndex, transform.childCount);
 
-        int maxVCount = (int)((tileTopOrigin.y - tileBottomOrigin.y) /
-                             ( displaySize.y * .9f));
+        int maxVCount = (int)(pieceCount.y * 1.2f);
+
         int count = 0;
         for (int i = firstPieceIndex; i < transform.childCount; i++)
         {
@@ -149,7 +148,7 @@ public class PuzzleGame : Puzzle {
                 int x = count / maxVCount;
                 int y = count % maxVCount;
 
-                child.transform.position = tileBottomOrigin +
+                child.transform.position = tileOrigin +
                     new Vector3(x * displaySize.x * 1.2f ,
                                 y * displaySize.y * 1.2f , 0);
 

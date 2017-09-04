@@ -15,6 +15,7 @@ public class PuzzleGame : Puzzle {
     public static bool isRotate;
 
     
+    [Header("Unity object")]
     public UIPlayAnimation menuButtonPlayAnimation;
     public UILabel startButtonLabel;
     public GameObject finishGamePanel;
@@ -22,7 +23,9 @@ public class PuzzleGame : Puzzle {
     public GameObject   controlPanel;
     public string       controlPanelAnimName;
 
-    Vector3 tileOrigin, tileTopOrigin;
+    public UILabel timerLabel;
+
+    Vector3 tileOrigin;
 
     // 设置
     bool newIsRotate;
@@ -48,12 +51,23 @@ public class PuzzleGame : Puzzle {
     {
         base.Start();
         Time.timeScale = 0f;
-        tileOrigin = transform.GetChild(1).localPosition;
+        tileOrigin = transform.GetChild(1).position;
+    }
+
+    protected override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        if (moveCount > 0 && !gameFinish)
+            timerLabel.text = (Time.fixedTime - startTime).ToString("F2");
     }
 
     protected override void ActiveObject(GameObject go)
     {
         base.ActiveObject(go);
+
+        if(moveCount == 0) 
+            startTime = Time.fixedTime;
 
         moveCount++;
     }
@@ -71,9 +85,10 @@ public class PuzzleGame : Puzzle {
             if (child != null)
             {
                 child.GetComponent<UILabel>().text = "移动次数 ： " + moveCount + 
-                                                        "\n使用时间 ： " + (Time.fixedTime - startTime);
+                                                     "\n使用时间 ： " + (Time.fixedTime - startTime).ToString("F2");
 
                 startButtonLabel.text = "开始";
+                timerLabel.text = "";
                 gameFinish = true;
             }
         }
@@ -106,8 +121,9 @@ public class PuzzleGame : Puzzle {
             pieceCreated = true;
             Piece.theFirstRun = false;
             startButtonLabel.text = "继续";
+            
             moveCount = 0;
-            startTime = Time.fixedTime;
+            gameFinish = false;
         }
 
     }

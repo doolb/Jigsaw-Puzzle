@@ -14,8 +14,17 @@ public class Puzzle : DragablePlane {
     public float largestSize = 10.0f;
 
 
+
+    // 显示信息
     [HideInInspector]
+    public float displayX = 640, displayY = 480;
+    public Vector2 displayRatio = new Vector2(1, 1);
     public Vector2 pieceSize;
+    public Vector2 displaySize;
+
+
+
+    [HideInInspector]
     public static Puzzle instance;
 
     protected override int raycastHitCacheSize
@@ -69,6 +78,7 @@ public class Puzzle : DragablePlane {
     #endregion
 
 
+    
 
 
     protected void MakePuzzle()
@@ -77,7 +87,7 @@ public class Puzzle : DragablePlane {
 
         int x = (int)pieceCount.x;
         int y = (int)pieceCount.y;
-        pieceSize = new Vector2(pieceImage.texture.width / x, pieceImage.texture.height / y);
+
 
         Piece.maxDepth = (int)pieceCount.x * (int)pieceCount.y + 1;
         Piece.pieceCache = new List<GameObject>(x * y);
@@ -92,13 +102,28 @@ public class Puzzle : DragablePlane {
 
     }
 
+    protected void ReSize()
+    {
+        if (pieceImage == null) return;
+
+        pieceSize = new Vector2(pieceImage.texture.width / pieceCount.x, pieceImage.texture.height / pieceCount.y);
+        
+        displayRatio.x = displayX / pieceImage.texture.width;
+        displayRatio.y = displayY / pieceImage.texture.height;
+
+        displaySize.x = displayRatio.x * pieceSize.x;
+        displaySize.y = displayRatio.y * pieceSize.y;
+    }
+    
     void CreatePiece(int x,int y)
     {
         GameObject piece = Instantiate(piecePrefab, gameObject.transform);
 
-        // 设置大小
-        piece.transform.localScale = new Vector3(100 / pieceCount.x * 2, 100 / pieceCount.y * 2, 1);
         
+        
+        
+
+
         // 设置材质
         float scaleX = 1 / pieceCount.x;
         float scaleY = 1 / pieceCount.y;
@@ -117,7 +142,6 @@ public class Puzzle : DragablePlane {
 
 
         piece.layer = childLayer;
-        piece.GetComponent<Piece>().connectedPieces = new List<GameObject>(x * y);
         piece.GetComponent<Piece>().Init(x,y);
         
         // 随机位置

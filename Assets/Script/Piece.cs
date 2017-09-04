@@ -7,6 +7,8 @@ public interface IPiece
 {
     void Init(int x, int y);
 
+    void ReSize();
+
     int order
     {
         get;
@@ -16,22 +18,29 @@ public interface IPiece
 
 }
 
+
+[RequireComponent(typeof(BoxCollider))]
+[RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(Rigidbody))]
 /// <summary>
 /// 这个用于拼图的每个块的具体逻辑
 /// </summary>
-public class Piece : MonoBehaviour,IPiece {
+public class Piece : MonoBehaviour,IPiece
+{
 
+    #region vary
 
+    // static 
     public static int maxDepth = 0;
     public static bool theFirstRun = false;
     public static List<GameObject> pieceCache;
+    static GameObject topGameObject = null;
     
 
-
+    // public
     public PieceID pid;
 
-    public List<GameObject> connectedPieces;
-
+    public List<GameObject> connectedPieces = new List<GameObject>();
 
     public int order
     {
@@ -49,18 +58,23 @@ public class Piece : MonoBehaviour,IPiece {
         }
     }
 
-    static GameObject topGameObject = null;
 
 
+    // unity object
+    new BoxCollider collider;
     SpriteRenderer sprite;
 
+    #endregion
+
     #region unity callback
-    
-    void Start()
+
+    void Awake()
     {
         sprite = GetComponent<SpriteRenderer>();
         sprite.sortingOrder = pid == null ? 0 : pid.order;
-        
+
+        collider = GetComponent<BoxCollider>();
+
     }
 
 
@@ -118,15 +132,28 @@ public class Piece : MonoBehaviour,IPiece {
 
     #endregion
 
-    #region public function
+    #region virtual function
     public void Init(int x, int y)
     {
         pid = new PieceID(x, y);
         gameObject.name = ToString();
 
         // 设置 拼图 mark 材质
-        Renderer rend = GetComponent<Renderer>();
-        rend.material.SetTextureOffset("_MarkTex", pid.markOffset);
+        sprite.material.SetTextureOffset("_MarkTex", pid.markOffset);
+        
+
+        ReSize();
+    }
+
+    public void ReSize()
+    {
+        // 设置显示
+        transform.localScale = new Vector3(200 / Puzzle.instance.pieceCount.x * Puzzle.instance.displayRatio.x,
+                                           200 / Puzzle.instance.pieceCount.y * Puzzle.instance.displayRatio.y, 1);
+
+        // 设置 collider 大小
+        collider.size  = new Vector3( Puzzle.instance.pieceImage.texture.width  / 200.0f,
+                                      Puzzle.instance.pieceImage.texture.height / 200.0f, 1);
     }
 
     public override string ToString()
@@ -177,8 +204,8 @@ public class Piece : MonoBehaviour,IPiece {
 
     Vector3 GetNeighborOffset(GameObject other, NeighborType type)
     {
-        Vector3 offsetY = new Vector3(0, Puzzle.instance.pieceSize.y, 0);
-        Vector3 offsetX = new Vector3(Puzzle.instance.pieceSize.x, 0, 0);
+        Vector3 offsetY = new Vector3(0, Puzzle.instance.displaySize.y, 0);
+        Vector3 offsetX = new Vector3(Puzzle.instance.displaySize.x, 0, 0);
         Vector3 pos = Vector3.zero;
         switch (type)
         {
@@ -206,8 +233,8 @@ public class Piece : MonoBehaviour,IPiece {
 
     bool IsClosed(GameObject other,NeighborType type)
     {
-        Vector3 offsetY = new Vector3(0, Puzzle.instance.pieceSize.y / 2 , 0);
-        Vector3 offsetX = new Vector3(Puzzle.instance.pieceSize.x / 2, 0, 0);
+        Vector3 offsetY = new Vector3(0, Puzzle.instance.displaySize.y / 2, 0);
+        Vector3 offsetX = new Vector3(Puzzle.instance.displaySize.x / 2, 0, 0);
         Vector3 a, b;
         switch (type)
         {

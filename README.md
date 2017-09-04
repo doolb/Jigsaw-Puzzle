@@ -38,3 +38,6 @@
 ### 2017.9.1
 * can change piece style
 * add a changeable background
+
+### 2017.9.4
+* can use different resolution image

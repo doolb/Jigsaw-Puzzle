@@ -26,3 +26,7 @@
 * alpha 通道：透明
 * green 通道：高光
 * blue  通道：阴影
+
+# piece object
+* collider =  图像大小 / 200
+* scale = 200 / 拼图个数 * （标准大小 / 图像大小）

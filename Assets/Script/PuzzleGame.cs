@@ -39,6 +39,7 @@ public class PuzzleGame : Puzzle {
     float startTime;
 
 
+
     #region virtual function
 
 
@@ -89,21 +90,15 @@ public class PuzzleGame : Puzzle {
             return;
         }
         else
-        {
-            if (isPieceCountChange)
+        { 
+            ClearPiece();
+
+
+            if(isPieceCountChange)
             {
                 pieceCount = newPieceCount;
-                ClearPiece();
+                ReSize();
             }
-            if(gameFinish)
-            {
-                ClearPiece();
-                gameFinish = false;
-            }
-
-            if (newIsRotate != isRotate)
-                ClearPiece();
-
 
             MakePuzzle();
             ShowAllOrNot(isShowAll);
@@ -141,12 +136,12 @@ public class PuzzleGame : Puzzle {
         BuildRandomBuffer(firstPieceIndex, transform.childCount);
 
         int maxVCount = (int)((tileTopOrigin.y - tileBottomOrigin.y) /
-                            (pieceSize.y * .8f));
+                             ( displaySize.y * .9f));
         int count = 0;
         for (int i = firstPieceIndex; i < transform.childCount; i++)
         {
             GameObject child = transform.GetChild(randomBuffer[i - firstPieceIndex]).gameObject;
-            if (!child.active) continue;
+            if (!child.activeSelf) continue;
             if (child.GetComponent<Piece>().connectedPieces.Count == 0)
             {
 
@@ -154,8 +149,9 @@ public class PuzzleGame : Puzzle {
                 int x = count / maxVCount;
                 int y = count % maxVCount;
 
-                child.transform.localPosition = tileBottomOrigin +
-                    new Vector3(x * pieceSize.x, y * pieceSize.y, 0);
+                child.transform.position = tileBottomOrigin +
+                    new Vector3(x * displaySize.x * 1.2f ,
+                                y * displaySize.y * 1.2f , 0);
 
                 count++;
             }
@@ -183,6 +179,7 @@ public class PuzzleGame : Puzzle {
         if(!pieceCreated)
         {
             pieceCount = newPieceCount;
+            ReSize();
             return;
         }
 
@@ -235,6 +232,9 @@ public class PuzzleGame : Puzzle {
         string name = "Image/" + UIPopupList.current.value;
         pieceImage = Resources.Load<Sprite>(name);
         transform.GetChild(0).gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", pieceImage.texture);
+
+        ReSize();
+
         if (pieceCreated) UpdatePieceImage();
 
     }
@@ -305,8 +305,10 @@ public class PuzzleGame : Puzzle {
     {
         for (int i = firstPieceIndex; i < transform.childCount; i++)
         {
-            SpriteRenderer rend = transform.GetChild(i).gameObject.GetComponent<SpriteRenderer>();
-            rend.sprite = pieceImage;
+            GameObject child = transform.GetChild(i).gameObject;
+            
+            child.GetComponent<SpriteRenderer>().sprite = pieceImage;
+            child.GetComponent<Piece>().ReSize();
         }
     }
 

@@ -79,7 +79,7 @@ public class DragablePlane : MonoBehaviour
                     Vector3 d = hit.point - activePoint;
                     activePoint = hit.point;
                     
-                    activeObject.transform.localPosition += d;
+                    activeObject.transform.position += d;
                     MoveObject(activeObject, d);
                 }
                 else

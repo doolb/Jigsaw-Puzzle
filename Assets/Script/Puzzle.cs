@@ -18,9 +18,9 @@ public class Puzzle : DragablePlane {
     // 显示信息
     [HideInInspector]
     public float displayX = 640, displayY = 480;
-    public Vector2 displayRatio = new Vector2(1, 1);
-    public Vector2 pieceSize;
-    public Vector2 displaySize;
+    public Vector2 displayRatio = new Vector2(1, 1); // 自缩放的比率
+    public Vector2 pieceSize;   // 原始的像素大小
+    public Vector2 displaySize; // 实际显示的大小
 
 
 
@@ -104,15 +104,24 @@ public class Puzzle : DragablePlane {
 
     protected void ReSize()
     {
+
+
         if (pieceImage == null) return;
+
+        transform.localScale = new Vector3(
+            pieceImage.texture.width / (pieceImage.texture.height / displayY) / displayX,
+            1, 1);
 
         pieceSize = new Vector2(pieceImage.texture.width / pieceCount.x, pieceImage.texture.height / pieceCount.y);
         
         displayRatio.x = displayX / pieceImage.texture.width;
         displayRatio.y = displayY / pieceImage.texture.height;
 
-        displaySize.x = displayRatio.x * pieceSize.x;
+        displaySize.x = displayRatio.x * pieceSize.x * transform.localScale.x;
         displaySize.y = displayRatio.y * pieceSize.y;
+
+
+        
     }
     
     void CreatePiece(int x,int y)
@@ -145,7 +154,7 @@ public class Puzzle : DragablePlane {
         piece.GetComponent<Piece>().Init(x,y);
         
         // 随机位置
-        piece.transform.localPosition = new Vector3(
+        piece.transform.position = new Vector3(
                                         Random.Range(-0.15f,0.15f) * collider.size.x ,
                                         Random.Range(-0.15f,0.15f) * collider.size.y ,
                                         0);

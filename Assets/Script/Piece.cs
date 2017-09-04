@@ -186,7 +186,7 @@ public class Piece : MonoBehaviour,IPiece
 
         // 计算要移动的偏移,移动所有相连的块
         Vector3 offset = GetNeighborOffset(other, type);
-        other.transform.localPosition += offset;
+        other.transform.position += offset;
         other.GetComponent<Piece>().MoveConnectedPiece(offset);
 
         print("Neighbor is at " + type + "\nmy :" + gameObject.GetComponent<Piece>() + " other :" + other.GetComponent<Piece>());
@@ -210,24 +210,23 @@ public class Piece : MonoBehaviour,IPiece
         switch (type)
         {
             case NeighborType.Top:
-                pos = gameObject.transform.localPosition + offsetY;
+                pos = gameObject.transform.position + offsetY;
                 break;
             case NeighborType.Bottom:
-                pos = gameObject.transform.localPosition - offsetY;
+                pos = gameObject.transform.position - offsetY;
                 break;
             case NeighborType.Left:
-                pos = gameObject.transform.localPosition - offsetX;
+                pos = gameObject.transform.position - offsetX;
                 break;
             case NeighborType.Right:
-                pos = gameObject.transform.localPosition + offsetX;
+                pos = gameObject.transform.position + offsetX;
                 break;
             default:
                 print("Neighbor type error: " + type);
                 break;
         }
-        Vector3 d = pos - other.gameObject.transform.localPosition ;
 
-        return d;
+        return pos - other.gameObject.transform.position;
    
     }
 
@@ -239,20 +238,20 @@ public class Piece : MonoBehaviour,IPiece
         switch (type)
         {
             case NeighborType.Top:
-                a = gameObject.transform.localPosition + offsetY;
-                b = other.transform.localPosition - offsetY;
+                a = gameObject.transform.position + offsetY;
+                b = other.transform.position - offsetY;
                 break;
             case NeighborType.Bottom:
-                a = gameObject.transform.localPosition - offsetY;
-                b = other.transform.localPosition + offsetY;
+                a = gameObject.transform.position - offsetY;
+                b = other.transform.position + offsetY;
                 break;
             case NeighborType.Left:
-                a = gameObject.transform.localPosition - offsetX;
-                b = other.transform.localPosition + offsetX;
+                a = gameObject.transform.position - offsetX;
+                b = other.transform.position + offsetX;
                 break;
             case NeighborType.Right:
-                a = gameObject.transform.localPosition + offsetX;
-                b = other.transform.localPosition - offsetX;
+                a = gameObject.transform.position + offsetX;
+                b = other.transform.position - offsetX;
                 break;
             default:
                 print("Neighbor type error: " + type);
@@ -266,7 +265,7 @@ public class Piece : MonoBehaviour,IPiece
     {
         foreach (GameObject piece in gameObject.GetComponent<Piece>().connectedPieces)
         {
-            piece.transform.localPosition += offset;
+            piece.transform.position += offset;
         }
     }
 

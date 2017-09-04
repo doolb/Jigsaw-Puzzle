@@ -41,3 +41,4 @@
 
 ### 2017.9.4
 * can use different resolution image
+* fix distorting of image

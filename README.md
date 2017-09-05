@@ -43,3 +43,4 @@
 * can use different resolution image
 * fix distorting of image
 * show score statistic when puzzle completed
+* fix piece shape when piece count is odd

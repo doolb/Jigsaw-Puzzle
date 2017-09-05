@@ -14,6 +14,7 @@
 		Tags { "RenderType"="Opaque" }
 		Blend SrcAlpha OneMinusSrcAlpha
 		LOD 200
+		Cull off
 		
 	PASS
 	{
@@ -68,7 +69,7 @@
 			col.rgb -= mark.b * _Shadow;
 			col.rgb += mark.g * _HighLight;
 			
-			if(mark.r > 0.5)
+			if(mark.r > 0.5)	
 				col.rgb = mark.r * _Special;
 
 			

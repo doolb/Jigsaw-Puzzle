@@ -19,9 +19,7 @@ public class PuzzleGame : Puzzle {
     public UIPlayAnimation menuButtonPlayAnimation;
     public UILabel startButtonLabel;
     public GameObject finishGamePanel;
-
-    public GameObject   controlPanel;
-    public string       controlPanelAnimName;
+    public GameObject statisPanel;
 
     public UILabel timerLabel;
 
@@ -40,6 +38,8 @@ public class PuzzleGame : Puzzle {
     bool gameFinish;
     int moveCount = 0;
     float startTime;
+
+    List<Score> scores = new List<Score>();
 
 
 
@@ -80,17 +80,7 @@ public class PuzzleGame : Puzzle {
         Piece piece = go.GetComponent<Piece>();
         if(piece.connectedPieces.Count == (int)(pieceCount.x * pieceCount.y) - 1)
         {
-            finishGamePanel.SetActive(true);
-            GameObject child = finishGamePanel.transform.Find("Label - Information").gameObject;
-            if (child != null)
-            {
-                child.GetComponent<UILabel>().text = "移动次数 ： " + moveCount + 
-                                                     "\n使用时间 ： " + (Time.fixedTime - startTime).ToString("F2");
-
-                startButtonLabel.text = "开始";
-                timerLabel.text = "";
-                gameFinish = true;
-            }
+            PuzzleCompleted();
         }
     }
 
@@ -128,13 +118,21 @@ public class PuzzleGame : Puzzle {
 
     }
 
-    public void DisplayControlPanel()
+    public void ShowControlPanel()
     {
-        finishGamePanel.SetActive(false);
-        Animation anim = controlPanel.GetComponent<Animation>();
-        ActiveAnimation.Play(anim, controlPanelAnimName, AnimationOrTween.Direction.Reverse);
+        menuButtonPlayAnimation.enabled = false;
+        Time.timeScale = 0f;
     }
 
+    public void HideControlPanel()
+    {
+        menuButtonPlayAnimation.enabled = true;
+        Time.timeScale = 1f;
+
+    }
+
+
+    #region piece 
     public void ShowAllPieceOrNot()
     {
         isShowAll = UIToggle.current.value;
@@ -173,18 +171,7 @@ public class PuzzleGame : Puzzle {
         }
     }
 
-    public void ShowControlPanel()
-    {
-        menuButtonPlayAnimation.enabled = false;
-        Time.timeScale = 0f;
-    }
 
-    public void HideControlPanel()
-    {
-        menuButtonPlayAnimation.enabled = true;
-        Time.timeScale = 1f;
-
-    }
 
     public void SetPieceCount()
     {
@@ -271,7 +258,104 @@ public class PuzzleGame : Puzzle {
             if (pieceCreated) UpdatePieceMark();
         }
     }
+    #endregion
 
+    #region game finish
+    public void PuzzleCompleted()
+    {
+        finishGamePanel.SetActive(true);
+        finishGamePanel.GetComponent<TweenAlpha>().ResetToBeginning();
+        finishGamePanel.GetComponent<TweenAlpha>().PlayForward();
+        GameObject child = finishGamePanel.transform.Find("Label - Information").gameObject;
+        if (child != null)
+        {
+            Score score = new Score{step = moveCount, time = Time.fixedTime - startTime};
+            scores.Add(score);
+
+            child.GetComponent<UILabel>().text = "移动次数 ： " + score.step +
+                                                 "\n使用时间 ： " + score.time.ToString("F2");
+
+            startButtonLabel.text = "开始";
+            timerLabel.text = "";
+            gameFinish = true;
+
+            Time.timeScale = 1;
+            
+        }
+    }
+
+    public void ShowStatis()
+    {
+        StartCoroutine(doShowStatis());
+    }
+
+    IEnumerator doShowStatis()
+    {
+        finishGamePanel.SetActive(false);
+
+        statisPanel.SetActive(true);
+        
+
+        // 显示当前的分数
+        Score current = scores[scores.Count - 1];
+        GameObject currentScoreLabel = statisPanel.transform.Find("Label - Score").gameObject;
+        
+        currentScoreLabel.GetComponent<UILabel>().text = current.ToString();
+        currentScoreLabel.GetComponent<TweenAlpha>().ResetToBeginning();
+        currentScoreLabel.GetComponent<TweenAlpha>().PlayForward();
+
+        GameObject topScore = statisPanel.transform.FindChild("Label - Top Score").gameObject;
+        topScore.SetActive(false);
+
+
+        // 对分数进行排序
+        scores.Sort((x, y) =>
+        {
+            if (x.step.CompareTo(y.step) != 0)
+                return x.step.CompareTo(y.step);
+            else
+                return x.time.CompareTo(y.time);
+        }
+            );
+
+        // 显示前 5 个分数
+        Transform scoreContainers = statisPanel.transform.FindChild("Container - Scores");
+        for (int i = 0; i < 5 && i < scores.Count; i++)
+        {
+            Transform container = scoreContainers.FindChild("Score Container " + (i + 1));
+
+            container.GetComponent<TweenScale>().ResetToBeginning();
+            container.GetComponent<TweenScale>().PlayForward();
+
+            container.FindChild("Label - Score").gameObject.
+                GetComponent<UILabel>().text = scores[i].ToString();
+
+            yield return new WaitForSeconds(.3f);
+        }
+
+
+        // 是否是新纪录
+        if (scores[0] == current)
+        {
+            yield return new WaitForSeconds(2);
+
+            currentScoreLabel.GetComponent<TweenAlpha>().ResetToBeginning();
+            currentScoreLabel.GetComponent<TweenAlpha>().PlayReverse();
+
+            // 显示新纪录
+            topScore.SetActive(true);
+            topScore.GetComponent<TweenPosition>().ResetToBeginning();
+            topScore.GetComponent<TweenPosition>().PlayForward();
+        }
+
+        yield return null;
+    }
+
+    public void CloseStatis()
+    {
+        statisPanel.SetActive(false);
+    }
+    #endregion
     #endregion
 
     #region function
@@ -377,4 +461,15 @@ public class PuzzleGame : Puzzle {
     }
 
     #endregion
+}
+
+class Score
+{
+    public int      step;
+    public float    time;
+
+    public override string ToString()
+    {
+        return "移动次数 ： " + step + " 使用时间 ： " + time.ToString("F2");
+    }
 }

@@ -8,6 +8,11 @@ using UnityEngine;
 public class Puzzle : DragablePlane
 {
 
+    /// <summary>
+    /// 第一块 拼图 的索引
+    /// </summary>
+    public int firstPieceIndex = 2;
+
     [Header("Piece")]
 
     /// <summary>
@@ -248,14 +253,15 @@ public class Puzzle : DragablePlane
             print("fix puzzle at top edge.");
 
             // 左上角
-            Transform leftTop = transform.FindChild("Piece 0:" + ((int)pieceCount.y - 1));
+            int leftTopIndex = firstPieceIndex + ((int)pieceCount.y - 1);
+            Transform leftTop = transform.GetChild(leftTopIndex);
             leftTop.localScale = new Vector3(leftTop.localScale.x, -leftTop.localScale.y, 1);
             leftTop.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0));
 
             // 其它的
             for (int i = 1; i < pieceCount.x - 1; i++)
             {
-                Transform piece = transform.FindChild("Piece " + i + ":" + ((int)pieceCount.y - 1));
+                Transform piece = transform.GetChild(leftTopIndex + i * (int)pieceCount.y);
                 piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0.5f, i % 2 == 1 ? 0.5f : 0.75f));
             }
         }

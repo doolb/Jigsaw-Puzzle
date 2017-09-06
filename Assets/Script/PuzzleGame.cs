@@ -8,10 +8,6 @@ using UnityEngine;
 public class PuzzleGame : Puzzle
 {
 
-    /// <summary>
-    /// 第一块 拼图 的索引
-    /// </summary>
-    public int firstPieceIndex = 2;
 
     [Header("旋转")]
 
@@ -145,7 +141,7 @@ public class PuzzleGame : Puzzle
 
             records.Add(new Record((int)(pieceCount.x * pieceCount.y), moveCount, gameTime, isRotate));
 
-            for (int i = 0; i < onGameEnd.Count;i++ )
+            for (int i = 0; i < onGameEnd.Count; i++)
                 onGameEnd[i].Execute();
         }
     }
@@ -182,6 +178,8 @@ public class PuzzleGame : Puzzle
         gameFinish = false;
 
         Time.timeScale = 1f;
+
+        needRestart = false;
     }
 
     public void Pause()

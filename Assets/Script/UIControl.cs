@@ -11,14 +11,10 @@ public class UIControl : MonoBehaviour
 
     UILabel time;
 
-    StatisticControl statistic;
-
 
     // Use this for initialization
     void Awake()
     {
-        statistic = transform.Find("Panel - Statistic").gameObject.AddComponent<StatisticControl>();
-        
 
 
         finish = transform.Find("Finish").gameObject;

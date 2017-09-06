@@ -3,29 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public interface IPiece
-{
-    void Init(int x, int y);
-
-    void ReSize();
-
-    int order
-    {
-        get;
-        set;
-    }
-
-
-}
-
-
 [RequireComponent(typeof(BoxCollider))]
 [RequireComponent(typeof(SpriteRenderer))]
 [RequireComponent(typeof(Rigidbody))]
 /// <summary>
 /// 这个用于拼图的每个块的具体逻辑
 /// </summary>
-public class Piece : MonoBehaviour,IPiece
+public class Piece : MonoBehaviour
 {
 
     #region vary
@@ -33,9 +17,9 @@ public class Piece : MonoBehaviour,IPiece
     // static 
     public static int maxDepth = 0;
     public static bool theFirstRun = false;
-    public static List<GameObject> pieceCache;
+    public static List<GameObject> pieceCache = new List<GameObject>();
     static GameObject topGameObject = null;
-    
+
 
     // public
     public PieceID pid;
@@ -44,14 +28,14 @@ public class Piece : MonoBehaviour,IPiece
 
     public int order
     {
-        get 
+        get
         {
             if (sprite != null) return sprite.sortingOrder;
             else return -1;
         }
 
-        set 
-        { 
+        set
+        {
             if (sprite != null) sprite.sortingOrder = value;
             foreach (GameObject go in connectedPieces)
                 go.GetComponent<SpriteRenderer>().sortingOrder = value;
@@ -118,7 +102,7 @@ public class Piece : MonoBehaviour,IPiece
         }
 
         // 是否旋转，是否按下按钮
-        if(PuzzleGame.isRotate && Input.GetButton("Fire2"))
+        if (PuzzleGame.isRotate && Input.GetButton("Fire2"))
         {
             transform.localEulerAngles -= new Vector3(0, 0, 90);
         }
@@ -140,7 +124,7 @@ public class Piece : MonoBehaviour,IPiece
 
         // 设置 拼图 mark 材质
         sprite.material.SetTextureOffset("_MarkTex", pid.markOffset);
-        
+
 
         ReSize();
     }
@@ -152,7 +136,7 @@ public class Piece : MonoBehaviour,IPiece
                                            200 / Puzzle.instance.pieceCount.y * Puzzle.instance.displayRatio.y, 1);
 
         // 设置 collider 大小
-        collider.size  = new Vector3( Puzzle.instance.pieceImage.texture.width  / 200.0f,
+        collider.size = new Vector3(Puzzle.instance.pieceImage.texture.width / 200.0f,
                                       Puzzle.instance.pieceImage.texture.height / 200.0f, 1);
     }
 
@@ -227,10 +211,10 @@ public class Piece : MonoBehaviour,IPiece
         }
 
         return pos - other.gameObject.transform.position;
-   
+
     }
 
-    bool IsClosed(GameObject other,NeighborType type)
+    bool IsClosed(GameObject other, NeighborType type)
     {
         Vector3 offsetY = new Vector3(0, Puzzle.instance.displaySize.y / 2, 0);
         Vector3 offsetX = new Vector3(Puzzle.instance.displaySize.x / 2, 0, 0);
@@ -269,7 +253,7 @@ public class Piece : MonoBehaviour,IPiece
         }
     }
 
-    
+
     /// <summary>
     /// 把所有可以连接的对象添加到缓存中
     /// </summary>
@@ -293,7 +277,7 @@ public class Piece : MonoBehaviour,IPiece
     void ConnectPiece()
     {
 
-        foreach(GameObject a in pieceCache)
+        foreach (GameObject a in pieceCache)
         {
             foreach (GameObject b in pieceCache)
             {
@@ -306,10 +290,10 @@ public class Piece : MonoBehaviour,IPiece
                 p.connectedPieces.Add(b);
 
             }
-            
+
         }
 
-        
+
     }
 
     /// <summary>
@@ -322,7 +306,7 @@ public class Piece : MonoBehaviour,IPiece
             order = this.order;
 
         other.GetComponent<Piece>().order = order;
-        
+
 
     }
 
@@ -370,21 +354,21 @@ public class PieceID
         return x + ":" + y;
     }
 
-    
+
 
     public NeighborType IsNeighbor(PieceID other)
     {
         NeighborType type = NeighborType.None;
         if (other == null) return NeighborType.None;
         // 同一列
-        if(x == other.x)
+        if (x == other.x)
         {
             if (y + 1 == other.y) type = NeighborType.Top;
             if (y - 1 == other.y) type = NeighborType.Bottom;
-            
+
         }
         // 同一行
-        else if(y == other.y)
+        else if (y == other.y)
         {
             if (x + 1 == other.x) type = NeighborType.Right;
             if (x - 1 == other.x) type = NeighborType.Left;
@@ -400,20 +384,20 @@ public class PieceID
         int countX = (int)Puzzle.instance.pieceCount.x;
         int countY = (int)Puzzle.instance.pieceCount.y;
 
-        float offsetX= 0,offsetY = 0;
+        float offsetX = 0, offsetY = 0;
         // 左边界
-        if(x==0)
+        if (x == 0)
         {
             // 左下角
             if (y == 0) goto _end_;
             // 左上角
-            if (y == countY -1 ) { offsetY = 0.25f; goto _end_; };
+            if (y == countY - 1) { offsetY = 0.25f; goto _end_; };
 
             offsetX = 0.25f;
             offsetY = y % 2 == 1 ? 0.25f : 0.0f;
         }
         // 右边界
-        else if(x== countX -1 )
+        else if (x == countX - 1)
         {
 
             // 右下角
@@ -426,19 +410,19 @@ public class PieceID
         }
         // 不用判断角落了
         // 下边界
-        else if(y==0)
+        else if (y == 0)
         {
             offsetX = 0.5f;
             offsetY = x % 2 == 1 ? 0.25f : 0f;
         }
         // 上边界
-        else if(y== countY -1)
+        else if (y == countY - 1)
         {
             offsetX = 0.5f;
             offsetY = x % 2 == 1 ? 0.75f : 0.5f;
         }
         // 其它地方
-        else 
+        else
         {
             offsetX = 0.75f;
             offsetY = x % 2 == 1 ? 0.25f : 0f;
@@ -449,7 +433,7 @@ public class PieceID
 
 
 
-        _end_:
-            markOffset = new Vector2(offsetX,offsetY);
+    _end_:
+        markOffset = new Vector2(offsetX, offsetY);
     }
 }

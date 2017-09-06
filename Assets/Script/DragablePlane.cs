@@ -9,11 +9,6 @@ using UnityEngine;
 public class DragablePlane : MonoBehaviour
 {
     /// <summary>
-    /// 可拖拽子对象的 层 掩码
-    /// </summary>
-    public LayerMask childLayerMask;
-
-    /// <summary>
     /// 表示拖拽是否结束
     /// </summary>
     public bool dragEnd;
@@ -28,17 +23,17 @@ public class DragablePlane : MonoBehaviour
     /// <summary>
     /// 激活的对象
     /// </summary>
-    protected GameObject    activeObject;
+    protected GameObject activeObject;
 
     /// <summary>
     /// 保存上次拖拽的位置
     /// </summary>
-    protected Vector3       activePoint;
+    protected Vector3 activePoint;
 
     /// <summary>
     /// 可拖拽子对象的 层
     /// </summary>
-    protected int childLayer;
+    protected int childLayer = 31;
 
     /// <summary>
     /// 碰撞的缓存
@@ -48,9 +43,9 @@ public class DragablePlane : MonoBehaviour
     /// <summary>
     /// 碰撞的缓存的大小
     /// </summary>
-    protected virtual int raycastHitCacheSize 
+    protected virtual int raycastHitCacheSize
     {
-        get {return 100;}
+        get { return 100; }
     }
 
 
@@ -67,9 +62,6 @@ public class DragablePlane : MonoBehaviour
         // 获取 collider 对象
         collider = GetComponent<BoxCollider>();
 
-        // 计算 层
-        childLayer = childLayerMask.MaskToLayer();
-
         // 初始化缓存
         raycastHitCache = new RaycastHit[raycastHitCacheSize];
     }
@@ -84,12 +76,12 @@ public class DragablePlane : MonoBehaviour
         Vector3 pos = Input.mousePosition;
 
         // 碰撞尝试的最大距离
-        float maxDis =Vector3.Distance (
-            Camera.main.transform.position ,
+        float maxDis = Vector3.Distance(
+            Camera.main.transform.position,
             transform.position) * 2;
 
         // 是否按下按钮
-        if(Input.GetButton("Fire1"))
+        if (Input.GetButton("Fire1"))
         {
             // 拖拽开始
             dragEnd = false;
@@ -102,7 +94,7 @@ public class DragablePlane : MonoBehaviour
             {
                 // 寻找一个最近的
                 RaycastHit hit;
-                if(FindAClosetChild(out hit,ray,maxDis))
+                if (FindClosetChild(out hit, ray, maxDis))
                 {
                     // 选中当前的对象
                     activeObject = hit.transform.gameObject;
@@ -123,7 +115,7 @@ public class DragablePlane : MonoBehaviour
                     // 和上次保存的点对比，得到偏移
                     Vector3 d = hit.point - activePoint;
                     activePoint = hit.point;
-                    
+
                     // 移动当前激活的对象
                     activeObject.transform.position += d;
 
@@ -181,7 +173,7 @@ public class DragablePlane : MonoBehaviour
     /// </summary>
     /// <param name="go">被移动的对象</param>
     /// <param name="delta">移动的偏移</param>
-    protected virtual void MoveObject(GameObject go,Vector3 delta)
+    protected virtual void MoveObject(GameObject go, Vector3 delta)
     {
 
     }
@@ -207,11 +199,11 @@ public class DragablePlane : MonoBehaviour
     /// <param name="ray">需要测试的光线</param>
     /// <param name="maxDistance">测试的最大距离</param>
     /// <returns>是否找到对象</returns>
-    bool FindAClosetChild(out RaycastHit hit,Ray ray,float maxDistance)
+    bool FindClosetChild(out RaycastHit hit, Ray ray, float maxDistance)
     {
         // 设置默认值
         hit = default(RaycastHit);
-        
+
         // 测试所有处于相应层中的对象
         int n = Physics.RaycastNonAlloc(ray, raycastHitCache, maxDistance, 1 << childLayer);
 
@@ -222,11 +214,11 @@ public class DragablePlane : MonoBehaviour
         int max = 0, maxOrder = 0;
 
         // 循环遍历所有的结果
-        for(int i=0;i<n;i++)
+        for (int i = 0; i < n; i++)
         {
             // 获取当前对象的顺先值
             int newOrder = RaycastHitOrder(raycastHitCache[i].transform.gameObject);
-            
+
             // 是否是最大的
             if (newOrder > maxOrder)
             {

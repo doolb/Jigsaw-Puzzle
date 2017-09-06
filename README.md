@@ -44,3 +44,6 @@
 * fix distorting of image
 * show score statistic when puzzle completed
 * fix piece shape when piece count is odd
+
+### 2017.9.6
+* rewrite code for dynamic load

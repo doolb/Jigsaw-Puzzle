@@ -3,71 +3,129 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 这个用于和UI元素交互
+/// 这个脚本用于和UI元素交互
 /// </summary>
-public class PuzzleGame : Puzzle {
+public class PuzzleGame : Puzzle
+{
 
-    public int firstPieceIndex = 3;
+    /// <summary>
+    /// 第一块 拼图 的索引
+    /// </summary>
+    public int firstPieceIndex = 2;
 
-    [Header("旋转个数")]
+    [Header("旋转")]
+
+    /// <summary>
+    /// 拼图最少的旋转个数
+    /// </summary>
     public int minCount = 1;
+
+    /// <summary>
+    /// 拼图最少的旋转个数
+    /// </summary>
     public int maxCount = 5;
+
+    /// <summary>
+    /// 是否旋转
+    /// </summary>
     public static bool isRotate;
 
-    
-    [Header("Unity object")]
-    public UIPlayAnimation menuButtonPlayAnimation;
-    public UILabel startButtonLabel;
-    public GameObject finishGamePanel;
-    public GameObject statisPanel;
 
-    public UILabel timerLabel;
+    /// <summary>
+    /// 用户新的 “是否旋转” 选择
+    /// </summary>
+    bool newIsRotate;
 
+    /// <summary>
+    /// 平铺拼图的 起始 位置
+    /// </summary>
     Vector3 tileOrigin;
 
-    // 设置
-    bool newIsRotate;
+
+    /// <summary>
+    /// 是否显示所有拼图
+    /// </summary>
     bool isShowAll;
-    bool pieceCreated;
+
+    /// <summary>
+    /// 拼图是否已经创建
+    /// </summary>
+    public bool pieceCreated;
+
+    /// <summary>
+    /// 保存随机数的缓存
+    /// </summary>
     List<int> randomBuffer = new List<int>();
-    bool isPieceCountChange;
+
+    /// <summary>
+    /// 新的拼图块数
+    /// </summary>
     Vector2 newPieceCount;
 
 
-    // 统计信息
+    /// <summary>
+    /// 游戏是否结束
+    /// </summary>
     bool gameFinish;
-    int moveCount = 0;
-    float startTime;
 
-    List<Score> scores = new List<Score>();
+    /// <summary>
+    /// 移动的次数
+    /// </summary>
+    public int moveCount = 0;
 
+    /// <summary>
+    /// 记录开始的时间
+    /// </summary>
+    public float gameTime = 0;
+
+    /// <summary>
+    /// 分数列表
+    /// </summary>
+    public List<Record> records = new List<Record>();
+
+
+    GameObject originImage;
+
+    public bool needRestart = false;
+
+    public List<EventDelegate> onGameEnd = new List<EventDelegate>();
 
 
     #region virtual function
 
 
-    // Use this for initialization
+    /// <summary>
+    /// 初始化
+    /// </summary>
     protected override void Start()
     {
         base.Start();
+
+        // 停止 时间更新
         Time.timeScale = 0f;
+
+        originImage = transform.GetChild(0).gameObject;
+
+        //获取平铺的起始位置
         tileOrigin = transform.GetChild(1).position;
+
     }
 
+    /// <summary>
+    /// 固定时间间隔执行
+    /// </summary>
     protected override void FixedUpdate()
     {
         base.FixedUpdate();
 
+        // 如果 已经开始移动，并且游戏没有结束，就更新并显示时间
         if (moveCount > 0 && !gameFinish)
-            timerLabel.text = (Time.fixedTime - startTime).ToString("F2");
+            gameTime += Time.fixedDeltaTime;
     }
 
     protected override void ActiveObject(GameObject go)
     {
         base.ActiveObject(go);
-
-        if(moveCount == 0) 
-            startTime = Time.fixedTime;
 
         moveCount++;
     }
@@ -78,73 +136,70 @@ public class PuzzleGame : Puzzle {
 
         // 是否和所有块相连
         Piece piece = go.GetComponent<Piece>();
-        if(piece.connectedPieces.Count == (int)(pieceCount.x * pieceCount.y) - 1)
+        if (piece.connectedPieces.Count == (int)(pieceCount.x * pieceCount.y) - 1)
         {
-            PuzzleCompleted();
+            Time.timeScale = 0;
+            gameTime = 0;
+
+            needRestart = true;
+
+            records.Add(new Record((int)(pieceCount.x * pieceCount.y), moveCount, gameTime, isRotate));
+
+            for (int i = 0; i < onGameEnd.Count;i++ )
+                onGameEnd[i].Execute();
         }
     }
 
     #endregion
 
     #region public function
+
+    #region game
     public void StartGame()
     {
-        if (startButtonLabel.text == "继续")
+        if (!needRestart && pieceCreated)
         {
+            Continue();
             return;
         }
-        else
-        { 
-            ClearPiece();
 
+        ClearPiece();
 
-            if(isPieceCountChange)
-            {
-                pieceCount = newPieceCount;
-                ReSize();
-            }
-
-            MakePuzzle();
-            ShowAllOrNot(isShowAll);
-            RotatePiece();
-
-            pieceCreated = true;
-            Piece.theFirstRun = false;
-            startButtonLabel.text = "继续";
-            
-            moveCount = 0;
-            gameFinish = false;
+        if (pieceCount != newPieceCount)
+        {
+            pieceCount = newPieceCount;
+            ReSize();
         }
 
+        MakePuzzle();
+        ShowAllOrNot(isShowAll);
+        RotatePiece();
+
+        pieceCreated = true;
+        Piece.theFirstRun = false;
+
+        moveCount = 0;
+        gameFinish = false;
+
+        Time.timeScale = 1f;
     }
 
-    public void ShowControlPanel()
+    public void Pause()
     {
-        menuButtonPlayAnimation.enabled = false;
         Time.timeScale = 0f;
     }
 
-    public void HideControlPanel()
+    public void Continue()
     {
-        menuButtonPlayAnimation.enabled = true;
         Time.timeScale = 1f;
-
     }
+    #endregion
 
-
-    #region piece 
-    public void ShowAllPieceOrNot()
-    {
-        isShowAll = UIToggle.current.value;
-
-
-        if (!pieceCreated) return;
-        ShowAllOrNot(isShowAll);
-    }
+    #region piece
 
     public void TilePiece()
     {
-        if(!pieceCreated) return;
+        if (!pieceCreated) return;
 
         BuildRandomBuffer(firstPieceIndex, transform.childCount);
 
@@ -163,8 +218,8 @@ public class PuzzleGame : Puzzle {
                 int y = count % maxVCount;
 
                 child.transform.position = tileOrigin +
-                    new Vector3(x * displaySize.x * 1.2f ,
-                                y * displaySize.y * 1.2f , 0);
+                    new Vector3(x * displaySize.x * 1.2f,
+                                y * displaySize.y * 1.2f, 0);
 
                 count++;
             }
@@ -173,35 +228,26 @@ public class PuzzleGame : Puzzle {
 
 
 
-    public void SetPieceCount()
+    public void SetPieceCount(Vector2 count)
     {
-        newPieceCount = GetPieceCount( int.Parse(UIPopupList.current.value.Trim()));
+        newPieceCount = count;
 
         // 游戏是否未开始
-        if(!pieceCreated)
+        if (!pieceCreated)
         {
             pieceCount = newPieceCount;
             ReSize();
             return;
         }
 
-        isPieceCountChange = newPieceCount != pieceCount;
-
-        if (isPieceCountChange)
-        {
-            startButtonLabel.text = "开始";
-        }
-        else
-        {
-            startButtonLabel.text = "继续";
-        }
+        needRestart = newPieceCount != pieceCount;
     }
 
-    public void SetPieceShape()
+    public void SetPieceShape(string name)
     {
-        string markName = "Image/puzzle mark/" + UIPopupList.current.value;
+        string markName = "Image/puzzle mark/" + name;
         // 是否包含风格
-        if(markImage != null && markImage.name.IndexOf('-') != -1)
+        if (markImage != null && markImage.name.IndexOf('-') != -1)
             markName += "-" + markImage.name.Split('-')[1];
 
         markImage = Resources.Load<Texture>(markName);
@@ -209,30 +255,22 @@ public class PuzzleGame : Puzzle {
     }
 
 
-    public void IsRotatePiece()
+    public void ToggleRotate(bool rotate)
     {
-        newIsRotate = UIToggle.current.value;
+        newIsRotate = rotate;
         if (!pieceCreated)
         {
             isRotate = newIsRotate;
             return;
         }
 
-        if (newIsRotate != isRotate)
-        {
-            startButtonLabel.text = "开始";
-        }
-        else
-        {
-            startButtonLabel.text = "继续";
-        }
+        needRestart = newIsRotate != isRotate;
 
     }
 
-    public void SetPieceImage()
+    public void SetPieceImage(string name)
     {
-        string name = "Image/" + UIPopupList.current.value;
-        pieceImage = Resources.Load<Sprite>(name);
+        pieceImage = Resources.Load<Sprite>("Image/" + name);
         transform.GetChild(0).gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", pieceImage.texture);
 
         ReSize();
@@ -241,9 +279,9 @@ public class PuzzleGame : Puzzle {
 
     }
 
-    public void SetPieceStyle()
+    public void SetPieceStyle(string name)
     {
-        string name = UIPopupList.current.value;
+        if (markImage == null) return;
 
         // 禁用风格
         if (name == "none")
@@ -260,108 +298,10 @@ public class PuzzleGame : Puzzle {
     }
     #endregion
 
-    #region game finish
-    public void PuzzleCompleted()
+    public void ShowAllOrNot(bool show)
     {
-        finishGamePanel.SetActive(true);
-        finishGamePanel.GetComponent<TweenAlpha>().ResetToBeginning();
-        finishGamePanel.GetComponent<TweenAlpha>().PlayForward();
-        GameObject child = finishGamePanel.transform.Find("Label - Information").gameObject;
-        if (child != null)
-        {
-            Score score = new Score{step = moveCount, time = Time.fixedTime - startTime};
-            scores.Add(score);
+        isShowAll = show;
 
-            child.GetComponent<UILabel>().text = "移动次数 ： " + score.step +
-                                                 "\n使用时间 ： " + score.time.ToString("F2");
-
-            startButtonLabel.text = "开始";
-            timerLabel.text = "";
-            gameFinish = true;
-
-            Time.timeScale = 1;
-            
-        }
-    }
-
-    public void ShowStatis()
-    {
-        StartCoroutine(doShowStatis());
-    }
-
-    IEnumerator doShowStatis()
-    {
-        finishGamePanel.SetActive(false);
-
-        statisPanel.SetActive(true);
-        
-
-        // 显示当前的分数
-        Score current = scores[scores.Count - 1];
-        GameObject currentScoreLabel = statisPanel.transform.Find("Label - Score").gameObject;
-        
-        currentScoreLabel.GetComponent<UILabel>().text = current.ToString();
-        currentScoreLabel.GetComponent<TweenAlpha>().ResetToBeginning();
-        currentScoreLabel.GetComponent<TweenAlpha>().PlayForward();
-
-        GameObject topScore = statisPanel.transform.FindChild("Label - Top Score").gameObject;
-        topScore.SetActive(false);
-
-
-        // 对分数进行排序
-        scores.Sort((x, y) =>
-        {
-            if (x.step.CompareTo(y.step) != 0)
-                return x.step.CompareTo(y.step);
-            else
-                return x.time.CompareTo(y.time);
-        }
-            );
-
-        // 显示前 5 个分数
-        Transform scoreContainers = statisPanel.transform.FindChild("Container - Scores");
-        for (int i = 0; i < 5 && i < scores.Count; i++)
-        {
-            Transform container = scoreContainers.FindChild("Score Container " + (i + 1));
-
-            container.GetComponent<TweenScale>().ResetToBeginning();
-            container.GetComponent<TweenScale>().PlayForward();
-
-            container.FindChild("Label - Score").gameObject.
-                GetComponent<UILabel>().text = scores[i].ToString();
-
-            yield return new WaitForSeconds(.3f);
-        }
-
-
-        // 是否是新纪录
-        if (scores[0] == current)
-        {
-            yield return new WaitForSeconds(2);
-
-            currentScoreLabel.GetComponent<TweenAlpha>().ResetToBeginning();
-            currentScoreLabel.GetComponent<TweenAlpha>().PlayReverse();
-
-            // 显示新纪录
-            topScore.SetActive(true);
-            topScore.GetComponent<TweenPosition>().ResetToBeginning();
-            topScore.GetComponent<TweenPosition>().PlayForward();
-        }
-
-        yield return null;
-    }
-
-    public void CloseStatis()
-    {
-        statisPanel.SetActive(false);
-    }
-    #endregion
-    #endregion
-
-    #region function
-
-    void ShowAllOrNot(bool show)
-    {
         for (int i = firstPieceIndex; i < transform.childCount; i++)
         {
             GameObject child = transform.GetChild(i).gameObject;
@@ -372,6 +312,16 @@ public class PuzzleGame : Puzzle {
         }
     }
 
+    public void ToggleImage(bool show)
+    {
+        originImage.SetActive(show);
+    }
+    #endregion
+
+    #region function
+
+
+
     void BuildRandomBuffer(int min, int max)
     {
         randomBuffer.Clear();
@@ -381,7 +331,7 @@ public class PuzzleGame : Puzzle {
             randomBuffer.Add(i);
 
         // 随机化列表
-        for(int i=0; i < randomBuffer.Count; i++)
+        for (int i = 0; i < randomBuffer.Count; i++)
         {
             int index = Random.Range(0, randomBuffer.Count);
             int temp = randomBuffer[i];
@@ -405,33 +355,17 @@ public class PuzzleGame : Puzzle {
         for (int i = firstPieceIndex; i < transform.childCount; i++)
         {
             GameObject child = transform.GetChild(i).gameObject;
-            
+
             child.GetComponent<SpriteRenderer>().sprite = pieceImage;
             child.GetComponent<Piece>().ReSize();
         }
     }
 
-    Vector2 GetPieceCount(int count)
-    {
-        int x = 6, y = 4;
-        switch(count)
-        {
-            case 24: x = 6; y = 4; break;
-            case 48: x = 8; y = 6; break;
-            case 63: x = 9; y = 7; break;
-            case 108: x = 12; y = 9; break;
-            case 192: x = 16; y = 12; break;
-            case 300: x = 25; y = 12; break;
-            case 520: x = 26; y = 20; break;
-            case 768: x = 32; y = 24; break;
-        }
 
-        return new Vector2(x, y);
-    }
 
-    void  ClearPiece()
+    void ClearPiece()
     {
-        while(transform.childCount > firstPieceIndex)
+        while (transform.childCount > firstPieceIndex)
         {
             GameObject go = transform.GetChild(firstPieceIndex).gameObject;
             go.transform.parent = null;
@@ -446,8 +380,8 @@ public class PuzzleGame : Puzzle {
         if (!isRotate) return;
 
         // 随机选择个数
-        int count = Random.Range(minCount,maxCount);
-        for(int i=0;i<count;i++)
+        int count = Random.Range(minCount, maxCount);
+        for (int i = 0; i < count; i++)
         {
             // 随机角度
             float angle = Random.Range(1, 4) * 90;
@@ -463,13 +397,24 @@ public class PuzzleGame : Puzzle {
     #endregion
 }
 
-class Score
+public class Record
 {
-    public int      step;
-    public float    time;
+    public int count;
+    public int step;
+    public float time;
+    bool rotate;
+
 
     public override string ToString()
     {
-        return "移动次数 ： " + step + " 使用时间 ： " + time.ToString("F2");
+        return "拼图块数：" + count + (rotate ? ",旋转" : "") + " 移动次数：" + step + " 使用时间：" + time.ToString("F2");
+    }
+
+    public Record(int _count, int _step, float _time, bool _rotate = false)
+    {
+        count = _count;
+        step = _step;
+        time = _time;
+        rotate = _rotate;
     }
 }

@@ -71,6 +71,7 @@ public class Puzzle : DragablePlane
 
 
 
+    List<GameObject> neighbors = new List<GameObject>();
 
     [HideInInspector]
     /// <summary>
@@ -118,6 +119,33 @@ public class Puzzle : DragablePlane
     {
         // 通知 激活的拼图 
         go.GetComponent<Piece>().OnActive();
+    }
+
+
+    protected override void DeactiveObject(GameObject go)
+    {
+        base.DeactiveObject(go);
+
+        // 只添加一个
+        bool add = false;
+        GameObject nb = GetCloestNeighbor(go);
+        if (nb != null)
+            add = go.GetComponent<Piece>().AddNeighbor(nb);
+        if (add) return;
+
+        foreach(GameObject obj in go.GetComponent<Piece>().connectedPieces)
+        {
+            nb = GetCloestNeighbor(obj);
+            if(nb != null)
+                add = obj.GetComponent<Piece>().AddNeighbor(nb);
+
+            if (add) return;
+        }
+
+
+        
+
+
     }
 
     /// <summary>
@@ -301,6 +329,72 @@ public class Puzzle : DragablePlane
             piece.localScale = new Vector3(piece.localScale.x, -piece.localScale.y, 1);
             piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0.5f));
 
+        }
+    }
+
+
+    GameObject GetPiece(int x, int y)
+    {
+        return transform.GetChild(firstPieceIndex + x * (int)pieceCount.y + y).gameObject;
+    }
+
+    GameObject GetCloestNeighbor(GameObject go)
+    {
+        CheckNeighbros(go);
+        if (neighbors.Count == 0) return null;
+
+        GameObject neighbor = neighbors[0];
+        float dis = Vector3.Distance(neighbors[0].transform.position, go.transform.position);
+
+        for (int i = 1; i < neighbors.Count; i++)
+        {
+            float d = Vector3.Distance(neighbors[i].transform.position, go.transform.position);
+            if (d < dis)
+            {
+                dis = d;
+                neighbor = neighbors[i];
+            }
+        }
+
+
+
+        return neighbor;
+
+    }
+
+    void CheckNeighbros(GameObject go)
+    {
+        neighbors.Clear();
+
+        Piece piece = go.GetComponent<Piece>();
+
+
+        // 左
+        if (piece.pid.x > 0)
+        {
+            GameObject nb = GetPiece(piece.pid.x - 1, piece.pid.y);
+            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+        }
+
+        // 右
+        if (piece.pid.x < pieceCount.x - 1)
+        {
+            GameObject nb = GetPiece(piece.pid.x + 1, piece.pid.y);
+            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+        }
+
+        // 下
+        if (piece.pid.y > 0)
+        {
+            GameObject nb = GetPiece(piece.pid.x, piece.pid.y - 1);
+            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+        }
+
+        // 上
+        if (piece.pid.y < pieceCount.y - 1)
+        {
+            GameObject nb = GetPiece(piece.pid.x, piece.pid.y + 1);
+            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
         }
     }
 }

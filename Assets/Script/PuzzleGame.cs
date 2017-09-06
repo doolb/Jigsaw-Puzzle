@@ -128,6 +128,8 @@ public class PuzzleGame : Puzzle
 
     protected override void DeactiveObject(GameObject go)
     {
+        base.DeactiveObject(go);
+
         if (gameFinish) return;
 
         // 是否和所有块相连
@@ -135,12 +137,12 @@ public class PuzzleGame : Puzzle
         if (piece.connectedPieces.Count == (int)(pieceCount.x * pieceCount.y) - 1)
         {
             Time.timeScale = 0;
-            gameTime = 0;
 
             needRestart = true;
 
             records.Add(new Record((int)(pieceCount.x * pieceCount.y), moveCount, gameTime, isRotate));
 
+            gameTime = 0;
             for (int i = 0; i < onGameEnd.Count; i++)
                 onGameEnd[i].Execute();
         }

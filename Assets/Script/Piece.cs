@@ -62,30 +62,6 @@ public class Piece : MonoBehaviour
     }
 
 
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject == null) return;
-        if (!theFirstRun) return;
-        if (other.gameObject.tag != "Piece") return;
-
-        // 只有当前选中的，或者和当前选中的相连的才能继续执行
-        if (topGameObject == gameObject ||
-            topGameObject.GetComponent<Piece>().IsConnected(gameObject))
-            AddNeighbor(other.gameObject);
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject == null) return;
-        if (!theFirstRun) return;
-        if (other.gameObject.tag != "Piece") return;
-
-        // 只有当前选中的，或者和当前选中的相连的才能继续执行
-        if (topGameObject == gameObject ||
-            topGameObject.GetComponent<Piece>().IsConnected(gameObject))
-            AddNeighbor(other.gameObject);
-    }
-
 
     #endregion
 
@@ -155,7 +131,7 @@ public class Piece : MonoBehaviour
 
     #region function
 
-    bool AddNeighbor(GameObject other)
+    public bool AddNeighbor(GameObject other)
     {
         // 是否旋转角度为 0
         if (System.Math.Abs(transform.localEulerAngles.z) > 1 ||
@@ -329,8 +305,8 @@ public enum NeighborType
 
 public class PieceID
 {
-    int x;
-    int y;
+    public int x;
+    public int y;
 
 
     public bool isAtEdge;

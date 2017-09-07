@@ -48,3 +48,6 @@
 ### 2017.9.6
 * rewrite code for dynamic load
 * remove unity physic system
+
+### 2017.9.7
+* just set to unactive when clear pieces

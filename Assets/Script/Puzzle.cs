@@ -20,6 +20,11 @@ public class Puzzle : DragablePlane
     /// </summary>
     public Vector2 pieceCount = new Vector2(6, 4);
 
+    public int pieceTotalCount
+    {
+        get { return (int)pieceCount.x * (int)pieceCount.y; }
+    }
+
     /// <summary>
     /// 拼图 预制体
     /// </summary>
@@ -70,6 +75,10 @@ public class Puzzle : DragablePlane
     public Vector2 displaySize;
 
 
+    /// <summary>
+    /// 拼图是否已经创建
+    /// </summary>
+    public bool pieceCreated;
 
     List<GameObject> neighbors = new List<GameObject>();
 
@@ -133,17 +142,17 @@ public class Puzzle : DragablePlane
             add = go.GetComponent<Piece>().AddNeighbor(nb);
         if (add) return;
 
-        foreach(GameObject obj in go.GetComponent<Piece>().connectedPieces)
+        foreach (GameObject obj in go.GetComponent<Piece>().connectedPieces)
         {
             nb = GetCloestNeighbor(obj);
-            if(nb != null)
+            if (nb != null)
                 add = obj.GetComponent<Piece>().AddNeighbor(nb);
 
             if (add) return;
         }
 
 
-        
+
 
 
     }
@@ -183,6 +192,7 @@ public class Puzzle : DragablePlane
         Piece.maxDepth = (int)pieceCount.x * (int)pieceCount.y + 1;
 
 
+
         // 生成 （x,y) 个 拼图块
         for (int i = 0; i < pieceCount.x; i++)
         {
@@ -194,8 +204,44 @@ public class Puzzle : DragablePlane
 
         // 检查 拼图的 显示
         CheckPiece();
+
+        pieceCreated = true;
     }
 
+    /// <summary>
+    /// 获取 第 (x,y) 个拼图，下标从 0 开始
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public GameObject GetPiece(int x, int y)
+    {
+        int index = firstPieceIndex + x * (int)pieceCount.y + y;
+
+        if (index < transform.childCount)
+            return transform.GetChild(index).gameObject;
+        return Instantiate(piecePrefab, transform);
+
+    }
+
+    public GameObject GetPiece(float x, float y)
+    {
+        return GetPiece((int)x, (int)y);
+    }
+
+
+    public void ClearPiece()
+    {
+        if (!pieceCreated) return;
+
+        for (int i = 0; i < pieceCount.x; i++)
+            for (int j = 0; j < pieceCount.y; j++)
+            {
+                GetPiece(i, j).SetActive(false);
+            }
+
+        pieceCreated = false;
+    }
 
     /// <summary>
     /// 重设拼图的大小
@@ -234,16 +280,19 @@ public class Puzzle : DragablePlane
     void CreatePiece(int x, int y)
     {
         // 实例化一个拼图对象
-        GameObject piece = Instantiate(piecePrefab, gameObject.transform);
+        GameObject child = GetPiece(x, y);
+        child.SetActive(true);
 
         // 初始化 拼图
-        piece.AddComponent<Piece>().Init(x, y);
+        Piece piece = child.GetComponent<Piece>();
+        if (piece == null) piece = child.AddComponent<Piece>();
+        piece.Init(x, y);
 
 
         // 设置材质
         Vector2 offset = pieceScale / 2f;
 
-        SpriteRenderer rend = piece.GetComponent<SpriteRenderer>();
+        SpriteRenderer rend = child.GetComponent<SpriteRenderer>();
 
         // 设置图像偏移
         rend.material.mainTextureScale = pieceScale * 2;
@@ -258,12 +307,12 @@ public class Puzzle : DragablePlane
 
 
         // 设置 层
-        piece.layer = childLayer;
+        child.layer = childLayer;
 
 
 
         // 随机位置
-        piece.transform.position = new Vector3(
+        child.transform.position = new Vector3(
                                         Random.Range(-0.15f, 0.15f) * collider.size.x,
                                         Random.Range(-0.15f, 0.15f) * collider.size.y,
                                         0);
@@ -281,15 +330,14 @@ public class Puzzle : DragablePlane
             print("fix puzzle at top edge.");
 
             // 左上角
-            int leftTopIndex = firstPieceIndex + ((int)pieceCount.y - 1);
-            Transform leftTop = transform.GetChild(leftTopIndex);
+            Transform leftTop = GetPiece(0, (int)pieceCount.y - 1).transform;
             leftTop.localScale = new Vector3(leftTop.localScale.x, -leftTop.localScale.y, 1);
             leftTop.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0));
 
             // 其它的
             for (int i = 1; i < pieceCount.x - 1; i++)
             {
-                Transform piece = transform.GetChild(leftTopIndex + i * (int)pieceCount.y);
+                GameObject piece = GetPiece(i, (int)pieceCount.y - 1);
                 piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0.5f, i % 2 == 1 ? 0.5f : 0.75f));
             }
         }
@@ -301,16 +349,15 @@ public class Puzzle : DragablePlane
             print("fix puzzle at right edge.");
 
 
-            // 左上角
-            int rightBottomIndex = transform.childCount - (int)pieceCount.y;
-            Transform rightBottom = transform.GetChild(rightBottomIndex);
+            // 右下角
+            Transform rightBottom = GetPiece(pieceCount.x - 1, 0).transform;
             rightBottom.localScale = new Vector3(rightBottom.localScale.x, -rightBottom.localScale.y, 1);
             rightBottom.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0.75f));
 
             // 其它的
             for (int i = 1; i < pieceCount.y - 1; i++)
             {
-                Transform piece = transform.GetChild(rightBottomIndex + i);
+                GameObject piece = GetPiece(pieceCount.x - 1, i);
                 piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0.25f, i % 2 == 1 ? 0.5f : 0.75f));
             }
 
@@ -322,9 +369,8 @@ public class Puzzle : DragablePlane
         {
             print("fix right top corner");
 
-            // 右上角 在最后一个位置
-            Transform piece = transform.GetChild(transform.childCount - 1);
-
+            // 右上角 
+            Transform piece = GetPiece(pieceCount.x - 1, pieceCount.y - 1).transform;
 
             piece.localScale = new Vector3(piece.localScale.x, -piece.localScale.y, 1);
             piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0.5f));
@@ -333,10 +379,8 @@ public class Puzzle : DragablePlane
     }
 
 
-    GameObject GetPiece(int x, int y)
-    {
-        return transform.GetChild(firstPieceIndex + x * (int)pieceCount.y + y).gameObject;
-    }
+
+
 
     GameObject GetCloestNeighbor(GameObject go)
     {

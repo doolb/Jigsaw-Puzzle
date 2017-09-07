@@ -43,10 +43,7 @@ public class PuzzleGame : Puzzle
     /// </summary>
     bool isShowAll;
 
-    /// <summary>
-    /// 拼图是否已经创建
-    /// </summary>
-    public bool pieceCreated;
+
 
     /// <summary>
     /// 保存随机数的缓存
@@ -173,7 +170,6 @@ public class PuzzleGame : Puzzle
         ShowAllOrNot(isShowAll);
         RotatePiece();
 
-        pieceCreated = true;
         Piece.theFirstRun = false;
 
         moveCount = 0;
@@ -201,14 +197,14 @@ public class PuzzleGame : Puzzle
     {
         if (!pieceCreated) return;
 
-        BuildRandomBuffer(firstPieceIndex, transform.childCount);
+        BuildRandomBuffer(firstPieceIndex, firstPieceIndex + pieceTotalCount);
 
         int maxVCount = (int)(pieceCount.y * 1.2f);
 
         int count = 0;
-        for (int i = firstPieceIndex; i < transform.childCount; i++)
+        for (int i = 0; i < pieceTotalCount; i++)
         {
-            GameObject child = transform.GetChild(randomBuffer[i - firstPieceIndex]).gameObject;
+            GameObject child = transform.GetChild(randomBuffer[i]).gameObject;
             if (!child.activeSelf) continue;
             if (child.GetComponent<Piece>().connectedPieces.Count == 0)
             {
@@ -301,15 +297,17 @@ public class PuzzleGame : Puzzle
     public void ShowAllOrNot(bool show)
     {
         isShowAll = show;
+        if (!pieceCreated) return;
 
-        for (int i = firstPieceIndex; i < transform.childCount; i++)
-        {
-            GameObject child = transform.GetChild(i).gameObject;
-            if (!child.GetComponent<Piece>().pid.isAtEdge)
+        for (int i = 0; i < pieceCount.x; i++)
+            for (int j = 0; j < pieceCount.y; j++)
             {
-                child.SetActive(show);
+                GameObject child = GetPiece(i, j);
+                if (!child.GetComponent<Piece>().pid.isAtEdge)
+                {
+                    child.SetActive(show);
+                }
             }
-        }
     }
 
     public void ToggleImage(bool show)
@@ -343,35 +341,29 @@ public class PuzzleGame : Puzzle
 
     void UpdatePieceMark()
     {
-        for (int i = firstPieceIndex; i < transform.childCount; i++)
-        {
-            Renderer rend = transform.GetChild(i).gameObject.GetComponent<Renderer>();
-            rend.material.SetTexture("_MarkTex", markImage);
-        }
+        for (int i = 0; i < pieceCount.x; i++)
+            for (int j = 0; j < pieceCount.y; j++)
+            {
+                Renderer rend = GetPiece(i, j).GetComponent<Renderer>();
+                rend.material.SetTexture("_MarkTex", markImage);
+            }
     }
 
     void UpdatePieceImage()
     {
-        for (int i = firstPieceIndex; i < transform.childCount; i++)
-        {
-            GameObject child = transform.GetChild(i).gameObject;
+        for (int i = 0; i < pieceCount.x; i++)
+            for (int j = 0; j < pieceCount.y; j++)
+            {
+                GameObject child = GetPiece(i, j);
 
-            child.GetComponent<SpriteRenderer>().sprite = pieceImage;
-            child.GetComponent<Piece>().ReSize();
-        }
+                child.GetComponent<SpriteRenderer>().sprite = pieceImage;
+                child.GetComponent<Piece>().ReSize();
+            }
     }
 
 
 
-    void ClearPiece()
-    {
-        while (transform.childCount > firstPieceIndex)
-        {
-            GameObject go = transform.GetChild(firstPieceIndex).gameObject;
-            go.transform.parent = null;
-            Destroy(go);
-        }
-    }
+
 
     void RotatePiece()
     {
@@ -385,10 +377,9 @@ public class PuzzleGame : Puzzle
         {
             // 随机角度
             float angle = Random.Range(1, 4) * 90;
-            // 随机元素
-            int index = Random.Range(firstPieceIndex, transform.childCount);
 
-            GameObject child = transform.GetChild(index).gameObject;
+            // 随机元素
+            GameObject child = GetPiece(Random.Range(0, pieceCount.x), Random.Range(0, pieceCount.y));
             child.transform.localEulerAngles = new Vector3(0, 0, angle);
             print(child.GetComponent<Piece>() + " " + angle);
         }

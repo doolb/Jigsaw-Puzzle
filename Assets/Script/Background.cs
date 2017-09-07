@@ -32,6 +32,7 @@ public class Background : MonoBehaviour
     /// <summary>
     /// 更改背景
     /// </summary>
+    /// <param name="name">背景文件名</param>
     public void ChangeBackground(string name)
     {
         // 加载新的 背景

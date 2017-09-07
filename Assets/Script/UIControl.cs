@@ -2,13 +2,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// UI 控制脚本
+/// </summary>
 public class UIControl : MonoBehaviour
 {
-
+    /// <summary>
+    /// 结束面板
+    /// </summary>
     GameObject finish;
 
+    /// <summary>
+    /// 显示分数 对象
+    /// </summary>
     UILabel infoLabel;
 
+    /// <summary>
+    /// 显示时间
+    /// </summary>
     UILabel time;
 
 

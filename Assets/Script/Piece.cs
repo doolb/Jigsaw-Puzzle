@@ -95,7 +95,13 @@ public class Piece : MonoBehaviour
     #region virtual function
     public void Init(int x, int y)
     {
+        // 清除连接列表
+        connectedPieces.Clear();
+
         pid = new PieceID(x, y);
+        order = pid.order;
+
+
         gameObject.name = ToString();
 
         // 设置 拼图 mark 材质

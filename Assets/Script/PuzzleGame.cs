@@ -72,9 +72,9 @@ public class PuzzleGame : Puzzle
     public float gameTime = 0;
 
     /// <summary>
-    /// 分数列表
+    /// 记录信息
     /// </summary>
-    public List<Record> records = new List<Record>();
+    public Record record;
 
 
     GameObject originImage;
@@ -137,7 +137,7 @@ public class PuzzleGame : Puzzle
 
             needRestart = true;
 
-            records.Add(new Record((int)(pieceCount.x * pieceCount.y), moveCount, gameTime, isRotate));
+            record = new Record((int)(pieceCount.x * pieceCount.y), moveCount, gameTime, isRotate);
 
             gameTime = 0;
             for (int i = 0; i < onGameEnd.Count; i++)

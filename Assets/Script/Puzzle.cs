@@ -417,28 +417,28 @@ public class Puzzle : DragablePlane
         if (piece.pid.x > 0)
         {
             GameObject nb = GetPiece(piece.pid.x - 1, piece.pid.y);
-            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
         }
 
         // 右
         if (piece.pid.x < pieceCount.x - 1)
         {
             GameObject nb = GetPiece(piece.pid.x + 1, piece.pid.y);
-            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
         }
 
         // 下
         if (piece.pid.y > 0)
         {
             GameObject nb = GetPiece(piece.pid.x, piece.pid.y - 1);
-            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
         }
 
         // 上
         if (piece.pid.y < pieceCount.y - 1)
         {
             GameObject nb = GetPiece(piece.pid.x, piece.pid.y + 1);
-            if (!piece.connectedPieces.Contains(nb)) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
         }
     }
 }

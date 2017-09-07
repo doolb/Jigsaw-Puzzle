@@ -54,6 +54,9 @@ public class MenuControl : MonoBehaviour
 
         // 暂停游戏
         GameLoader.puzzleGame.Pause();
+
+        // 隐藏 UI
+        GameLoader.uiControl.Hide();
     }
 
     /// <summary>
@@ -70,6 +73,9 @@ public class MenuControl : MonoBehaviour
 
         // 继续游戏
         GameLoader.puzzleGame.Continue();
+
+        // 显示 UI
+        GameLoader.uiControl.Show();
     }
 
     /// <summary>

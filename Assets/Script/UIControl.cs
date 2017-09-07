@@ -22,6 +22,11 @@ public class UIControl : MonoBehaviour
     /// </summary>
     UILabel time;
 
+    /// <summary>
+    /// 菜单按钮
+    /// </summary>
+    GameObject buttonMenu;
+
 
     /// <summary>
     /// 初始化
@@ -43,7 +48,8 @@ public class UIControl : MonoBehaviour
         time = transform.Find("Label - Time").GetComponent<UILabel>();
 
         // 注册 菜单控制 事件
-        transform.Find("Button - Menu").GetComponent<UIButton>().onClick.Add(new EventDelegate(GameLoader.menuControl.Show));
+        buttonMenu = transform.Find("Button - Menu").gameObject;
+        buttonMenu.GetComponent<UIButton>().onClick.Add(new EventDelegate(GameLoader.menuControl.Show));
 
         // 注册 游戏结束 事件
         GameLoader.puzzleGame.onGameEnd.Add(new EventDelegate(ShowFinish));
@@ -80,8 +86,30 @@ public class UIControl : MonoBehaviour
     /// <param name="t">时间</param>
     public void ShowTime(float t = 0)
     {
-        // 显示时间
-        time.text = t.ToString("F1");
+        // 如果 时间 小于 0.1， 不显示
+        if (t < 0.1)
+            time.text = "";
+        else
+            // 显示时间
+            time.text = t.ToString("F1");
     }
 
+
+    /// <summary>
+    /// 显示菜单按钮
+    /// </summary>
+    public void Show()
+    {
+        // 激活菜单按钮
+        buttonMenu.SetActive(true);
+    }
+
+    /// <summary>
+    /// 隐藏菜单按钮
+    /// </summary>
+    public void Hide()
+    {
+        // 取消激活菜单按钮
+        buttonMenu.SetActive(false);
+    }
 }

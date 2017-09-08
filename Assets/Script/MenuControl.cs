@@ -23,6 +23,11 @@ public class MenuControl : MonoBehaviour
     UILabel startLabel;
 
     /// <summary>
+    /// 重新开始游戏的按钮
+    /// </summary>
+    GameObject restartButton;
+
+    /// <summary>
     /// 初始化
     /// </summary>
     void Awake()
@@ -130,6 +135,11 @@ public class MenuControl : MonoBehaviour
 
         // 寻找 平铺拼图 按钮, 并注册 事件
         transform.Find("Button - Tile Piece").GetComponent<UIButton>().onClick.Add(new EventDelegate(TilePiece));
+
+
+        // 寻找开始按钮，并注册事件
+        restartButton = transform.Find("Button - ReStart").gameObject;
+        restartButton.GetComponent<UIButton>().onClick.Add(new EventDelegate(ReStartGame));
     }
 
     /// <summary>
@@ -143,10 +153,18 @@ public class MenuControl : MonoBehaviour
         {
             // 更新按钮 为 "开始"
             startLabel.text = "开始";
+
+            // 显示重新开始 按钮
+            restartButton.SetActive(false);
         }
         else
+        {
             // 更新按钮 为 "继续"
             startLabel.text = "继续";
+
+            // 隐藏重新开始 按钮
+            restartButton.SetActive(true);
+        }
     }
 
     /// <summary>
@@ -290,6 +308,14 @@ public class MenuControl : MonoBehaviour
 
         // 更新按钮
         UpdateButton();
+    }
+
+    /// <summary>
+    /// 重新开始游戏
+    /// </summary>
+    void ReStartGame()
+    {
+        GameLoader.puzzleGame.ReStart();
     }
 
     #endregion

@@ -8,12 +8,19 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class DragablePlane : MonoBehaviour
 {
+    static int working;
+
+    #region 变量
+
     /// <summary>
     /// 表示拖拽是否结束
     /// </summary>
     public bool dragEnd;
 
-    #region 类中的变量
+    /// <summary>
+    /// 进行碰撞测试的摄像机
+    /// </summary>
+    public Camera cam;
 
     /// <summary>
     /// collider, 决定可以拖拽的范围
@@ -33,7 +40,7 @@ public class DragablePlane : MonoBehaviour
     /// <summary>
     /// 可拖拽子对象的 层
     /// </summary>
-    protected int childLayer = 31;
+    public int childLayer = 31;
 
     /// <summary>
     /// 碰撞的缓存
@@ -64,6 +71,9 @@ public class DragablePlane : MonoBehaviour
 
         // 初始化缓存
         raycastHitCache = new RaycastHit[raycastHitCacheSize];
+
+        // 如果没有设置摄化机， 就使用默认的
+        if (cam == null) cam = Camera.main;
     }
 
 
@@ -72,26 +82,30 @@ public class DragablePlane : MonoBehaviour
     /// </summary>
     protected virtual void FixedUpdate()
     {
+        if (working != 0 && working != GetInstanceID()) return;
+
         // 鼠标的位置
         Vector3 pos = Input.mousePosition;
 
         // 碰撞尝试的最大距离
         float maxDis = Vector3.Distance(
-            Camera.main.transform.position,
+            cam.transform.position,
             transform.position) * 2;
 
         // 是否按下按钮
         if (Input.GetButton("Fire1"))
         {
+
             // 拖拽开始
             dragEnd = false;
 
             // 当前位置发出的光线
-            Ray ray = Camera.main.ScreenPointToRay(pos);
+            Ray ray = cam.ScreenPointToRay(pos);
 
             // 没有活动的对象，从所有的对象中选择一个
             if (activeObject == null)
             {
+
                 // 寻找一个最近的
                 RaycastHit hit;
                 if (FindClosetChild(out hit, ray, maxDis))
@@ -126,6 +140,8 @@ public class DragablePlane : MonoBehaviour
                     activeObject = null; // 已经移出了平面
 
             }
+
+            if (activeObject != null) working = GetInstanceID();
         }
         // 释放按钮
         else
@@ -141,6 +157,8 @@ public class DragablePlane : MonoBehaviour
 
                 // 拖拽结束
                 dragEnd = true;
+
+                working = 0;
             }
         }
 

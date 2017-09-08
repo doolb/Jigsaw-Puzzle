@@ -42,7 +42,7 @@ public class GameLoader : MonoBehaviour
     /// </summary>
     public static PuzzleGame puzzleGame;
 
-
+    public Camera viewcam;
 
     /// <summary>
     /// 初始化
@@ -89,6 +89,8 @@ public class GameLoader : MonoBehaviour
         // 加载 拼图游戏 预制体，并挂载游戏脚本
         puzzleGame = Instantiate<GameObject>(Resources.Load("Puzzle") as GameObject).
             AddComponent<PuzzleGame>();
+
+        puzzleGame.cam = viewcam;
     }
 
     /// <summary>

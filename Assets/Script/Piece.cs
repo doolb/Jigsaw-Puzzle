@@ -189,22 +189,13 @@ public class Piece : MonoBehaviour
     /// </summary>
     /// <param name="other">要加入的拼图对象</param>
     /// <returns>是否添加成功</returns>
-    public bool AddNeighbor(GameObject other)
+    public bool AddNeighbor(GameObject other, NeighborType type)
     {
         // 旋转角度 是否 都为 0 
         if (System.Math.Abs(transform.localEulerAngles.z) > 1 ||
             System.Math.Abs(other.transform.localEulerAngles.z) > 1)
             return false;
-
-
-        // 判断邻居的类型
-        NeighborType type = pid.IsNeighbor(other.GetComponent<Piece>().pid);
-
-        // 如果不是邻居，返回 false
-        if (type == NeighborType.None) return false;
-
-        // 是否足够接近
-        if (!IsClosed(other, type)) return false;
+        
 
         // 计算要移动的偏移
         Vector3 offset = GetNeighborOffset(other, type);
@@ -288,72 +279,7 @@ public class Piece : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// 两个相邻的拼图是否足够接近
-    /// </summary>
-    /// <param name="other">另一个拼图</param>
-    /// <param name="type">邻居类型</param>
-    /// <returns>是否足够接近</returns>
-    bool IsClosed(GameObject other, NeighborType type)
-    {
-        // 保存当前拼图在 Y 轴大小的一半
-        Vector3 offsetY = new Vector3(0, Puzzle.instance.displaySize.y / 2, 0);
-
-        // 保存当前拼图在 X 轴大小的一半
-        Vector3 offsetX = new Vector3(Puzzle.instance.displaySize.x / 2, 0, 0);
-
-        Vector3 a, b;
-        switch (type)
-        {
-            // 邻居在上面
-            case NeighborType.Top:
-
-                // 当前对象 加上 Y 轴的偏移的一半
-                a = gameObject.transform.position + offsetY;
-
-                // 邻居 减去 Y 轴的偏移的一半
-                b = other.transform.position - offsetY;
-                break;
-
-            // 邻居在下面
-            case NeighborType.Bottom:
-
-                // 当前对象 减去 Y 轴的偏移的一半
-                a = gameObject.transform.position - offsetY;
-
-                // 邻居 加上 Y 轴的偏移的一半
-                b = other.transform.position + offsetY;
-                break;
-
-            // 邻居在左边
-            case NeighborType.Left:
-
-                // 当前对象 减去 X 轴的偏移的一半
-                a = gameObject.transform.position - offsetX;
-
-                // 邻居 加上 X 轴的偏移的一半
-                b = other.transform.position + offsetX;
-                break;
-
-            // 邻居在右边
-            case NeighborType.Right:
-
-                // 当前对象 加上 X 轴的偏移的一半
-                a = gameObject.transform.position + offsetX;
-
-                // 邻居 减去 X 轴的偏移的一半
-                b = other.transform.position - offsetX;
-                break;
-
-            // 不是邻居，返回 false
-            default:
-                print("Neighbor type error: " + type);
-                return false;
-        }
-
-        // 测试当前 距离是否小于 设置的大小，并返回结果
-        return Vector3.Distance(a, b) < Puzzle.instance.largestSize;
-    }
+    
 
     /// <summary>
     /// 移动所有相邻的拼图

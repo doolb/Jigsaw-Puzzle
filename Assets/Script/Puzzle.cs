@@ -80,7 +80,15 @@ public class Puzzle : DragablePlane
     /// </summary>
     public bool pieceCreated;
 
+    /// <summary>
+    /// 缓存邻居拼图
+    /// </summary>
     List<GameObject> neighbors = new List<GameObject>();
+
+    /// <summary>
+    /// 缓存邻居拼图类型
+    /// </summary>
+    List<NeighborType> neighborTypes = new List<NeighborType>();
 
     [HideInInspector]
     /// <summary>
@@ -145,12 +153,12 @@ public class Puzzle : DragablePlane
         bool add = false;
 
         // 寻找最近的邻居
-
-        GameObject nb = GetCloestNeighbor(go);
+        NeighborType type;
+        GameObject nb = GetCloestNeighbor(go,out type);
 
         // 如果找到 就 通知当前拼图块添加
         if (nb != null)
-            add = go.GetComponent<Piece>().AddNeighbor(nb);
+            add = go.GetComponent<Piece>().AddNeighbor(nb,type);
 
         // 如果添加成功，返回
         if (add) return;
@@ -159,11 +167,11 @@ public class Puzzle : DragablePlane
         foreach (GameObject obj in go.GetComponent<Piece>().connectedPieces)
         {
             // 寻找最近的邻居
-            nb = GetCloestNeighbor(obj);
+            nb = GetCloestNeighbor(obj,out type);
 
             // 如果找到 就 通知当前拼图块添加
             if (nb != null)
-                add = obj.GetComponent<Piece>().AddNeighbor(nb);
+                add = obj.GetComponent<Piece>().AddNeighbor(nb,type);
 
             // 如果添加成功，返回
             if (add) return;
@@ -430,47 +438,29 @@ public class Puzzle : DragablePlane
     }
 
 
-
-
     /// <summary>
     /// 获取最近的邻居
     /// </summary>
     /// <param name="go">要获取邻居的对象</param>
-    /// <returns></returns>
-    GameObject GetCloestNeighbor(GameObject go)
+    /// <param name="type">邻居的类型</param>
+    /// <returns>找到的邻居</returns>
+    GameObject GetCloestNeighbor(GameObject go,out NeighborType type)
     {
-        // 查察所有邻居
+        type = NeighborType.None;
+        // 获取所有邻居 和邻居的类型
         CheckNeighbros(go);
-
-        // 如果可以添加的邻居数为 0，返回 null
-        if (neighbors.Count == 0) return null;
-
-        // 记录第一个邻居
-        GameObject neighbor = neighbors[0];
-
-        // 第一个邻居的距离
-        float dis = Vector3.Distance(neighbors[0].transform.position, go.transform.position);
-
-        // 测试其它邻居
-        for (int i = 1; i < neighbors.Count; i++)
+        
+        for(int i=0;i<neighbors.Count;i++)
         {
-            // 获取当前的距离
-            float d = Vector3.Distance(neighbors[i].transform.position, go.transform.position);
-
-            // 如果更近，就替换成当前的邻居
-            if (d < dis)
+            type = neighborTypes[i];
+            // 如果可以连接，返回
+            if (IsClosedToConnect(go, neighbors[i], type))
             {
-                // 更新距离
-                dis = d;
-
-                // 更新邻居
-                neighbor = neighbors[i];
+                return neighbors[i];
             }
         }
 
-
-        // 返回最近的邻居
-        return neighbor;
+        return null;
     }
 
     /// <summary>
@@ -481,6 +471,7 @@ public class Puzzle : DragablePlane
     {
         // 清空列表
         neighbors.Clear();
+        neighborTypes.Clear();
 
         // 获取拼图块控制脚本
         Piece piece = go.GetComponent<Piece>();
@@ -493,7 +484,11 @@ public class Puzzle : DragablePlane
             GameObject nb = GetPiece(piece.pid.x - 1, piece.pid.y);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            {
+                neighbors.Add(nb);
+                neighborTypes.Add(NeighborType.Left);
+            }
         }
 
         // 右，跳过最右边的一列
@@ -503,7 +498,11 @@ public class Puzzle : DragablePlane
             GameObject nb = GetPiece(piece.pid.x + 1, piece.pid.y);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            {
+                neighbors.Add(nb);
+                neighborTypes.Add(NeighborType.Right);
+            }
         }
 
         // 下，跳过最下的一行
@@ -513,7 +512,11 @@ public class Puzzle : DragablePlane
             GameObject nb = GetPiece(piece.pid.x, piece.pid.y - 1);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            {
+                neighbors.Add(nb);
+                neighborTypes.Add(NeighborType.Bottom);
+            }
         }
 
         // 上，跳过最上的一行
@@ -523,7 +526,79 @@ public class Puzzle : DragablePlane
             GameObject nb = GetPiece(piece.pid.x, piece.pid.y + 1);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf) neighbors.Add(nb);
+            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            {
+                neighbors.Add(nb);
+                neighborTypes.Add(NeighborType.Top);
+            }
         }
+    }
+
+    /// <summary>
+    /// 两个相邻的拼图是否足够接近
+    /// </summary>
+    /// <param name="piece">当前选中的拼图</param>
+    /// <param name="other">另一个拼图</param>
+    /// <param name="type">邻居类型</param>
+    /// <returns>是否足够接近</returns>
+    bool IsClosedToConnect(GameObject piece, GameObject other, NeighborType type)
+    {
+        // 保存当前拼图在 Y 轴大小的一半
+        Vector3 offsetY = new Vector3(0, displaySize.y / 2, 0);
+
+        // 保存当前拼图在 X 轴大小的一半
+        Vector3 offsetX = new Vector3(displaySize.x / 2, 0, 0);
+
+        Vector3 a, b;
+        switch (type)
+        {
+            // 邻居在上面
+            case NeighborType.Top:
+
+                // 当前对象 加上 Y 轴的偏移的一半
+                a = piece.transform.position + offsetY;
+
+                // 邻居 减去 Y 轴的偏移的一半
+                b = other.transform.position - offsetY;
+                break;
+
+            // 邻居在下面
+            case NeighborType.Bottom:
+
+                // 当前对象 减去 Y 轴的偏移的一半
+                a = piece.transform.position - offsetY;
+
+                // 邻居 加上 Y 轴的偏移的一半
+                b = other.transform.position + offsetY;
+                break;
+
+            // 邻居在左边
+            case NeighborType.Left:
+
+                // 当前对象 减去 X 轴的偏移的一半
+                a = piece.transform.position - offsetX;
+
+                // 邻居 加上 X 轴的偏移的一半
+                b = other.transform.position + offsetX;
+                break;
+
+            // 邻居在右边
+            case NeighborType.Right:
+
+                // 当前对象 加上 X 轴的偏移的一半
+                a = piece.transform.position + offsetX;
+
+                // 邻居 减去 X 轴的偏移的一半
+                b = other.transform.position - offsetX;
+                break;
+
+            // 不是邻居，返回 false
+            default:
+                print("Neighbor type error: " + type);
+                return false;
+        }
+
+        // 测试当前 距离是否小于 设置的大小，并返回结果
+        return Vector3.Distance(a, b) < largestSize;
     }
 }

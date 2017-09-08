@@ -145,7 +145,7 @@ public class Puzzle : DragablePlane
         bool add = false;
 
         // 寻找最近的邻居
-        
+
         GameObject nb = GetCloestNeighbor(go);
 
         // 如果找到 就 通知当前拼图块添加

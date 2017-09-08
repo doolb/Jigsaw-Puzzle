@@ -33,6 +33,11 @@ public class GameLoader : MonoBehaviour
     public static MenuControl menuControl;
 
     /// <summary>
+    /// 记录控制脚本
+    /// </summary>
+    public static RecordControl recordControl;
+
+    /// <summary>
     /// 游戏控制脚本
     /// </summary>
     public static PuzzleGame puzzleGame;
@@ -61,6 +66,9 @@ public class GameLoader : MonoBehaviour
 
         // 加载 UI
         LoadUI();
+
+        // 建立事件的联系
+        BuildEvent();
     }
 
     /// <summary>
@@ -89,13 +97,30 @@ public class GameLoader : MonoBehaviour
     void LoadUI()
     {
         // 加载 游戏 菜单 预制体
-        menuControl = NGUITools.AddChild(uiRoot3D, Resources.Load<GameObject>("Panel - Menu")).
-            AddComponent<MenuControl>();
+        menuControl = NGUITools.AddChild(uiRoot3D, Resources.Load<GameObject>("Panel - Menu")).AddComponent<MenuControl>();
 
         // 加载 UI 预制体
-        uiControl = NGUITools.AddChild(uiRoot, Resources.Load<GameObject>("Panel - UI")).
-            AddComponent<UIControl>();
+        uiControl = NGUITools.AddChild(uiRoot, Resources.Load<GameObject>("Panel - UI")).AddComponent<UIControl>();
+
+        // 加载 显示纪录 预制体
+        recordControl = NGUITools.AddChild(uiRoot, Resources.Load<GameObject>("Panel - Record")).AddComponent<RecordControl>();
     }
 
 
+    void BuildEvent()
+    {
+
+        // 注册 菜单控制 事件
+        uiControl.onShowMenu.Add(new EventDelegate(menuControl.Show));
+
+        // 注册 游戏结束 事件
+        puzzleGame.onGameEnd.Add(new EventDelegate(() => uiControl.ShowFinish(puzzleGame.record.ToString())));
+
+
+        // 结束界面 显示结束后，显示 纪录
+        uiControl.onFinishEnd.Add(new EventDelegate(() => recordControl.Show<Record>(puzzleGame.record)));
+
+        // 关闭纪录界面后显示菜单
+        recordControl.onHide.Add(new EventDelegate(menuControl.Show));
+    }
 }

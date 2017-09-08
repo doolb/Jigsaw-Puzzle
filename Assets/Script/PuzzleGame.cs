@@ -72,9 +72,10 @@ public class PuzzleGame : Puzzle
     public float gameTime = 0;
 
     /// <summary>
-    /// 记录信息
+    /// 本次记录信息
     /// </summary>
     public Record record;
+
 
     /// <summary>
     /// 拼图原图对象
@@ -155,7 +156,7 @@ public class PuzzleGame : Puzzle
 
             // 保存记录
             record = new Record(pieceTotalCount, moveCount, gameTime, isRotate);
-
+            
             // 重置时间
             gameTime = 0;
 

@@ -8,7 +8,10 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class DragablePlane : MonoBehaviour
 {
-    static int working;
+    /// <summary>
+    /// 正在工作的实例
+    /// </summary>
+    protected static int workingId;
 
     #region 变量
 
@@ -59,7 +62,7 @@ public class DragablePlane : MonoBehaviour
     #endregion
 
 
-    #region unity callback
+    #region unity 函数
 
     /// <summary>
     /// 初始化
@@ -82,91 +85,13 @@ public class DragablePlane : MonoBehaviour
     /// </summary>
     protected virtual void FixedUpdate()
     {
-        if (working != 0 && working != GetInstanceID()) return;
-
-        // 鼠标的位置
-        Vector3 pos = Input.mousePosition;
-
-        // 碰撞尝试的最大距离
-        float maxDis = Vector3.Distance(
-            cam.transform.position,
-            transform.position) * 2;
-
-        // 是否按下按钮
-        if (Input.GetButton("Fire1"))
-        {
-
-            // 拖拽开始
-            dragEnd = false;
-
-            // 当前位置发出的光线
-            Ray ray = cam.ScreenPointToRay(pos);
-
-            // 没有活动的对象，从所有的对象中选择一个
-            if (activeObject == null)
-            {
-
-                // 寻找一个最近的
-                RaycastHit hit;
-                if (FindClosetChild(out hit, ray, maxDis))
-                {
-                    // 选中当前的对象
-                    activeObject = hit.transform.gameObject;
-
-                    // 记录当前的坐标
-                    activePoint = hit.point;
-
-                    // 调用虚函数
-                    ActiveObject(activeObject);
-                }
-            }
-            // 已经选中了个对象，直接中在平面中获取坐标
-            else
-            {
-                RaycastHit hit;
-                if (collider.Raycast(ray, out hit, maxDis))
-                {
-                    // 和上次保存的点对比，得到偏移
-                    Vector3 d = hit.point - activePoint;
-                    activePoint = hit.point;
-
-                    // 移动当前激活的对象
-                    activeObject.transform.position += d;
-
-                    // 调用虚函数
-                    MoveObject(activeObject, d);
-                }
-                else
-                    activeObject = null; // 已经移出了平面
-
-            }
-
-            if (activeObject != null) working = GetInstanceID();
-        }
-        // 释放按钮
-        else
-        {
-            // 是否有激活的对象
-            if (activeObject != null)
-            {
-                // 调用虚函数
-                DeactiveObject(activeObject);
-
-                // 清除激活标志
-                activeObject = null;
-
-                // 拖拽结束
-                dragEnd = true;
-
-                working = 0;
-            }
-        }
-
+        // 移动对象
+        MoveObject(Input.mousePosition);
     }
     #endregion
 
 
-    #region virtual function
+    #region 虚函数
 
     /// <summary>
     /// 当有一个对象被激活时调用
@@ -208,7 +133,99 @@ public class DragablePlane : MonoBehaviour
 
     #endregion
 
-    #region function
+    #region 函数
+
+    /// <summary>
+    /// 移动对象
+    /// </summary>
+    /// <param name="pos">屏幕坐标</param>
+    protected void MoveObject(Vector3 pos)
+    {
+        // 判断是否有实例在工作，并且是否是当前实例
+        if (workingId != 0 && workingId != GetInstanceID()) return;
+
+        // 碰撞尝试的最大距离
+        float maxDis = Vector3.Distance(
+            cam.transform.position,
+            transform.position) * 2;
+
+
+        // 是否按下按钮
+        if (Input.GetButton("Fire1"))
+        {
+
+            // 拖拽开始
+            dragEnd = false;
+
+            // 当前位置发出的光线
+            Ray ray = cam.ScreenPointToRay(pos);
+
+            // 没有活动的对象，从所有的对象中选择一个
+            if (activeObject == null)
+            {
+
+                // 寻找一个最近的
+                RaycastHit hit;
+                if (FindClosetChild(out hit, ray, maxDis))
+                {
+                    // 选中当前的对象
+                    activeObject = hit.transform.gameObject;
+
+                    // 记录当前的坐标
+                    activePoint = hit.point;
+
+                    // 调用虚函数
+                    ActiveObject(activeObject);
+
+                    // 标记当前的实例
+                    workingId = GetInstanceID();
+                }
+            }
+            // 已经选中了个对象，直接中在平面中获取坐标
+            else
+            {
+                RaycastHit hit;
+                if (collider.Raycast(ray, out hit, maxDis))
+                {
+                    // 和上次保存的点对比，得到偏移
+                    Vector3 d = hit.point - activePoint;
+                    activePoint = hit.point;
+
+                    // 移动当前激活的对象
+                    activeObject.transform.position += d;
+
+                    // 调用虚函数
+                    MoveObject(activeObject, d);
+                }
+                else
+                    activeObject = null; // 已经移出了平面
+
+            }
+
+        }
+        // 释放按钮
+        else
+        {
+            // 是否有激活的对象
+            if (activeObject != null)
+            {
+                // 调用虚函数
+                DeactiveObject(activeObject);
+
+                // 清除激活标志
+                activeObject = null;
+
+                // 拖拽结束
+                dragEnd = true;
+
+                // 清除工作实例标记
+                workingId = 0;
+            }
+        }
+
+
+    }
+
 
     /// <summary>
     /// 寻找一个最近的对象

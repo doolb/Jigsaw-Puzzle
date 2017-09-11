@@ -51,3 +51,6 @@
 
 ### 2017.9.7
 * just set to unactive when clear pieces
+
+### 2017.9.11
+* add support to change game camera view

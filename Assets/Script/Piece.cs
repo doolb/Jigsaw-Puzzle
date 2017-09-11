@@ -195,7 +195,7 @@ public class Piece : MonoBehaviour
         if (System.Math.Abs(transform.localEulerAngles.z) > 1 ||
             System.Math.Abs(other.transform.localEulerAngles.z) > 1)
             return false;
-        
+
 
         // 计算要移动的偏移
         Vector3 offset = GetNeighborOffset(other, type);
@@ -279,7 +279,7 @@ public class Piece : MonoBehaviour
 
     }
 
-    
+
 
     /// <summary>
     /// 移动所有相邻的拼图

@@ -14,10 +14,6 @@ public class ViewCameraControl : DragablePlane
     /// </summary>
     GameObject viewArea;
 
-    /// <summary>
-    /// 可视化视口大小的对象 边界大小
-    /// </summary>
-    public float border = .1f;
 
     /// <summary>
     /// 最大的摄像头视口范围
@@ -34,6 +30,20 @@ public class ViewCameraControl : DragablePlane
     /// </summary>
     public float minZoom = 0.2f;
 
+    /// <summary>
+    /// 激活对象在视口中的坐标
+    /// </summary>
+    public Vector2 value = new Vector2(0.5f, 0.5f);
+
+    /// <summary>
+    /// 保存上次的鼠标的输入
+    /// </summary>
+    Vector2 lastViewport = new Vector2(0.5f, 0.5f);
+
+    /// <summary>
+    /// 是否在有效范围中点击了一次
+    /// </summary>
+    bool clickInView = false;
 
     /// <summary>
     /// 覆盖 基类 的 Start
@@ -43,11 +53,16 @@ public class ViewCameraControl : DragablePlane
         // 只需要 collider
         collider = GetComponent<BoxCollider>();
 
+        // 寻找 控制主摄像头的 父对象
         viewArea = transform.Find("View Area").gameObject;
 
+        // 设置 对象的 层
         childLayer = viewArea.layer;
 
+        // 保存当前的视口范围为 最大的范围
         maxViewSize = Camera.main.orthographicSize;
+
+        // 保存当前的缩放大小
         maxImageSize = viewArea.transform.localScale.x;
 
         //transform.Find("Zoom Bar").GetComponent<UISlider>().onChange.Add(new EventDelegate(OnZoom));
@@ -60,29 +75,20 @@ public class ViewCameraControl : DragablePlane
     void Update()
     {
         // 判断是否按下鼠标
-        if (!Input.GetButton("Fire1"))
+        if (!Input.GetButton("Fire1") || !MoveValue())
         {
             // 清除工作标记
             workingId = 0;
 
             // 清除激活的对象
             activeObject = null;
+
+            // 需要在有效范围中点动一次
+            clickInView = false;
+
             return;
         }
 
-
-        // 判断是否在视口范围内
-        Vector3 viewport = cam.ScreenToViewportPoint(Input.mousePosition);
-
-        if (!IsInView(viewport))
-        {
-            // 清除工作标记
-            workingId = 0;
-
-            // 清除激活的对象
-            activeObject = null;
-            return;
-        }
 
         // 标记当前实例在工作
         workingId = GetInstanceID();
@@ -91,7 +97,7 @@ public class ViewCameraControl : DragablePlane
         activeObject = viewArea;
 
         // 移动对象
-        MoveObject(cam.ViewportToScreenPoint(viewport));
+        MoveObject(cam.ViewportToScreenPoint(value));
     }
 
     /// <summary>
@@ -110,10 +116,58 @@ public class ViewCameraControl : DragablePlane
     bool IsInView(Vector3 viewport)
     {
         // 视口范围 为 （0，1），再加上 判断边界值
-        if (viewport.x < border || viewport.x > 1 - border)
+        if (viewport.x < 0 || viewport.x > 1)
             return false;
-        if (viewport.y < border || viewport.y > 1 - border)
+        if (viewport.y < 0 || viewport.y > 1)
             return false;
+
+        return true;
+    }
+
+    bool MoveValue()
+    {
+
+        // 获取当前的鼠标在 视口中坐标
+        Vector2 viewport = cam.ScreenToViewportPoint(Input.mousePosition);
+
+        // 判断是否在视口范围内
+        if (!IsInView(viewport))
+        {
+            // 不是有效的点击，直接返回
+            if (!clickInView)
+                return false;
+            // 否则，获取鼠标移动的偏移，再移动视口
+            else
+            {
+                // 获取鼠标移动的偏移
+                Vector2 delta = viewport - lastViewport;
+
+                // 保存本次视口坐标
+                lastViewport = viewport;
+
+                // 根据位置裁剪移动
+                // x 轴
+                if (viewport.x < 0 || viewport.x > 1) delta.x = 0;
+                // y 轴
+                if (viewport.y < 0 || viewport.y > 1) delta.y = 0;
+    
+                // 移动视口
+                value += delta;
+            }
+        }
+        else
+        {
+            // 在视口范围中，直接移动位置
+            // 设置视口坐标
+            value = viewport;
+
+            // 保存视口坐标
+            lastViewport = viewport;
+
+            // 在有效范围中点击
+            clickInView = true;
+        }
+
 
         return true;
     }

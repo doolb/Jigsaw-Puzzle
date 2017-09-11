@@ -92,6 +92,9 @@ public class ViewCameraControl : DragablePlane
         // 如果暂停，直接返回
         if (pause) return;
 
+        // 已经有另一实例在工作
+        if (workingId != 0 && workingId != GetInstanceID()) return;
+
         // 判断是否按下鼠标
         if (!Input.GetButton("Fire1") || !MoveValue())
         {

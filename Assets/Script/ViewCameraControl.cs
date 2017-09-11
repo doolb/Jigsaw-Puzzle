@@ -14,6 +14,15 @@ public class ViewCameraControl : DragablePlane
     /// </summary>
     GameObject viewArea;
 
+    /// <summary>
+    /// 可视化视口大小的对象 渲染组件
+    /// </summary>
+    SpriteRenderer rend;
+
+    /// <summary>
+    /// 可视化视口摄像头
+    /// </summary>
+    Camera viewCam;
 
     /// <summary>
     /// 最大的摄像头视口范围
@@ -46,6 +55,11 @@ public class ViewCameraControl : DragablePlane
     bool clickInView = false;
 
     /// <summary>
+    /// 是否暂停
+    /// </summary>
+    bool pause = true;
+
+    /// <summary>
     /// 覆盖 基类 的 Start
     /// </summary>
     protected override void Start()
@@ -55,6 +69,7 @@ public class ViewCameraControl : DragablePlane
 
         // 寻找 控制主摄像头的 父对象
         viewArea = transform.Find("View Area").gameObject;
+        rend = viewArea.GetComponent<SpriteRenderer>();
 
         // 设置 对象的 层
         childLayer = viewArea.layer;
@@ -65,8 +80,8 @@ public class ViewCameraControl : DragablePlane
         // 保存当前的缩放大小
         maxImageSize = viewArea.transform.localScale.x;
 
-        //transform.Find("Zoom Bar").GetComponent<UISlider>().onChange.Add(new EventDelegate(OnZoom));
-
+        // 获取 视口可视化摄像头
+        viewCam = cam;
     }
 
     /// <summary>
@@ -74,6 +89,9 @@ public class ViewCameraControl : DragablePlane
     /// </summary>
     void Update()
     {
+        // 如果暂停，直接返回
+        if (pause) return;
+
         // 判断是否按下鼠标
         if (!Input.GetButton("Fire1") || !MoveValue())
         {
@@ -150,7 +168,7 @@ public class ViewCameraControl : DragablePlane
                 if (viewport.x < 0 || viewport.x > 1) delta.x = 0;
                 // y 轴
                 if (viewport.y < 0 || viewport.y > 1) delta.y = 0;
-    
+
                 // 移动视口
                 value += delta;
             }
@@ -188,5 +206,18 @@ public class ViewCameraControl : DragablePlane
 
         // 缩放视口可视化对象
         viewArea.transform.localScale = new Vector3(maxImageSize, maxImageSize, 1) * zoom;
+    }
+
+    // 显示或 隐藏 视口
+    public void Toggle(bool show)
+    {
+        // 切换 暂停
+        pause = !show;
+
+        // 显示或 隐藏  Camera
+        viewCam.enabled = show;
+
+        // 显示或 隐藏  图像显示
+        rend.enabled = show;
     }
 }

@@ -28,6 +28,11 @@ public class MenuControl : MonoBehaviour
     GameObject restartButton;
 
     /// <summary>
+    /// 开始游戏事件
+    /// </summary>
+    public List<EventDelegate> onStartGame = new List<EventDelegate>();
+
+    /// <summary>
     /// 初始化
     /// </summary>
     void Awake()
@@ -180,6 +185,10 @@ public class MenuControl : MonoBehaviour
 
         // 更新按钮文本
         UpdateButton();
+
+        // 通知开始游戏事件
+        for (int i = 0; i < onStartGame.Count; i++)
+            onStartGame[i].Execute();
     }
 
     /// <summary>

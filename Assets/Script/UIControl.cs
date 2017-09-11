@@ -38,7 +38,10 @@ public class UIControl : MonoBehaviour
     GameObject buttonMenu;
 
 
-
+    /// <summary>
+    /// 视口显示窗口
+    /// </summary>
+    GameObject viewWindow;
 
     /// <summary>
     /// 初始化
@@ -46,7 +49,7 @@ public class UIControl : MonoBehaviour
     void Awake()
     {
 
-        // 获取结束面板
+        // 获取 结束面板
         finish = transform.Find("Finish").gameObject;
         finish.SetActive(false);
 
@@ -62,6 +65,9 @@ public class UIControl : MonoBehaviour
         // 注册 菜单控制 事件
         buttonMenu = transform.Find("Button - Menu").gameObject;
         buttonMenu.GetComponent<UIButton>().onClick.Add(new EventDelegate(ShowMenu));
+
+        // 获取 视口显示窗口
+        viewWindow = transform.Find("View Window").gameObject;
     }
 
     /// <summary>
@@ -112,6 +118,12 @@ public class UIControl : MonoBehaviour
             time.text = t.ToString("F1");
     }
 
+    // 显示或 隐藏  视口
+    public void ToggleView(bool show)
+    {
+        // 显示或 隐藏  视口
+        viewWindow.SetActive(show);
+    }
 
     /// <summary>
     /// 显示菜单按钮

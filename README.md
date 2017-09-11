@@ -54,3 +54,4 @@
 
 ### 2017.9.11
 * add support to change game camera view
+* smooth move the camera in viewport

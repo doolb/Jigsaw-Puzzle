@@ -135,9 +135,13 @@ public class GameLoader : MonoBehaviour
         // 关联视口显示和隐藏
         uiControl.transform.Find("Check Box - View").GetComponent<UIToggle>().onChange.Add(new EventDelegate(() =>
             {
+                // 获取是否显示视口
                 bool show = UIToggle.current.value;
+
+                // 切换视口显示
                 viewControl.Toggle(show);
 
+                // 转换ui显示
                 uiControl.ToggleView(show);
             }));
 

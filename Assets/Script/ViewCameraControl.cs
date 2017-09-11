@@ -45,11 +45,6 @@ public class ViewCameraControl : DragablePlane
     public Vector2 value = new Vector2(0.5f, 0.5f);
 
     /// <summary>
-    /// 保存上次的鼠标的输入
-    /// </summary>
-    Vector2 lastViewport = new Vector2(0.5f, 0.5f);
-
-    /// <summary>
     /// 是否在有效范围中点击了一次
     /// </summary>
     bool clickInView = false;
@@ -58,6 +53,11 @@ public class ViewCameraControl : DragablePlane
     /// 是否暂停
     /// </summary>
     bool pause = true;
+
+    /// <summary>
+    /// 平滑移动的时间
+    /// </summary>
+    float deltaTime;
 
     /// <summary>
     /// 覆盖 基类 的 Start
@@ -82,6 +82,7 @@ public class ViewCameraControl : DragablePlane
 
         // 获取 视口可视化摄像头
         viewCam = cam;
+
     }
 
     /// <summary>
@@ -94,6 +95,13 @@ public class ViewCameraControl : DragablePlane
 
         // 已经有另一实例在工作
         if (workingId != 0 && workingId != GetInstanceID()) return;
+
+        // 更新时间
+        deltaTime += Time.deltaTime;
+
+        // 在按下按钮瞬间，重置时间
+        if (Input.GetButtonDown("Fire1"))
+            deltaTime = 0;
 
         // 判断是否按下鼠标
         if (!Input.GetButton("Fire1") || !MoveValue())
@@ -119,6 +127,7 @@ public class ViewCameraControl : DragablePlane
 
         // 移动对象
         MoveObject(cam.ViewportToScreenPoint(value));
+
     }
 
     /// <summary>
@@ -157,38 +166,24 @@ public class ViewCameraControl : DragablePlane
             // 不是有效的点击，直接返回
             if (!clickInView)
                 return false;
-            // 否则，获取鼠标移动的偏移，再移动视口
+            // 否则，把坐标裁剪到视口中
             else
             {
-                // 获取鼠标移动的偏移
-                Vector2 delta = viewport - lastViewport;
-
-                // 保存本次视口坐标
-                lastViewport = viewport;
-
-                // 根据位置裁剪移动
-                // x 轴
-                if (viewport.x < 0 || viewport.x > 1) delta.x = 0;
-                // y 轴
-                if (viewport.y < 0 || viewport.y > 1) delta.y = 0;
-
-                // 移动视口
-                value += delta;
+                viewport = viewport.ClipInView();
             }
         }
         else
         {
-            // 在视口范围中，直接移动位置
-            // 设置视口坐标
-            value = viewport;
-
-            // 保存视口坐标
-            lastViewport = viewport;
-
             // 在有效范围中点击
             clickInView = true;
         }
 
+
+        // 移动位置视口坐标
+        value = Vector2.Lerp(value, viewport, deltaTime);
+
+        // 重置 delta time
+        deltaTime = 0;
 
         return true;
     }
@@ -223,4 +218,7 @@ public class ViewCameraControl : DragablePlane
         // 显示或 隐藏  图像显示
         rend.enabled = show;
     }
+
+
+
 }

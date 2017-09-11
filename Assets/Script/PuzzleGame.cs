@@ -156,7 +156,7 @@ public class PuzzleGame : Puzzle
 
             // 保存记录
             record = new Record(pieceTotalCount, moveCount, gameTime, isRotate);
-            
+
             // 重置时间
             gameTime = 0;
 

@@ -154,11 +154,11 @@ public class Puzzle : DragablePlane
 
         // 寻找最近的邻居
         NeighborType type;
-        GameObject nb = GetCloestNeighbor(go,out type);
+        GameObject nb = GetCloestNeighbor(go, out type);
 
         // 如果找到 就 通知当前拼图块添加
         if (nb != null)
-            add = go.GetComponent<Piece>().AddNeighbor(nb,type);
+            add = go.GetComponent<Piece>().AddNeighbor(nb, type);
 
         // 如果添加成功，返回
         if (add) return;
@@ -167,11 +167,11 @@ public class Puzzle : DragablePlane
         foreach (GameObject obj in go.GetComponent<Piece>().connectedPieces)
         {
             // 寻找最近的邻居
-            nb = GetCloestNeighbor(obj,out type);
+            nb = GetCloestNeighbor(obj, out type);
 
             // 如果找到 就 通知当前拼图块添加
             if (nb != null)
-                add = obj.GetComponent<Piece>().AddNeighbor(nb,type);
+                add = obj.GetComponent<Piece>().AddNeighbor(nb, type);
 
             // 如果添加成功，返回
             if (add) return;
@@ -444,13 +444,13 @@ public class Puzzle : DragablePlane
     /// <param name="go">要获取邻居的对象</param>
     /// <param name="type">邻居的类型</param>
     /// <returns>找到的邻居</returns>
-    GameObject GetCloestNeighbor(GameObject go,out NeighborType type)
+    GameObject GetCloestNeighbor(GameObject go, out NeighborType type)
     {
         type = NeighborType.None;
         // 获取所有邻居 和邻居的类型
         CheckNeighbros(go);
-        
-        for(int i=0;i<neighbors.Count;i++)
+
+        for (int i = 0; i < neighbors.Count; i++)
         {
             type = neighborTypes[i];
             // 如果可以连接，返回

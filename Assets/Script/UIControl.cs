@@ -99,7 +99,7 @@ public class UIControl : MonoBehaviour
         // 显示信息
         infoLabel.text = info;
 
-        
+
     }
 
 

@@ -42,8 +42,15 @@ public class GameLoader : MonoBehaviour
     /// </summary>
     public static PuzzleGame puzzleGame;
 
+    /// <summary>
+    /// 视口控制对象
+    /// </summary>
     public static ViewCameraControl viewControl;
 
+    /// <summary>
+    /// 数据管理对象
+    /// </summary>
+    GameDataManager dataManager;
 
     /// <summary>
     /// 初始化
@@ -52,7 +59,16 @@ public class GameLoader : MonoBehaviour
     {
         // 加载场景
         LoadScene();
+
+        // 建立事件的联系
+        BuildEvent();
+
+        // 加载用户数据
+        LoadData();
     }
+
+
+    #region 加载场景
 
     /// <summary>
     /// 加载场景
@@ -70,9 +86,6 @@ public class GameLoader : MonoBehaviour
 
         // 加载 UI
         LoadUI();
-
-        // 建立事件的联系
-        BuildEvent();
 
     }
 
@@ -114,6 +127,22 @@ public class GameLoader : MonoBehaviour
     }
 
 
+
+    // 加载视图
+    void LoadView()
+    {
+        // 加载视图预制体，并挂载脚本
+        viewControl = Instantiate<GameObject>(Resources.Load<GameObject>("Main Camera Control")).AddComponent<ViewCameraControl>();
+
+        // 设置 摄像头
+        viewControl.cam = GetComponent<Camera>();
+
+    }
+    #endregion
+
+
+    #region 关联事件
+
     void BuildEvent()
     {
         // 获取视口显示对象
@@ -134,16 +163,16 @@ public class GameLoader : MonoBehaviour
 
         // 关联视口显示和隐藏
         uiControl.transform.Find("Check Box - View").GetComponent<UIToggle>().onChange.Add(new EventDelegate(() =>
-            {
-                // 获取是否显示视口
-                bool show = UIToggle.current.value;
+        {
+            // 获取是否显示视口
+            bool show = UIToggle.current.value;
 
-                // 切换视口显示
-                viewControl.Toggle(show);
+            // 切换视口显示
+            viewControl.Toggle(show);
 
-                // 转换ui显示
-                uiControl.ToggleView(show);
-            }));
+            // 转换ui显示
+            uiControl.ToggleView(show);
+        }));
 
 
 
@@ -164,14 +193,26 @@ public class GameLoader : MonoBehaviour
         recordControl.onHide.Add(new EventDelegate(menuControl.Show));
     }
 
-    // 加载视图
-    void LoadView()
+
+    #endregion
+
+    /// <summary>
+    /// 加载用户数据
+    /// </summary>
+    void LoadData()
     {
-        // 加载视图预制体，并挂载脚本
-        viewControl = Instantiate<GameObject>(Resources.Load<GameObject>("Main Camera Control")).AddComponent<ViewCameraControl>();
+        // 挂载数据管理脚本
+        dataManager = gameObject.AddComponent<GameDataManager>();
 
-        // 设置 摄像头
-        viewControl.cam = GetComponent<Camera>();
+        Transform menu = uiRoot3D.transform.Find("Panel - Menu(Clone)");
 
+        menu.Find("Pop Up List - Background").GetComponent<UIPopupList>().value = dataManager.gameData.background;
+        
+    }
+
+
+    void OnDestroy()
+    {
+        dataManager.Save();
     }
 }

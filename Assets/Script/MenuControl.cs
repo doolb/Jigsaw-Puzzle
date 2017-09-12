@@ -91,7 +91,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 游戏结束 时 回调
     /// </summary>
-    void GameEnd()
+    public void GameEnd()
     {
         // 更新按钮显示
         UpdateButton();
@@ -150,7 +150,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 根据游戏状态，更新按钮文本
     /// </summary>
-    void UpdateButton()
+    public void UpdateButton()
     {
         // 如果没有创建拼图，或者需要重新创建
         if (GameLoader.puzzleGame.needRestart ||
@@ -175,7 +175,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 开始游戏
     /// </summary>
-    void StartGame()
+    public void StartGame()
     {
         // 隐藏菜单
         Hide();
@@ -194,7 +194,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 更改背景
     /// </summary>
-    void ChangeBackground()
+    public void ChangeBackground()
     {
         // 更改背景
         GameLoader.background.ChangeBackground(UIPopupList.current.value);
@@ -203,7 +203,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 更改拼图个数
     /// </summary>
-    void ChangeCount()
+    public void ChangeCount()
     {
         // 更改拼图个数
         GameLoader.puzzleGame.SetPieceCount(GetPieceCount(int.Parse(UIPopupList.current.value.Trim())));
@@ -217,7 +217,7 @@ public class MenuControl : MonoBehaviour
     /// </summary>
     /// <param name="count">要转换个数</param>
     /// <returns></returns>
-    Vector2 GetPieceCount(int count)
+    public Vector2 GetPieceCount(int count)
     {
         // 默认 为 （6，4）
         int x = 6, y = 4;
@@ -255,7 +255,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 更改拼图图像
     /// </summary>
-    void ChangeImage()
+    public void ChangeImage()
     {
         // 更改拼图图像
         GameLoader.puzzleGame.SetPieceImage(UIPopupList.current.value);
@@ -264,7 +264,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 更改拼图形状
     /// </summary>
-    void ChangeShape()
+    public void ChangeShape()
     {
         // 更改拼图形状
         GameLoader.puzzleGame.SetPieceShape(UIPopupList.current.value);
@@ -274,7 +274,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 更改拼图风格
     /// </summary>
-    void ChangeStyle()
+    public void ChangeStyle()
     {
         // 更改拼图风格
         GameLoader.puzzleGame.SetPieceStyle(UIPopupList.current.value);
@@ -283,7 +283,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 切换是否显示全就拼图
     /// </summary>
-    void ToggleShow()
+    public void ToggleShow()
     {
         // 切换是否显示全就拼图
         GameLoader.puzzleGame.ShowAllOrNot(UIToggle.current.value);
@@ -292,7 +292,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 平铺拼图
     /// </summary>
-    void TilePiece()
+    public void TilePiece()
     {
         // 平铺拼图
         GameLoader.puzzleGame.TilePiece();
@@ -301,7 +301,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 切换显示原图
     /// </summary>
-    void ToggleImage()
+    public void ToggleImage()
     {
         // 切换显示原图
         GameLoader.puzzleGame.ToggleImage(UIToggle.current.value);
@@ -310,7 +310,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 切换旋转
     /// </summary>
-    void ToggleRotate()
+    public void ToggleRotate()
     {
         // 切换旋转
         GameLoader.puzzleGame.ToggleRotate(UIToggle.current.value);
@@ -322,7 +322,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 重新开始游戏
     /// </summary>
-    void ReStartGame()
+    public void ReStartGame()
     {
         GameLoader.puzzleGame.ReStart();
     }

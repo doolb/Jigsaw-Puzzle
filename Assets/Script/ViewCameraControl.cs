@@ -138,21 +138,7 @@ public class ViewCameraControl : DragablePlane
 
     }
 
-    /// <summary>
-    /// 是否在视口中
-    /// </summary>
-    /// <param name="viewport">视口坐标</param>
-    /// <returns></returns>
-    bool IsInView(Vector3 viewport)
-    {
-        // 视口范围 为 （0，1），再加上 判断边界值
-        if (viewport.x < 0 || viewport.x > 1)
-            return false;
-        if (viewport.y < 0 || viewport.y > 1)
-            return false;
-
-        return true;
-    }
+    
 
     bool MoveValue()
     {
@@ -161,7 +147,7 @@ public class ViewCameraControl : DragablePlane
         Vector2 viewport = cam.ScreenToViewportPoint(Input.mousePosition);
 
         // 判断是否在视口范围内
-        if (!IsInView(viewport))
+        if (!viewport.IsInView())
         {
             // 不是有效的点击，直接返回
             if (!clickInView)

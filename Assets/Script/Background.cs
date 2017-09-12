@@ -9,7 +9,6 @@ using UnityEngine;
 [RequireComponent(typeof(Renderer))]
 public class Background : MonoBehaviour
 {
-
     /// <summary>
     /// Renderer 对象
     /// </summary>

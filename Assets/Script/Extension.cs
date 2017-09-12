@@ -8,6 +8,23 @@ using UnityEngine;
 public static class Extension
 {
     /// <summary>
+    /// 判断 vector2 向量 是否在视口中
+    /// </summary>
+    /// <param name="viewport">视口坐标</param>
+    /// <returns></returns>
+    public static bool IsInView(this Vector2 viewport)
+    {
+        // 视口范围 为 （0，1），再加上 判断边界值
+        if (viewport.x < 0 || viewport.x > 1)
+            return false;
+        if (viewport.y < 0 || viewport.y > 1)
+            return false;
+
+        return true;
+    }
+
+
+    /// <summary>
     /// 获取 Vector2 的法线
     /// </summary>
     /// <param name="v">要获取法线的向量</param>

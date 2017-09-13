@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 这个脚本用于控制拼图游戏
 /// </summary>
-public class PuzzleGame : Puzzle
+public class PuzzleGame : PuzzleManager
 {
     #region 变量
 
@@ -59,7 +59,7 @@ public class PuzzleGame : Puzzle
     /// <summary>
     /// 新的拼图块数
     /// </summary>
-    Vector2 newPieceCount;
+    Count newPieceCount;
 
 
     /// <summary>
@@ -129,6 +129,8 @@ public class PuzzleGame : Puzzle
         //获取平铺的起始位置
         tileOrigin = transform.Find("Tile Origin").position;
 
+        ReSize();
+
     }
 
     /// <summary>
@@ -166,9 +168,8 @@ public class PuzzleGame : Puzzle
         // 如果游戏结束，返回
         if (gameFinish) return;
 
-        // 是否和所有块相连
-        Piece piece = go.GetComponent<Piece>();
-        if (piece.connectedPieces.Count == pieceTotalCount - 1)
+        // 是否完全拼图
+        if (puzzle.finish)
         {
             // 暂停时间更新
             Time.timeScale = 0;
@@ -177,7 +178,7 @@ public class PuzzleGame : Puzzle
             needRestart = true;
 
             // 保存记录
-            record = new Record(pieceTotalCount, moveCount, gameTime, isRotate);
+            record = new Record(puzzle.totalCount, moveCount, gameTime, isRotate);
 
             // 重置时间
             gameTime = 0;
@@ -219,10 +220,10 @@ public class PuzzleGame : Puzzle
         ClearPiece();
 
         // 是否更改了拼图个数
-        if (pieceCount != newPieceCount)
+        if (puzzle.count != newPieceCount)
         {
             // 更新拼图大小
-            pieceCount = newPieceCount;
+            puzzle.count = newPieceCount;
             ReSize();
         }
 
@@ -278,16 +279,16 @@ public class PuzzleGame : Puzzle
         if (!pieceCreated) return;
 
         // 生成随机数缓存
-        BuildRandomBuffer(firstPieceIndex, firstPieceIndex + pieceTotalCount);
+        BuildRandomBuffer(firstPieceIndex, firstPieceIndex + puzzle.totalCount);
 
         // 每列最多的个数
-        int maxVCount = (int)(pieceCount.y * 1.2f);
+        int maxVCount = (int)(puzzle.count.y * 1.2f);
 
         // 当前平铺的个数
         int count = 0;
 
         // 遍历所有拼图
-        for (int i = 0; i < pieceTotalCount; i++)
+        for (int i = 0; i < puzzle.totalCount; i++)
         {
             // 随机获取拼图
             GameObject child = transform.GetChild(randomBuffer[i]).gameObject;
@@ -296,7 +297,7 @@ public class PuzzleGame : Puzzle
             if (!child.activeSelf) continue;
 
             // 是否没有和其它块相连
-            if (child.GetComponent<Piece>().connectedPieces.Count == 0)
+            if ( child.GetComponent<Piece>().connectedCount == 1)
             {
                 // 计算 平铺的 行 和 列
                 int x = count / maxVCount;
@@ -317,16 +318,16 @@ public class PuzzleGame : Puzzle
     /// 设置拼图块数
     /// </summary>
     /// <param name="count">新的拼图块数</param>
-    public void SetPieceCount(Vector2 count)
+    public void SetPieceCount(Count count)
     {
         // 保存新的块数
-        newPieceCount = count;
+        newPieceCount = puzzle.count;
 
         // 游戏是否未开始
         if (!pieceCreated)
         {
             // 设置成新的块数
-            pieceCount = newPieceCount;
+            count = newPieceCount;
 
             // 更新拼图大小
             ReSize();
@@ -334,7 +335,7 @@ public class PuzzleGame : Puzzle
         }
 
         // 判断是否需要重新开始游戏
-        needRestart = newPieceCount != pieceCount;
+        needRestart = newPieceCount != count;
     }
 
     /// <summary>
@@ -442,14 +443,14 @@ public class PuzzleGame : Puzzle
         if (!pieceCreated) return;
 
         // 遍历所有拼图
-        for (int i = 0; i < pieceCount.x; i++)
-            for (int j = 0; j < pieceCount.y; j++)
+        for (int i = 0; i < puzzle.count.x; i++)
+            for (int j = 0; j < puzzle.count.y; j++)
             {
                 // 获取 第 (x,y) 个拼图
                 GameObject child = GetPiece(i, j);
 
                 // 判断是否在边界上
-                if (!child.GetComponent<Piece>().pid.isAtEdge)
+                if (!child.GetComponent<Piece>().isAtEdge)
                 {
                     // 切换拼图的显示
                     child.SetActive(show);
@@ -517,8 +518,8 @@ public class PuzzleGame : Puzzle
     void UpdatePieceMark()
     {
         // 遍历所有拼图
-        for (int i = 0; i < pieceCount.x; i++)
-            for (int j = 0; j < pieceCount.y; j++)
+        for (int i = 0; i < puzzle.count.x; i++)
+            for (int j = 0; j < puzzle.count.y; j++)
             {
                 // 设置 拼图 为新的形状
                 GetPiece(i, j).GetComponent<Renderer>().material.SetTexture("_MarkTex", markImage);
@@ -531,8 +532,8 @@ public class PuzzleGame : Puzzle
     void UpdatePieceImage()
     {
         // 遍历所有拼图
-        for (int i = 0; i < pieceCount.x; i++)
-            for (int j = 0; j < pieceCount.y; j++)
+        for (int i = 0; i < puzzle.count.x; i++)
+            for (int j = 0; j < puzzle.count.y; j++)
             {
                 // 获取第 (x,y) 个拼图
                 GameObject child = GetPiece(i, j);
@@ -565,7 +566,7 @@ public class PuzzleGame : Puzzle
             float angle = Random.Range(1, 4) * 90;
 
             // 随机选择拼图
-            GameObject child = GetPiece(Random.Range(0, pieceCount.x), Random.Range(0, pieceCount.y));
+            GameObject child = GetPiece(Random.Range(0, puzzle.count.x), Random.Range(0, puzzle.count.y));
 
             // 旋转拼图
             child.transform.localEulerAngles = new Vector3(0, 0, angle);

@@ -58,3 +58,4 @@
 
 ### 2017.9.13
 * can save game setting
+* split puzzle logic from MonoBehaviour

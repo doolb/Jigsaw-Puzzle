@@ -118,7 +118,8 @@ public class DragablePlane : MonoBehaviour
     /// <param name="delta">移动的偏移</param>
     protected virtual void MoveObject(GameObject go, Vector3 delta)
     {
-
+        // 移动当前激活的对象
+        activeObject.transform.position += delta;
     }
 
     /// <summary>
@@ -190,9 +191,6 @@ public class DragablePlane : MonoBehaviour
                     // 和上次保存的点对比，得到偏移
                     Vector3 d = hit.point - activePoint;
                     activePoint = hit.point;
-
-                    // 移动当前激活的对象
-                    activeObject.transform.position += d;
 
                     // 调用虚函数
                     MoveObject(activeObject, d);

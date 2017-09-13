@@ -2,441 +2,261 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
+/// <summary>
+/// 保存 整形 二维大小的结构体
+/// </summary>
+public struct Count
+{
+    /// <summary>
+    /// x 
+    /// </summary>
+    public int x;
+
+    /// <summary>
+    /// y
+    /// </summary>
+    public int y;
+
+
+    /// <summary>
+    /// 重载 ToString 函数
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return x + ":" + y;
+    }
+
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="_x">x</param>
+    /// <param name="_y">y</param>
+    public Count(int _x,int _y)
+    {
+        x = _x;
+        y = _y;
+    }
+
+
+    public static bool operator !=(Count lhs, Count rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    public static bool operator ==(Count lhs, Count rhs)
+    {
+        return (lhs.x == rhs.x) && (lhs.y == rhs.y);
+    }
+}
+
+
+
+/// <summary>
+/// 邻居的类型
+/// </summary>
+public enum NeighborType
+{
+    /// <summary>
+    /// 不是邻居
+    /// </summary>
+    None,
+
+    /// <summary>
+    /// 上面
+    /// </summary>
+    Top,
+
+    /// <summary>
+    /// 下面
+    /// </summary>
+    Bottom,
+
+    /// <summary>
+    /// 左边
+    /// </summary>
+    Left,
+
+    /// <summary>
+    /// 右边
+    /// </summary>
+    Right,
+
+    /// <summary>
+    /// 枚举最大值
+    /// </summary>
+    Max
+};
+
+
 /// <summary>
 /// 这个类控制拼图的逻辑
 /// </summary>
-public class Puzzle : DragablePlane
+public class Puzzle
 {
+    PuzzleManager manager;
 
-    /// <summary>
-    /// 第一块 拼图 的索引
-    /// </summary>
-    public int firstPieceIndex = 3;
-
-    [Header("Piece")]
 
     /// <summary>
     /// 拼图的个数
     /// </summary>
-    public Vector2 pieceCount = new Vector2(6, 4);
+    public Count count = new Count(6, 4);
 
-    public int pieceTotalCount
+    /// <summary>
+    /// 拼图总个数
+    /// </summary>
+    public int totalCount
     {
-        get { return (int)pieceCount.x * (int)pieceCount.y; }
+        get { return count.x * count.y; }
     }
 
     /// <summary>
-    /// 拼图 预制体
+    /// 拼图的大小
     /// </summary>
-    public GameObject piecePrefab;
+    public Vector2 size
+    {
+        get { return manager.displaySize; }
+    }
 
     /// <summary>
-    /// 拼图 图像
+    /// 拼图缩放比率
     /// </summary>
-    public Sprite pieceImage;
+    public Vector2 display
+    {
+        get { return manager.displayRatio; }
+    }
+
+    public float imageX { get { return manager.pieceImage.texture.width; } }
+    public float imageY { get { return manager.pieceImage.texture.height; } }
 
     /// <summary>
-    /// 拼图的 形状
+    /// 是否完全拼图
     /// </summary>
-    public Texture markImage;
-
-    /// <summary>
-    /// 自动连接 的最大 距离
-    /// </summary>
-    public float largestSize = 30.0f;
-
-
-    [HideInInspector]
-
-    /// <summary>
-    /// 计算显示 的 标准尺寸
-    /// </summary>
-    public const float displayX = 640, displayY = 480;
-
-
-    /// <summary>
-    /// 拼图的标准缩放值
-    /// </summary>
-    public Vector2 pieceScale;
-
-    /// <summary>
-    /// 拼图和标准尺寸缩放比率
-    /// </summary>
-    public Vector2 displayRatio = new Vector2(1, 1);
-
-    /// <summary>
-    /// 每块拼图的像素大小
-    /// </summary>
-    public Vector2 pieceSize;
-
-    /// <summary>
-    /// 每块拼图的实际显示的大小
-    /// </summary>
-    public Vector2 displaySize;
-
-
-    /// <summary>
-    /// 拼图是否已经创建
-    /// </summary>
-    public bool pieceCreated;
+    public bool finish
+    {
+        get { return connectedPieces[0].Count == totalCount; }
+    }
 
     /// <summary>
     /// 缓存邻居拼图
     /// </summary>
-    List<GameObject> neighbors = new List<GameObject>();
+    List<GameObject> neighborCache = new List<GameObject>();
 
     /// <summary>
     /// 缓存邻居拼图类型
     /// </summary>
     List<NeighborType> neighborTypes = new List<NeighborType>();
 
-    [HideInInspector]
     /// <summary>
-    /// 单一实例
+    /// 保存所有拼图的连接表
     /// </summary>
-    public static Puzzle instance;
+    public List<List<GameObject>> connectedPieces = new List<List<GameObject>>();
+
 
     /// <summary>
-    /// 碰撞测试的 缓存大小
+    /// 构造函数
     /// </summary>
-    protected override int raycastHitCacheSize
+    /// <param name="m">管理拼图显示的对象</param>
+    public Puzzle(PuzzleManager m)
     {
-        // 总的 拼图个数
-        get { return ((int)pieceCount.x) * ((int)pieceCount.y); }
+        manager = m;
     }
 
+    #region 公共函数
 
     /// <summary>
-    /// 初始化
+    /// 重置拼图
     /// </summary>
-    protected override void Awake()
+    public void Reset()
     {
-        base.Awake();
-
-
-        // 启动单实例
-        if (instance == null)
-            instance = this;
-        if (instance != null && instance != this)
-            DestroyObject(gameObject);
-
-        DontDestroyOnLoad(gameObject);
-
-        // 加载拼图预制体
-        piecePrefab = Resources.Load("Piece") as GameObject;
-    }
-
-
-
-    #region 重载基类函数
-    /// <summary>
-    /// 激活拼图对象
-    /// </summary>
-    /// <param name="go">激活的拼图对象</param>
-    protected override void ActiveObject(GameObject go)
-    {
-        base.ActiveObject(go);
-
-        // 通知 激活的拼图 
-        go.GetComponent<Piece>().OnActive();
-    }
-
-    /// <summary>
-    /// 取消激活对象
-    /// </summary>
-    /// <param name="go">取消激活拼图对象</param>
-    protected override void DeactiveObject(GameObject go)
-    {
-        base.DeactiveObject(go);
-
-        // 记录是否已经添加
-        bool add = false;
-
-        // 寻找最近的邻居
-        NeighborType type;
-        GameObject nb = GetCloestNeighbor(go, out type);
-
-        // 如果找到 就 通知当前拼图块添加
-        if (nb != null)
-            add = go.GetComponent<Piece>().AddNeighbor(nb, type);
-
-        // 如果添加成功，返回
-        if (add) return;
-
-        // 遍历 已经连接的 块
-        foreach (GameObject obj in go.GetComponent<Piece>().connectedPieces)
+        // 遍历所有拼图
+        for(int i=0;i<count.x ;i++)
         {
-            // 寻找最近的邻居
-            nb = GetCloestNeighbor(obj, out type);
+            for(int j=0;j<count.y;j++)
+            {
+                // 获取 第 (x,y)个拼图
+                GameObject child = GetPiece(i, j);
 
-            // 如果找到 就 通知当前拼图块添加
-            if (nb != null)
-                add = obj.GetComponent<Piece>().AddNeighbor(nb, type);
+                // 获取拼图块控制脚本
+                Piece piece = child.GetComponent<Piece>();
 
-            // 如果添加成功，返回
-            if (add) return;
+                // 判断列表个数是否足够
+                List<GameObject> list = null;
+                if (piece.connectedListID >= connectedPieces.Count)
+                {
+                    // 新建一个列表
+                    list = new List<GameObject>();
+
+                    // 加入列表中
+                    connectedPieces.Add(list);
+                }
+                // 直接获取列表
+                else
+                    list = connectedPieces[piece.connectedListID];
+
+                // 清空列表
+                list.Clear();
+
+                // 添加当前拼图
+                list.Add(child);
+            }
         }
-
     }
+
 
     /// <summary>
-    /// 移动拼图
+    /// 移动拼图，包括相连的其它拼图
     /// </summary>
-    /// <param name="go">拼图对象</param>
-    /// <param name="delta">移动的距离</param>
-    protected override void MoveObject(GameObject go, Vector3 delta)
+    /// <param name="piece">要移动的拼图</param>
+    /// <param name="delta">要移动的距离</param>
+    public void Move(GameObject piece, Vector3 delta)
     {
-        // 通知 拼图 移动
-        go.GetComponent<Piece>().OnMove(delta);
-    }
+        // 获取当前拼图 在 连接表 中索引
+        int index = piece.GetComponent<Piece>().connectedListID;
 
+        // 移动所有连接的拼图
+        foreach(GameObject go in connectedPieces[index])
+            go.transform.position += delta;
+    }
+    
     /// <summary>
-    /// 碰撞测试的 优先值
+    /// 移动一个拼图结束
     /// </summary>
-    /// <param name="go">拼图对象</param>
-    /// <returns>拼图对象的 优先值</returns>
-    protected override int RaycastHitOrder(GameObject go)
+    /// <param name="piece">移动的拼图</param>
+    public void MoveEnd(GameObject piece)
     {
-        // 返回 拼图对象的 优先值
-        return go.GetComponent<Piece>().order;
+
+        // 获取当前拼图 在 连接表 中索引
+        int index = piece.GetComponent<Piece>().connectedListID;
+
+        // 遍历所有连接的拼图
+        foreach(GameObject go in connectedPieces[index])
+        {
+            // 如果添加邻居成功，返回
+            if(AddNeighbor(piece))
+                return;
+        }
     }
-
-
-
     #endregion
 
-    /// <summary>
-    /// 生成拼图
-    /// </summary>
-    protected void MakePuzzle()
-    {
-        // 设置 拼图 的最大 优先值
-        Piece.maxDepth = (int)pieceCount.x * (int)pieceCount.y + 1;
 
-        // 生成 （x,y) 个 拼图块
-        for (int i = 0; i < pieceCount.x; i++)
-        {
-            for (int j = 0; j < pieceCount.y; j++)
-            {
-                // 创建 第 （ x,y ) 个拼图
-                CreatePiece(i, j);
-            }
-        }
+    #region 其它函数
 
-        // 检查 拼图的 显示
-        CheckPiece();
-
-        // 拼图已经创建
-        pieceCreated = true;
-    }
 
     /// <summary>
-    /// 获取 第 (x,y) 个拼图，下标从 0 开始
-    /// 原点在 左下角
+    /// 获取第( x,y ) 块拼图
     /// </summary>
-    /// <param name="x">第 x 列 </param>
-    /// <param name="y">第 y 列 </param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
     /// <returns></returns>
-    public GameObject GetPiece(int x, int y)
+    GameObject GetPiece(int x,int y)
     {
-        // 找到 拼图 的索引
-        int index = firstPieceIndex + x * (int)pieceCount.y + y;
-
-        // 如果 小于 当前 已有的拼图个数，直接返回
-        if (index < transform.childCount)
-            return transform.GetChild(index).gameObject;
-
-        // 创建一个新的拼图实例
-        return Instantiate(piecePrefab, transform);
-
+        return manager.GetPiece(x, y);
     }
 
-    /// <summary>
-    /// 获取 第 (x,y) 个拼图，下标从 0 开始
-    /// 原点在 左下角
-    /// </summary>
-    /// <param name="x">第 x 列 </param>
-    /// <param name="y">第 y 列 </param>
-    /// <returns></returns>
-    public GameObject GetPiece(float x, float y)
-    {
-        // 获取 第 (x,y) 个拼图
-        return GetPiece((int)x, (int)y);
-    }
-
-
-    /// <summary>
-    /// 清理现有的拼图
-    /// </summary>
-    public void ClearPiece()
-    {
-        // 如果没有生成拼图，返回
-        if (!pieceCreated) return;
-
-        // 遍历所有拼图对象
-        for (int i = 0; i < pieceCount.x; i++)
-            for (int j = 0; j < pieceCount.y; j++)
-            {
-                // 隐藏 拼图对象
-                GetPiece(i, j).SetActive(false);
-            }
-
-        // 拼图已经清理
-        pieceCreated = false;
-    }
-
-    /// <summary>
-    /// 重设拼图的大小
-    /// </summary>
-    protected void ReSize()
-    {
-        // 如果 拼图对象为空，返回
-        if (pieceImage == null) return;
-
-        // 适配 图像 的 宽高比
-        transform.localScale = new Vector3(
-            pieceImage.texture.width / (pieceImage.texture.height / displayY) / displayX,
-            1, 1);
-
-        // 更新 图像大小
-        pieceSize = new Vector2(pieceImage.texture.width / pieceCount.x, pieceImage.texture.height / pieceCount.y);
-
-        // 更新 拼图缩放比率
-        displayRatio.x = displayX / pieceImage.texture.width;
-        displayRatio.y = displayY / pieceImage.texture.height;
-
-        // 更新 拼图显示大小
-        displaySize.x = displayRatio.x * pieceSize.x * transform.localScale.x;
-        displaySize.y = displayRatio.y * pieceSize.y;
-
-        // 更新 拼图标准缩放值
-        pieceScale.x = 1 / pieceCount.x;
-        pieceScale.y = 1 / pieceCount.y;
-    }
-
-    /// <summary>
-    /// 创建 第 (x,y) 个拼图
-    /// </summary>
-    /// <param name="x">第 x 列</param>
-    /// <param name="y">第 y 行</param>
-    void CreatePiece(int x, int y)
-    {
-        // 获取 当前 位置的 拼图对象
-        GameObject child = GetPiece(x, y);
-
-        // 激活对象
-        child.SetActive(true);
-
-        // 初始化 拼图
-        Piece piece = child.GetComponent<Piece>();
-        if (piece == null) piece = child.AddComponent<Piece>();
-        piece.Init(x, y);
-
-
-        // 设置材质
-        Vector2 offset = pieceScale / 2f;
-
-        // 获取图像渲染对象
-        SpriteRenderer rend = child.GetComponent<SpriteRenderer>();
-
-        // 设置图像 uv
-        rend.material.mainTextureScale = pieceScale * 2;
-        rend.material.mainTextureOffset =
-            new Vector2(x * pieceScale.x - offset.x, y * pieceScale.y - offset.y);
-
-        // 设置拼图图像
-        rend.sprite = pieceImage;
-
-        // 设置拼图形状
-        rend.material.SetTexture("_MarkTex", markImage);
-
-        // 设置 层
-        child.layer = childLayer;
-
-        // 随机位置
-        child.transform.position = new Vector3(
-                                        Random.Range(-0.15f, 0.15f) * collider.size.x,
-                                        Random.Range(-0.15f, 0.15f) * collider.size.y,
-                                        0);
-    }
-
-    /// <summary>
-    /// 检查 拼图的 显示
-    /// </summary>
-    void CheckPiece()
-    {
-        // 上边界
-        // 如果 拼图个数 y 是奇数，反转  
-        if ((int)pieceCount.y % 2 == 1)
-        {
-            print("fix puzzle at top edge.");
-
-            // 左上角
-            Transform leftTop = GetPiece(0, (int)pieceCount.y - 1).transform;
-
-            // 反转 Y 轴显示
-            leftTop.localScale = new Vector3(leftTop.localScale.x, -leftTop.localScale.y, 1);
-
-            // 设置成 左下角的形状
-            leftTop.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0));
-
-
-            // 遍历 上边界的其它拼图，不包括 右上角
-            for (int i = 1; i < pieceCount.x - 1; i++)
-            {
-                // 获取拼图对象
-                GameObject piece = GetPiece(i, (int)pieceCount.y - 1);
-
-                // 反转 形状
-                piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0.5f, i % 2 == 1 ? 0.5f : 0.75f));
-            }
-        }
-
-        // 右边界
-        // 如果 拼图个数 x 是奇数，反转  
-        if ((int)pieceCount.x % 2 == 1)
-        {
-            print("fix puzzle at right edge.");
-
-            // 右下角
-            Transform rightBottom = GetPiece(pieceCount.x - 1, 0).transform;
-
-            // 反转 Y 轴显示
-            rightBottom.localScale = new Vector3(rightBottom.localScale.x, -rightBottom.localScale.y, 1);
-
-            // 设置成 右上角的形状
-            rightBottom.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0.75f));
-
-            // 遍历 右边界的其它拼图，不包括 右上角
-            for (int i = 1; i < pieceCount.y - 1; i++)
-            {
-                // 获取拼图对象
-                GameObject piece = GetPiece(pieceCount.x - 1, i);
-
-                // 反转 形状
-                piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0.25f, i % 2 == 1 ? 0.5f : 0.75f));
-            }
-
-        }
-
-        // 右上角
-        // 只有 x, 和 y 其中一个是奇数时，才反转
-        if (((int)pieceCount.x + (int)pieceCount.y) % 2 == 1)
-        {
-            print("fix right top corner");
-
-            // 获取拼图对象
-            Transform piece = GetPiece(pieceCount.x - 1, pieceCount.y - 1).transform;
-
-            // 反转 Y 轴显示
-            piece.localScale = new Vector3(piece.localScale.x, -piece.localScale.y, 1);
-
-            // 设置成 右下角的形状
-            piece.GetComponent<Renderer>().material.SetTextureOffset("_MarkTex", new Vector2(0, 0.5f));
-
-        }
-    }
-
+    
 
     /// <summary>
     /// 获取最近的邻居
@@ -450,13 +270,13 @@ public class Puzzle : DragablePlane
         // 获取所有邻居 和邻居的类型
         CheckNeighbros(go);
 
-        for (int i = 0; i < neighbors.Count; i++)
+        for (int i = 0; i < neighborCache.Count; i++)
         {
             type = neighborTypes[i];
             // 如果可以连接，返回
-            if (IsClosedToConnect(go, neighbors[i], type))
+            if (IsClosedToConnect(go.transform.position, neighborCache[i].transform.position, type))
             {
-                return neighbors[i];
+                return neighborCache[i];
             }
         }
 
@@ -469,85 +289,227 @@ public class Puzzle : DragablePlane
     /// <param name="go">要检查的对象</param>
     void CheckNeighbros(GameObject go)
     {
-        // 清空列表
-        neighbors.Clear();
+        // 清空缓存列表
+        neighborCache.Clear();
         neighborTypes.Clear();
 
         // 获取拼图块控制脚本
         Piece piece = go.GetComponent<Piece>();
 
+        // 获取邻居表
+        List<GameObject> neighbors = connectedPieces[piece.connectedListID];
 
         // 左，跳过最左边的一列
-        if (piece.pid.x > 0)
+        if (piece.id.x > 0)
         {
             // 获取 左边的拼图
-            GameObject nb = GetPiece(piece.pid.x - 1, piece.pid.y);
+            GameObject nb = GetPiece(piece.id.x - 1, piece.id.y);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            if (!neighbors.Contains(nb) && nb.activeSelf)
             {
-                neighbors.Add(nb);
+                neighborCache.Add(nb);
                 neighborTypes.Add(NeighborType.Left);
             }
         }
 
         // 右，跳过最右边的一列
-        if (piece.pid.x < pieceCount.x - 1)
+        if (piece.id.x < count.x - 1)
         {
             // 获取 右边的拼图
-            GameObject nb = GetPiece(piece.pid.x + 1, piece.pid.y);
+            GameObject nb = GetPiece(piece.id.x + 1, piece.id.y);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            if (!neighbors.Contains(nb) && nb.activeSelf)
             {
-                neighbors.Add(nb);
+                neighborCache.Add(nb);
                 neighborTypes.Add(NeighborType.Right);
             }
         }
 
         // 下，跳过最下的一行
-        if (piece.pid.y > 0)
+        if (piece.id.y > 0)
         {
             // 获取 下边的拼图
-            GameObject nb = GetPiece(piece.pid.x, piece.pid.y - 1);
+            GameObject nb = GetPiece(piece.id.x, piece.id.y - 1);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            if (!neighbors.Contains(nb) && nb.activeSelf)
             {
-                neighbors.Add(nb);
+                neighborCache.Add(nb);
                 neighborTypes.Add(NeighborType.Bottom);
             }
         }
 
         // 上，跳过最上的一行
-        if (piece.pid.y < pieceCount.y - 1)
+        if (piece.id.y < count.y - 1)
         {
             // 获取 上边的拼图
-            GameObject nb = GetPiece(piece.pid.x, piece.pid.y + 1);
+            GameObject nb = GetPiece(piece.id.x, piece.id.y + 1);
 
             // 检查是否已经连接，并且没有隐藏
-            if (!piece.connectedPieces.Contains(nb) && nb.activeSelf)
+            if (!neighbors.Contains(nb) && nb.activeSelf)
             {
-                neighbors.Add(nb);
+                neighborCache.Add(nb);
                 neighborTypes.Add(NeighborType.Top);
             }
         }
     }
 
+    
+
+    /// <summary>
+    /// 添加邻居
+    /// </summary>
+    /// <param name="piece">当前选中的拼图</param>
+    /// <param name="type">邻居的类型</param>
+    /// <returns>是否添加成功</returns>
+    public bool AddNeighbor(GameObject piece)
+    {
+        // 寻找最近的邻居
+        NeighborType type;
+        GameObject neighbor = GetCloestNeighbor(piece, out type);
+
+        // 如果没有找到，返回
+        if (neighbor == null) return false;
+
+        // 旋转角度 是否 都为 0 
+        if (System.Math.Abs(piece.transform.localEulerAngles.z) > 1 ||
+            System.Math.Abs(neighbor.transform.localEulerAngles.z) > 1)
+            return false;
+
+
+        // 是否足够接近
+        if (!IsClosedToConnect(piece.transform.position, neighbor.transform.position, type))
+            return false;
+
+        // 计算要移动的偏移
+        Vector3 offset = GetNeighborOffset(piece.transform.position,neighbor.transform.position, type);
+
+        // 移动拼图
+        Move(neighbor, offset);
+
+        // 打印邻居信息
+        Debug.Log("Neighbor is at " + type + "\nmy :" + piece.GetComponent<Piece>() + " other :" + neighbor.GetComponent<Piece>());
+
+
+        // 连接邻居
+        ConnectNeighbor(piece, neighbor);
+        
+
+        // 添加成功
+        return true;
+    }
+
+
+    /// <summary>
+    /// 连接邻居
+    /// </summary>
+    /// <param name="master">当前选中的拼图</param>
+    /// <param name="neighbor">要加入的邻居</param>
+    void ConnectNeighbor(GameObject master, GameObject neighbor)
+    {
+        int index = master.GetComponent<Piece>().connectedListID;
+
+        // 当前拼图 在连接表
+        List<GameObject> pieces = connectedPieces[index];
+
+        // 当前拼图的顺序
+        int order = master.GetComponent<Piece>().order;
+
+        // 保存要加入的邻居们的连接表
+        List<GameObject> neighbors = connectedPieces[neighbor.GetComponent<Piece>().connectedListID];
+
+        // 设置 邻居 的顺序,并把所有块连接起来
+        foreach (GameObject go in neighbors)
+        {
+            Piece nb = go.GetComponent<Piece>();
+
+            // 设置顺序
+            nb.order = order;
+
+            // 加入到新的表中
+            pieces.Add(go);
+
+            // 更新邻居在表中索引
+            nb.connectedListID = index;
+        }
+
+        // 清空原来的表
+        neighbors.Clear();
+    }
+
+
+    /// <summary>
+    /// 获取两个拼图需要移动的偏移
+    /// </summary>
+    /// <param name="A">当前选中的拼图的位置</param>
+    /// <param name="B">需要移动的另一个拼图的位置</param>
+    /// <param name="type">第二个拼图关于第一个拼图的位置</param>
+    /// <returns></returns>
+    Vector3 GetNeighborOffset(Vector3 A, Vector3 B, NeighborType type)
+    {
+        // 邻居在 Y 轴上的偏移
+        Vector3 Y = new Vector3(0, size.y, 0);
+
+        // 邻居在 X 轴上的偏移
+        Vector3 X = new Vector3(size.x, 0, 0);
+
+        // 邻居要移动到的位置
+        Vector3 pos = Vector3.zero;
+
+        // 判断邻居的类型，计算偏移
+        switch (type)
+        {
+            // 邻居在上面
+            case NeighborType.Top:
+                // 在 Y 轴上增加偏移
+                pos = A + Y;
+                break;
+
+            // 邻居在下面
+            case NeighborType.Bottom:
+                // 在 Y 轴上减少偏移
+                pos = A - Y;
+                break;
+
+            // 邻居在左边
+            case NeighborType.Left:
+                // 在 X 轴上减少偏移
+                pos = A - X;
+                break;
+
+            // 邻居在右边
+            case NeighborType.Right:
+                // 在 X 轴上增加偏移
+                pos = A + X;
+                break;
+
+            // 不是邻居
+            default:
+                break;
+        }
+
+        // 返回要移动的偏移
+        return pos - B;
+    }
+
+
+
     /// <summary>
     /// 两个相邻的拼图是否足够接近
     /// </summary>
-    /// <param name="piece">当前选中的拼图</param>
-    /// <param name="other">另一个拼图</param>
+    /// <param name="A">当前选中的拼图的位置</param>
+    /// <param name="B">需要移动的另一个拼图的位置</param>
     /// <param name="type">邻居类型</param>
     /// <returns>是否足够接近</returns>
-    bool IsClosedToConnect(GameObject piece, GameObject other, NeighborType type)
+    bool IsClosedToConnect(Vector3 A, Vector3 B, NeighborType type)
     {
         // 保存当前拼图在 Y 轴大小的一半
-        Vector3 offsetY = new Vector3(0, displaySize.y / 2, 0);
+        Vector3 Y = new Vector3(0, size.y / 2, 0);
 
         // 保存当前拼图在 X 轴大小的一半
-        Vector3 offsetX = new Vector3(displaySize.x / 2, 0, 0);
+        Vector3 X = new Vector3(size.x / 2, 0, 0);
 
         Vector3 a, b;
         switch (type)
@@ -556,49 +518,55 @@ public class Puzzle : DragablePlane
             case NeighborType.Top:
 
                 // 当前对象 加上 Y 轴的偏移的一半
-                a = piece.transform.position + offsetY;
+                a = A + Y;
 
                 // 邻居 减去 Y 轴的偏移的一半
-                b = other.transform.position - offsetY;
+                b = B - Y;
                 break;
 
             // 邻居在下面
             case NeighborType.Bottom:
 
                 // 当前对象 减去 Y 轴的偏移的一半
-                a = piece.transform.position - offsetY;
+                a = A - Y;
 
                 // 邻居 加上 Y 轴的偏移的一半
-                b = other.transform.position + offsetY;
+                b = B + Y;
                 break;
 
             // 邻居在左边
             case NeighborType.Left:
 
                 // 当前对象 减去 X 轴的偏移的一半
-                a = piece.transform.position - offsetX;
+                a = A - X;
 
                 // 邻居 加上 X 轴的偏移的一半
-                b = other.transform.position + offsetX;
+                b = B + X;
                 break;
 
             // 邻居在右边
             case NeighborType.Right:
 
                 // 当前对象 加上 X 轴的偏移的一半
-                a = piece.transform.position + offsetX;
+                a = A + X;
 
                 // 邻居 减去 X 轴的偏移的一半
-                b = other.transform.position - offsetX;
+                b = B - X;
                 break;
 
             // 不是邻居，返回 false
             default:
-                print("Neighbor type error: " + type);
                 return false;
         }
 
         // 测试当前 距离是否小于 设置的大小，并返回结果
-        return Vector3.Distance(a, b) < largestSize;
+        return Vector3.Distance(a, b) < manager.largestSize;
     }
+
+
+
+    
+
+    #endregion
+
 }

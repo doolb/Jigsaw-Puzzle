@@ -262,7 +262,7 @@ public class GameLoader : MonoBehaviour
                 // 获取个数
                 string s = UIPopupList.current.value;
                 int i = int.Parse(s);
-                Vector2 count = GetPieceCount(i);
+                Count count = GetPieceCount(i);
 
                 // 设置个数
                 puzzleGame.SetPieceCount(count);
@@ -347,7 +347,7 @@ public class GameLoader : MonoBehaviour
     /// </summary>
     /// <param name="count">要转换个数</param>
     /// <returns></returns>
-    Vector2 GetPieceCount(int count)
+    Count GetPieceCount(int count)
     {
         // 默认 为 （6，4）
         int x = 6, y = 4;
@@ -379,7 +379,7 @@ public class GameLoader : MonoBehaviour
         }
 
         // 返回个数
-        return new Vector2(x, y);
+        return new Count(x, y);
     }
 
 }

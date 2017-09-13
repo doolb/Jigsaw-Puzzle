@@ -28,9 +28,25 @@ public class MenuControl : MonoBehaviour
     GameObject restartButton;
 
     /// <summary>
+    /// 背景列表
+    /// </summary>
+    public UIPopupList backgroundList;
+
+    #region 事件
+
+    /// <summary>
     /// 开始游戏事件
     /// </summary>
     public List<EventDelegate> onStartGame = new List<EventDelegate>();
+
+    /// <summary>
+    /// 重新开始游戏
+    /// </summary>
+    public List<EventDelegate> onReStartGame = new List<EventDelegate>();
+
+
+    #endregion
+
 
     /// <summary>
     /// 初始化
@@ -144,7 +160,8 @@ public class MenuControl : MonoBehaviour
 
         // 寻找开始按钮，并注册事件
         restartButton = transform.Find("Button - ReStart").gameObject;
-        restartButton.GetComponent<UIButton>().onClick.Add(new EventDelegate(ReStartGame));
+        restartButton.GetComponent<UIButton>().onClick.Add(new EventDelegate(() => 
+        { for (int i = 0; i < onReStartGame.Count; i++) onReStartGame[i].Execute(); }));
     }
 
     /// <summary>
@@ -319,13 +336,6 @@ public class MenuControl : MonoBehaviour
         UpdateButton();
     }
 
-    /// <summary>
-    /// 重新开始游戏
-    /// </summary>
-    public void ReStartGame()
-    {
-        GameLoader.puzzleGame.ReStart();
-    }
 
     #endregion
 }

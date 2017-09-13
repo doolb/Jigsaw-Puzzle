@@ -50,7 +50,7 @@ public class GameLoader : MonoBehaviour
     /// <summary>
     /// 数据管理对象
     /// </summary>
-    GameDataManager dataManager;
+    public static GameDataManager dataManager;
 
     /// <summary>
     /// 初始化
@@ -65,6 +65,15 @@ public class GameLoader : MonoBehaviour
 
         // 加载用户数据
         LoadData();
+    }
+
+    /// <summary>
+    /// 固定时间执行
+    /// </summary>
+    void FixedUpdate()
+    {
+        // 显示时间
+        uiControl.ShowTime(puzzleGame.gameTime);
     }
 
 
@@ -145,6 +154,7 @@ public class GameLoader : MonoBehaviour
 
     void BuildEvent()
     {
+
         // 获取视口显示对象
         Transform viewWindow = uiControl.transform.Find("View Window");
 

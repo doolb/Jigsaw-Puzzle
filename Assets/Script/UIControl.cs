@@ -54,7 +54,12 @@ public class UIControl : MonoBehaviour
         finish.SetActive(false);
 
         // 添加 动画结束 事件
-        finish.GetComponent<TweenAlpha>().onFinished.Add(new EventDelegate(ShowFinishEnd));
+        finish.GetComponent<TweenAlpha>().onFinished.Add(new EventDelegate(() =>
+            {
+                // 通知 结束界面动画结束
+                for (int i = 0; i < onFinishEnd.Count; i++)
+                    onFinishEnd[i].Execute();
+            }));
 
         // 获取文本对象
         infoLabel = finish.transform.Find("Label - Info").GetComponent<UILabel>();
@@ -64,20 +69,24 @@ public class UIControl : MonoBehaviour
 
         // 注册 菜单控制 事件
         buttonMenu = transform.Find("Button - Menu").gameObject;
-        buttonMenu.GetComponent<UIButton>().onClick.Add(new EventDelegate(ShowMenu));
+        buttonMenu.GetComponent<UIButton>().onClick.Add(new EventDelegate(() =>
+            {
+
+                // 隐藏菜单按钮
+                Hide();
+
+                // 通知显示菜单 事件
+                for (int i = 0; i < onShowMenu.Count; i++)
+                    onShowMenu[i].Execute();
+            }));
+        // 隐藏菜单按钮
+        buttonMenu.SetActive(false);
+
 
         // 获取 视口显示窗口
         viewWindow = transform.Find("View Window").gameObject;
     }
 
-    /// <summary>
-    /// 固定时间执行
-    /// </summary>
-    void FixedUpdate()
-    {
-        // 显示时间
-        ShowTime(GameLoader.puzzleGame.gameTime);
-    }
 
 
     #region 公共函数
@@ -98,8 +107,6 @@ public class UIControl : MonoBehaviour
 
         // 显示信息
         infoLabel.text = info;
-
-
     }
 
 
@@ -144,28 +151,4 @@ public class UIControl : MonoBehaviour
     }
     #endregion
 
-    #region 事件 处理 函数
-    void ShowMenu()
-    {
-        // 隐藏菜单按钮
-        Hide();
-
-        // 通知显示菜单 事件
-        for (int i = 0; i < onShowMenu.Count; i++)
-            onShowMenu[i].Execute();
-
-
-    }
-
-    /// <summary>
-    /// 结束界面动画结束
-    /// </summary>
-    void ShowFinishEnd()
-    {
-        // 通知 结束界面动画结束
-        for (int i = 0; i < onFinishEnd.Count; i++)
-            onFinishEnd[i].Execute();
-    }
-
-    #endregion
 }

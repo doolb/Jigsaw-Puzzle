@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 
 /// <summary>
 /// This editor helper class makes it easy to create and show a context menu.
 /// It ensures that it's possible to add multiple items with the same name.
 /// </summary>
 
-public static class NGUIContextMenu
+static public class NGUIContextMenu
 {
-	[MenuItem("Help/NGUI Documentation (v.3.6.7)")]
+	[MenuItem("Help/NGUI Documentation (v.3.11.0)")]
 	static void ShowHelp0 (MenuCommand command) { NGUIHelp.Show(); }
 
 	[MenuItem("Help/NGUI Support Forum")]
@@ -121,7 +122,7 @@ public static class NGUIContextMenu
 
 	public delegate UIWidget AddFunc (GameObject go);
 
-	static BetterList<string> mEntries = new BetterList<string>();
+	static List<string> mEntries = new List<string>();
 	static GenericMenu mMenu;
 
 	/// <summary>
@@ -145,7 +146,7 @@ public static class NGUIContextMenu
 			if (mMenu == null) mMenu = new GenericMenu();
 			int count = 0;
 
-			for (int i = 0; i < mEntries.size; ++i)
+			for (int i = 0; i < mEntries.Count; ++i)
 			{
 				string str = mEntries[i];
 				if (str == item) ++count;
@@ -180,7 +181,7 @@ public static class NGUIContextMenu
 			if (mMenu == null) mMenu = new GenericMenu();
 			int count = 0;
 
-			for (int i = 0; i < mEntries.size; ++i)
+			for (int i = 0; i < mEntries.Count; ++i)
 			{
 				string str = mEntries[i];
 				if (str == item) ++count;
@@ -215,7 +216,7 @@ public static class NGUIContextMenu
 			if (mMenu == null) mMenu = new GenericMenu();
 			int count = 0;
 
-			for (int i = 0; i < mEntries.size; ++i)
+			for (int i = 0; i < mEntries.Count; ++i)
 			{
 				string str = mEntries[i];
 				if (str == item) ++count;
@@ -326,7 +327,11 @@ public static class NGUIContextMenu
 					NGUIContextMenu.AddSeparator("Attach/");
 				}
 			}
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+			else if (target.collider == null && target.GetComponent<Collider2D>() == null)
+#else
 			else if (target.GetComponent<Collider>() == null && target.GetComponent<Collider2D>() == null)
+#endif
 			{
 				AddItem("Attach/Box Collider", false, AttachCollider, null);
 				NGUIContextMenu.AddSeparator("Attach/");
@@ -344,7 +349,11 @@ public static class NGUIContextMenu
 				}
 			}
 
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+			if (target.collider != null || target.GetComponent<Collider2D>() != null)
+#else
 			if (target.GetComponent<Collider>() != null || target.GetComponent<Collider2D>() != null)
+#endif
 			{
 				if (scrollView != null)
 				{
@@ -377,7 +386,7 @@ public static class NGUIContextMenu
 
 				if (target.GetComponent<UIDragScrollView>() == null)
 				{
-					for (int i = 0; i < UIPanel.list.size; ++i)
+					for (int i = 0; i < UIPanel.list.Count; ++i)
 					{
 						UIPanel pan = UIPanel.list[i];
 						if (pan.clipping == UIDrawCall.Clipping.None) continue;

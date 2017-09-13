@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 
@@ -46,6 +46,10 @@ public class UILocalize : MonoBehaviour
 				}
 				else if (sp != null)
 				{
+					UIButton btn = NGUITools.FindInParents<UIButton>(sp.gameObject);
+					if (btn != null && btn.tweenTarget == sp.gameObject)
+						btn.normalSprite = value;
+
 					sp.spriteName = value;
 					sp.MakePixelPerfect();
 #if UNITY_EDITOR

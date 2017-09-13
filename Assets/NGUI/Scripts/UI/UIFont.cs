@@ -1,12 +1,12 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 // Dynamic font support contributed by the NGUI community members:
 // Unisip, zh4ox, Mudwiz, Nicki, DarkMagicCK.
 
-#if !UNITY_3_5 && !UNITY_FLASH
+#if !UNITY_3_5
 #define DYNAMIC_FONT
 #endif
 
@@ -123,14 +123,14 @@ public class UIFont : MonoBehaviour
 			}
 			else if (mAtlas != value)
 			{
-				if (value == null)
-				{
-					if (mAtlas != null) mMat = mAtlas.spriteMaterial;
-					if (sprite != null) mUVRect = uvRect;
-				}
-
 				mPMA = -1;
 				mAtlas = value;
+
+				if (mAtlas != null)
+				{
+					mMat = mAtlas.spriteMaterial;
+					if (sprite != null) mUVRect = uvRect;
+				}
 				MarkAsChanged();
 			}
 		}
@@ -177,6 +177,13 @@ public class UIFont : MonoBehaviour
 			}
 		}
 	}
+
+	/// <summary>
+	/// Whether the font is using a premultiplied alpha material.
+	/// </summary>
+
+	[System.Obsolete("Use UIFont.premultipliedAlphaShader instead")]
+	public bool premultipliedAlpha { get { return premultipliedAlphaShader; } }
 
 	/// <summary>
 	/// Whether the font is using a premultiplied alpha material.
@@ -473,7 +480,7 @@ public class UIFont : MonoBehaviour
 	static public bool CheckIfRelated (UIFont a, UIFont b)
 	{
 		if (a == null || b == null) return false;
-#if DYNAMIC_FONT
+#if DYNAMIC_FONT && !UNITY_FLASH
 		if (a.isDynamic && b.isDynamic && a.dynamicFont.fontNames[0] == b.dynamicFont.fontNames[0]) return true;
 #endif
 		return a == b || a.References(b) || b.References(a);

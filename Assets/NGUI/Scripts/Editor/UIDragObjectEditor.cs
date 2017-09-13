@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -35,14 +35,15 @@ public class UIDragObjectEditor : Editor
 
 			if (sp.hasMultipleDifferentValues || (UIDragObject.DragEffect)sp.intValue != UIDragObject.DragEffect.None)
 			{
-				NGUIEditorTools.DrawProperty(" Momentum", serializedObject, "momentumAmount", GUILayout.Width(140f));
+				NGUIEditorTools.DrawProperty("  Momentum", serializedObject, "momentumAmount", GUILayout.Width(140f));
 			}
 
 			sp = NGUIEditorTools.DrawProperty("Keep Visible", serializedObject, "restrictWithinPanel");
 
 			if (sp.hasMultipleDifferentValues || sp.boolValue)
 			{
-				NGUIEditorTools.DrawProperty(" Content Rect", serializedObject, "contentRect");
+				NGUIEditorTools.DrawProperty("  Content Rect", serializedObject, "contentRect");
+				NGUIEditorTools.DrawProperty("  Panel Region", serializedObject, "panelRegion");
 			}
 		}
 		EditorGUI.EndDisabledGroup();

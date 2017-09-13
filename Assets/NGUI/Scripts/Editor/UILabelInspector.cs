@@ -1,9 +1,9 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
-#if !UNITY_3_5 && !UNITY_FLASH
+#if !UNITY_FLASH
 #define DYNAMIC_FONT
 #endif
 
@@ -15,11 +15,7 @@ using UnityEditor;
 /// </summary>
 
 [CanEditMultipleObjects]
-#if UNITY_3_5
-[CustomEditor(typeof(UILabel))]
-#else
 [CustomEditor(typeof(UILabel), true)]
-#endif
 public class UILabelInspector : UIWidgetInspector
 {
 	public enum FontType
@@ -41,8 +37,13 @@ public class UILabelInspector : UIWidgetInspector
 	void OnNGUIFont (Object obj)
 	{
 		serializedObject.Update();
+		
 		SerializedProperty sp = serializedObject.FindProperty("mFont");
 		sp.objectReferenceValue = obj;
+
+		sp = serializedObject.FindProperty("mTrueTypeFont");
+		sp.objectReferenceValue = null;
+		
 		serializedObject.ApplyModifiedProperties();
 		NGUISettings.ambigiousFont = obj;
 	}
@@ -50,8 +51,13 @@ public class UILabelInspector : UIWidgetInspector
 	void OnUnityFont (Object obj)
 	{
 		serializedObject.Update();
+		
 		SerializedProperty sp = serializedObject.FindProperty("mTrueTypeFont");
 		sp.objectReferenceValue = obj;
+
+		sp = serializedObject.FindProperty("mFont");
+		sp.objectReferenceValue = null;
+
 		serializedObject.ApplyModifiedProperties();
 		NGUISettings.ambigiousFont = obj;
 	}
@@ -90,26 +96,38 @@ public class UILabelInspector : UIWidgetInspector
 
 		if (mFontType == FontType.NGUI)
 		{
+			GUI.changed = false;
 			fnt = NGUIEditorTools.DrawProperty("", serializedObject, "mFont", GUILayout.MinWidth(40f));
 
 			if (fnt.objectReferenceValue != null)
 			{
+				if (GUI.changed) serializedObject.FindProperty("mTrueTypeFont").objectReferenceValue = null;
 				NGUISettings.ambigiousFont = fnt.objectReferenceValue;
 				isValid = true;
 			}
 		}
 		else
 		{
+			GUI.changed = false;
 			ttf = NGUIEditorTools.DrawProperty("", serializedObject, "mTrueTypeFont", GUILayout.MinWidth(40f));
 
 			if (ttf.objectReferenceValue != null)
 			{
+				if (GUI.changed) serializedObject.FindProperty("mFont").objectReferenceValue = null;
 				NGUISettings.ambigiousFont = ttf.objectReferenceValue;
 				isValid = true;
 			}
 		}
 
 		GUILayout.EndHorizontal();
+
+		if (mFontType == FontType.Unity)
+		{
+			EditorGUILayout.HelpBox("Dynamic fonts suffer from issues in Unity itself where your characters may disappear, get garbled, or just not show at times. Use this feature at your own risk.\n\n" +
+				"When you do run into such issues, please submit a Bug Report to Unity via Help -> Report a Bug (as this is will be a Unity bug, not an NGUI one).", MessageType.Warning);
+		}
+
+		NGUIEditorTools.DrawProperty("Material", serializedObject, "mMat");
 
 		EditorGUI.BeginDisabledGroup(!isValid);
 		{
@@ -138,8 +156,6 @@ public class UILabelInspector : UIWidgetInspector
 					EditorGUI.EndDisabledGroup();
 				}
 				GUILayout.EndHorizontal();
-
-				NGUIEditorTools.DrawProperty("Material", serializedObject, "mMaterial");
 			}
 			else if (uiFont != null)
 			{
@@ -148,7 +164,11 @@ public class UILabelInspector : UIWidgetInspector
 
 				EditorGUI.BeginDisabledGroup(true);
 				if (!serializedObject.isEditingMultipleObjects)
-					GUILayout.Label(" Default: " + mLabel.defaultFontSize);
+				{
+					if (mLabel.overflowMethod == UILabel.Overflow.ShrinkContent)
+						GUILayout.Label(" Actual: " + mLabel.finalFontSize + "/" + mLabel.defaultFontSize);
+					else GUILayout.Label(" Default: " + mLabel.defaultFontSize);
+				}
 				EditorGUI.EndDisabledGroup();
 
 				NGUISettings.fontSize = prop.intValue;
@@ -173,8 +193,8 @@ public class UILabelInspector : UIWidgetInspector
 
 				if (height > 90f)
 				{
-				    offset = false;
-				    height = style.CalcHeight(new GUIContent(sp.stringValue), Screen.width - 20f);
+					offset = false;
+					height = style.CalcHeight(new GUIContent(sp.stringValue), Screen.width - 20f);
 				}
 				else
 				{
@@ -200,8 +220,20 @@ public class UILabelInspector : UIWidgetInspector
 
 			GUI.skin.textField.wordWrap = ww;
 
+			NGUIEditorTools.DrawPaddedProperty("Modifier", serializedObject, "mModifier");
+
 			SerializedProperty ov = NGUIEditorTools.DrawPaddedProperty("Overflow", serializedObject, "mOverflow");
 			NGUISettings.overflowStyle = (UILabel.Overflow)ov.intValue;
+			if (NGUISettings.overflowStyle == UILabel.Overflow.ClampContent)
+				NGUIEditorTools.DrawProperty("Use Ellipsis", serializedObject, "mOverflowEllipsis", GUILayout.Width(110f));
+
+			if (NGUISettings.overflowStyle == UILabel.Overflow.ResizeFreely)
+			{
+				GUILayout.BeginHorizontal();
+				SerializedProperty s = NGUIEditorTools.DrawPaddedProperty("Max Width", serializedObject, "mOverflowWidth");
+				if (s != null && s.intValue < 1) GUILayout.Label("unlimited");
+				GUILayout.EndHorizontal();
+			}
 
 			NGUIEditorTools.DrawPaddedProperty("Alignment", serializedObject, "mAlignment");
 
@@ -251,15 +283,31 @@ public class UILabelInspector : UIWidgetInspector
 			GUILayout.EndHorizontal();
 			EditorGUI.EndDisabledGroup();
 
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Spacing", GUILayout.Width(56f));
-			NGUIEditorTools.SetLabelWidth(20f);
-			NGUIEditorTools.DrawProperty("X", serializedObject, "mSpacingX", GUILayout.MinWidth(40f));
-			NGUIEditorTools.DrawProperty("Y", serializedObject, "mSpacingY", GUILayout.MinWidth(40f));
-			NGUIEditorTools.DrawPadding();
-			NGUIEditorTools.SetLabelWidth(80f);
-			GUILayout.EndHorizontal();
+			sp = NGUIEditorTools.DrawProperty("Float spacing", serializedObject, "mUseFloatSpacing", GUILayout.Width(100f));
 
+			if (!sp.boolValue)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Spacing", GUILayout.Width(56f));
+				NGUIEditorTools.SetLabelWidth(20f);
+				NGUIEditorTools.DrawProperty("X", serializedObject, "mSpacingX", GUILayout.MinWidth(40f));
+				NGUIEditorTools.DrawProperty("Y", serializedObject, "mSpacingY", GUILayout.MinWidth(40f));
+				NGUIEditorTools.DrawPadding();
+				NGUIEditorTools.SetLabelWidth(80f);
+				GUILayout.EndHorizontal();
+			}
+			else
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Spacing", GUILayout.Width(56f));
+				NGUIEditorTools.SetLabelWidth(20f);
+				NGUIEditorTools.DrawProperty("X", serializedObject, "mFloatSpacingX", GUILayout.MinWidth(40f));
+				NGUIEditorTools.DrawProperty("Y", serializedObject, "mFloatSpacingY", GUILayout.MinWidth(40f));
+				NGUIEditorTools.DrawPadding();
+				NGUIEditorTools.SetLabelWidth(80f);
+				GUILayout.EndHorizontal();
+			}
+			
 			NGUIEditorTools.DrawProperty("Max Lines", serializedObject, "mMaxLineCount", GUILayout.Width(110f));
 
 			GUILayout.BeginHorizontal();

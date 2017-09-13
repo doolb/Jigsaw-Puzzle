@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //			  NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -20,9 +20,17 @@ public class NGUITransformInspector : Editor
 	{
 		instance = this;
 
-		mPos = serializedObject.FindProperty("m_LocalPosition");
-		mRot = serializedObject.FindProperty("m_LocalRotation");
-		mScale = serializedObject.FindProperty("m_LocalScale");
+		if (this)
+		{
+			try
+			{
+				var so = serializedObject;
+				mPos = so.FindProperty("m_LocalPosition");
+				mRot = so.FindProperty("m_LocalRotation");
+				mScale = so.FindProperty("m_LocalScale");
+			}
+			catch { }
+		}
 	}
 
 	void OnDestroy () { instance = null; }
@@ -80,16 +88,18 @@ public class NGUITransformInspector : Editor
 	void DrawPosition ()
 	{
 		GUILayout.BeginHorizontal();
-		{
-			bool reset = GUILayout.Button("P", GUILayout.Width(20f));
-
-			EditorGUILayout.PropertyField(mPos.FindPropertyRelative("x"));
-			EditorGUILayout.PropertyField(mPos.FindPropertyRelative("y"));
-			EditorGUILayout.PropertyField(mPos.FindPropertyRelative("z"));
-
-			if (reset) mPos.vector3Value = Vector3.zero;
-		}
+		bool reset = GUILayout.Button("P", GUILayout.Width(20f));
+		EditorGUILayout.PropertyField(mPos.FindPropertyRelative("x"));
+		EditorGUILayout.PropertyField(mPos.FindPropertyRelative("y"));
+		EditorGUILayout.PropertyField(mPos.FindPropertyRelative("z"));
 		GUILayout.EndHorizontal();
+
+		//GUILayout.BeginHorizontal();
+		//reset = GUILayout.Button("W", GUILayout.Width(20f));
+		//EditorGUILayout.Vector3Field("", (target as Transform).position);
+
+		if (reset) mPos.vector3Value = Vector3.zero;
+		//GUILayout.EndHorizontal();
 	}
 
 	void DrawScale (bool isWidget)

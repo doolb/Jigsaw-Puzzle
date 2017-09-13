@@ -1,16 +1,17 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 
 /// <summary>
-/// Example script that resizes the widget it's attached to in order to envelop the target content.
+/// This script is capable of resizing the widget it's attached to in order to
+/// completely envelop targeted UI content.
 /// </summary>
 
 [RequireComponent(typeof(UIWidget))]
-[AddComponentMenu("NGUI/Examples/Envelop Content")]
+[AddComponentMenu("NGUI/Interaction/Envelop Content")]
 public class EnvelopContent : MonoBehaviour
 {
 	public Transform targetRoot;
@@ -18,6 +19,7 @@ public class EnvelopContent : MonoBehaviour
 	public int padRight = 0;
 	public int padBottom = 0;
 	public int padTop = 0;
+	public bool ignoreDisabled = true;
 
 	bool mStarted = false;
 
@@ -42,7 +44,7 @@ public class EnvelopContent : MonoBehaviour
 		}
 		else
 		{
-			Bounds b = NGUIMath.CalculateRelativeWidgetBounds(transform.parent, targetRoot, false);
+			Bounds b = NGUIMath.CalculateRelativeWidgetBounds(transform.parent, targetRoot, !ignoreDisabled);
 			float x0 = b.min.x + padLeft;
 			float y0 = b.min.y + padBottom;
 			float x1 = b.max.x + padRight;
@@ -51,6 +53,7 @@ public class EnvelopContent : MonoBehaviour
 			UIWidget w = GetComponent<UIWidget>();
 			w.SetRect(x0, y0, x1 - x0, y1 - y0);
 			BroadcastMessage("UpdateAnchors", SendMessageOptions.DontRequireReceiver);
+			NGUITools.UpdateWidgetCollider(gameObject);
 		}
 	}
 }

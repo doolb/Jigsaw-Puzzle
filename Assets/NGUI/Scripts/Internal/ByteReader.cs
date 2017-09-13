@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Text;
@@ -28,7 +28,7 @@ public class ByteReader
 
 	static public ByteReader Open (string path)
 	{
-#if UNITY_EDITOR || (!UNITY_FLASH && !NETFX_CORE && !UNITY_WP8)
+#if UNITY_EDITOR || (!UNITY_FLASH && !NETFX_CORE && !UNITY_WP8 && !UNITY_WP_8_1)
 		FileStream fs = File.OpenRead(path);
 
 		if (fs != null)
@@ -217,7 +217,6 @@ public class ByteReader
 				if (s == null) return null;
 				s = s.Replace("\\n", "\n");
 				line += "\n" + s;
-				++wordStart;
 			}
 			else
 			{

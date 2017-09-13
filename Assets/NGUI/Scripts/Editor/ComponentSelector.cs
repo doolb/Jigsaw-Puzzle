@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEditor;
 using UnityEngine;
@@ -127,7 +127,7 @@ public class ComponentSelector : ScriptableWizard
 		{
 			string[] paths = AssetDatabase.GetAllAssetPaths();
 			bool isComponent = mType.IsSubclassOf(typeof(Component));
-			BetterList<Object> list = new BetterList<Object>();
+			List<Object> list = new List<Object>();
 
 			for (int i = 0; i < mObjects.Length; ++i)
 				if (mObjects[i] != null)

@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -21,7 +21,6 @@ public class UIKeyNavigationEditor : Editor
 
 		serializedObject.Update();
 		NGUIEditorTools.DrawProperty("Starts Selected", serializedObject, "startsSelected");
-		NGUIEditorTools.DrawProperty("Select on Click", serializedObject, "onClick");
 		NGUIEditorTools.DrawProperty("Constraint", serializedObject, "constraint");
 
 		if (NGUIEditorTools.DrawHeader("Override"))
@@ -32,6 +31,11 @@ public class UIKeyNavigationEditor : Editor
 			NGUIEditorTools.DrawProperty("Right", serializedObject, "onRight");
 			NGUIEditorTools.DrawProperty("Up", serializedObject, "onUp");
 			NGUIEditorTools.DrawProperty("Down", serializedObject, "onDown");
+			NGUIEditorTools.DrawProperty("OnClick", serializedObject, "onClick");
+
+			if (serializedObject.isEditingMultipleObjects || (target as UIKeyNavigation).GetComponent<UIInput>() != null)
+				NGUIEditorTools.DrawProperty("Tab", serializedObject, "onTab");
+
 			NGUIEditorTools.EndContents();
 		}
 

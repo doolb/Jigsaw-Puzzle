@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -18,9 +18,10 @@ using System.Collections.Generic;
 public class UI2DSprite : UIBasicSprite
 {
 	[HideInInspector][SerializeField] UnityEngine.Sprite mSprite;
-	[HideInInspector][SerializeField] Material mMat;
 	[HideInInspector][SerializeField] Shader mShader;
 	[HideInInspector][SerializeField] Vector4 mBorder = Vector4.zero;
+	[HideInInspector][SerializeField] bool mFixedAspect = false;
+	[HideInInspector][SerializeField] float mPixelSize = 1f;
 
 	/// <summary>
 	/// To be used with animations.
@@ -47,7 +48,7 @@ public class UI2DSprite : UIBasicSprite
 				RemoveFromPanel();
 				mSprite = value;
 				nextSprite = null;
-				MarkAsChanged();
+				CreatePanel();
 			}
 		}
 	}
@@ -117,6 +118,27 @@ public class UI2DSprite : UIBasicSprite
 	}
 
 	/// <summary>
+	/// Whether the sprite is going to have a fixed aspect ratio.
+	/// </summary>
+
+	public bool fixedAspect
+	{
+		get
+		{
+			return mFixedAspect;
+		}
+		set
+		{
+			if (mFixedAspect != value)
+			{
+				mFixedAspect = value;
+				mDrawRegion = new Vector4(0f, 0f, 1f, 1f);
+				MarkAsChanged();
+			}
+		}
+	}
+
+	/// <summary>
 	/// Whether the texture is using a premultiplied alpha material.
 	/// </summary>
 
@@ -132,6 +154,12 @@ public class UI2DSprite : UIBasicSprite
 			return (mPMA == 1);
 		}
 	}
+
+	/// <summary>
+	/// Size of the pixel -- used for drawing.
+	/// </summary>
+
+	override public float pixelSize { get { return mPixelSize; } }
 
 	/// <summary>
 	/// Widget's dimensions used for drawing. X = left, Y = bottom, Z = right, W = top.
@@ -194,10 +222,20 @@ public class UI2DSprite : UIBasicSprite
 				}
 			}
 
-			Vector4 br = border;
+			float fw, fh;
 
-			float fw = br.x + br.z;
-			float fh = br.y + br.w;
+			if (mFixedAspect)
+			{
+				fw = 0f;
+				fh = 0f;
+			}
+			else
+			{
+				Vector4 br = border * pixelSize;
+				fw = (br.x + br.z);
+				fh = (br.y + br.w);
+			}
+
 			float vx = Mathf.Lerp(x0, x1 - fw, mDrawRegion.x);
 			float vy = Mathf.Lerp(y0, y1 - fh, mDrawRegion.y);
 			float vz = Mathf.Lerp(x0 + fw, x1, mDrawRegion.z);
@@ -242,6 +280,40 @@ public class UI2DSprite : UIBasicSprite
 			nextSprite = null;
 		}
 		base.OnUpdate();
+
+		if (mFixedAspect)
+		{
+			Texture tex = mainTexture;
+
+			if (tex != null)
+			{
+				int w = Mathf.RoundToInt(mSprite.rect.width);
+				int h = Mathf.RoundToInt(mSprite.rect.height);
+				int padLeft = Mathf.RoundToInt(mSprite.textureRectOffset.x);
+				int padBottom = Mathf.RoundToInt(mSprite.textureRectOffset.y);
+				int padRight = Mathf.RoundToInt(mSprite.rect.width - mSprite.textureRect.width - mSprite.textureRectOffset.x);
+				int padTop = Mathf.RoundToInt(mSprite.rect.height - mSprite.textureRect.height - mSprite.textureRectOffset.y);
+
+				w += padLeft + padRight;
+				h += padTop + padBottom;
+
+				float widgetWidth = mWidth;
+				float widgetHeight = mHeight;
+				float widgetAspect = widgetWidth / widgetHeight;
+				float textureAspect = (float)w / h;
+
+				if (textureAspect < widgetAspect)
+				{
+					float x = (widgetWidth - widgetHeight * textureAspect) / widgetWidth * 0.5f;
+					drawRegion = new Vector4(x, 0f, 1f - x, 1f);
+				}
+				else
+				{
+					float y = (widgetHeight - widgetWidth / textureAspect) / widgetHeight * 0.5f;
+					drawRegion = new Vector4(0f, y, 1f, 1f - y);
+				}
+			}
+		}
 	}
 
 #if UNITY_EDITOR
@@ -276,8 +348,8 @@ public class UI2DSprite : UIBasicSprite
 			if (tex != null)
 			{
 				Rect rect = mSprite.rect;
-				int w = Mathf.RoundToInt(rect.width);
-				int h = Mathf.RoundToInt(rect.height);
+				int w = Mathf.RoundToInt(pixelSize * rect.width);
+				int h = Mathf.RoundToInt(pixelSize * rect.height);
 
 				if ((w & 1) == 1) ++w;
 				if ((h & 1) == 1) ++h;
@@ -292,12 +364,12 @@ public class UI2DSprite : UIBasicSprite
 	/// Virtual function called by the UIPanel that fills the buffers.
 	/// </summary>
 
-	public override void OnFill (BetterList<Vector3> verts, BetterList<Vector2> uvs, BetterList<Color32> cols)
+	public override void OnFill (List<Vector3> verts, List<Vector2> uvs, List<Color> cols)
 	{
 		Texture tex = mainTexture;
 		if (tex == null) return;
 
-		Rect outer = mSprite.textureRect;
+		Rect outer = (mSprite != null) ? mSprite.textureRect : new Rect(0f, 0f, tex.width, tex.height);
 		Rect inner = outer;
 		Vector4 br = border;
 		inner.xMin += br.x;
@@ -318,7 +390,7 @@ public class UI2DSprite : UIBasicSprite
 		inner.yMin *= h;
 		inner.yMax *= h;
 
-		int offset = verts.size;
+		int offset = verts.Count;
 		Fill(verts, uvs, cols, outer, inner);
 
 		if (onPostFill != null)

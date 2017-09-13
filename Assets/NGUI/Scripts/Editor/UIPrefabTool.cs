@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEditor;
 using UnityEngine;
@@ -135,7 +135,7 @@ public class UIPrefabTool : EditorWindow
 
 		if (mTab == 0)
 		{
-			BetterList<string> filtered = new BetterList<string>();
+			List<string> filtered = new List<string>();
 			string[] allAssets = AssetDatabase.GetAllAssetPaths();
 
 			foreach (string s in allAssets)
@@ -374,27 +374,21 @@ public class UIPrefabTool : EditorWindow
 	}
 
 	/// <summary>
-	/// Helper function that loads a preview texture. Previews are used for the Free version of Unity that can't use render textures.
+	/// GetComponentInChildren doesn't work on prefabs.
 	/// </summary>
 
-	static Texture2D LoadPreview (Item item)
+	static UISnapshotPoint GetSnapshotPoint (Transform t)
 	{
-		string path = "Assets/NGUI/Editor/Preview/" + item.prefab.name + ".png";
-		if (!File.Exists(path)) return null;
-
-		FileStream fs = File.OpenRead(path);
-		fs.Seek(0, SeekOrigin.End);
-		int size = (int)fs.Position;
-		fs.Seek(0, SeekOrigin.Begin);
-		BinaryReader reader = new BinaryReader(fs);
-		byte[] bytes = new byte[size];
-		reader.Read(bytes, 0, size);
-		reader.Close();
-
-		Texture2D tex = new Texture2D(1, 1);
-		tex.LoadImage(bytes);
-		tex.Apply();
-		return tex;
+		UISnapshotPoint point = t.GetComponent<UISnapshotPoint>();
+		if (point != null) return point;
+		
+		for (int i = 0, imax = t.childCount; i < imax; ++i)
+		{
+			Transform c = t.GetChild(i);
+			point = GetSnapshotPoint(c);
+			if (point != null) return point;
+		}
+		return null;
 	}
 
 	/// <summary>
@@ -405,14 +399,31 @@ public class UIPrefabTool : EditorWindow
 	{
 		if (item == null || item.prefab == null) return;
 
-		// Render textures only work in Unity Pro
-		if (!UnityEditorInternal.InternalEditorUtility.HasPro())
+		// For some reason Unity 5 doesn't seem to support render textures at edit time while Unity 4 does...
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+		if (point == null) point = GetSnapshotPoint(item.prefab.transform);
+
+		if (point != null && point.thumbnail != null)
 		{
-			item.tex = LoadPreview(item);
-			item.dynamicTex = true;
+			// Explicitly chosen thumbnail
+			item.tex = point.thumbnail;
+			item.dynamicTex = false;
 			return;
 		}
-
+		else if (!UnityEditorInternal.InternalEditorUtility.HasPro())
+#endif
+		{
+			// Render textures only work in Unity Pro
+			string path = "Assets/NGUI/Editor/Preview/" + item.prefab.name + ".png";
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+			item.tex = File.Exists(path) ? (Texture2D)Resources.LoadAssetAtPath(path, typeof(Texture2D)) : null;
+#else
+			item.tex = File.Exists(path) ? (Texture2D)AssetDatabase.LoadAssetAtPath(path, typeof(Texture2D)) : null;
+#endif
+			item.dynamicTex = false;
+			return;
+		}
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
 		int dim = (cellSize - 4) * 2;
 
 		// Asset Preview-based approach is unreliable, and most of the time fails to provide a texture.
@@ -422,21 +433,23 @@ public class UIPrefabTool : EditorWindow
 		//if (item.tex != null) return;
 
 		// Let's create a basic scene
-		GameObject root = EditorUtility.CreateGameObjectWithHideFlags(
-				"Preview Root", HideFlags.HideAndDontSave);
-
-		GameObject camGO = EditorUtility.CreateGameObjectWithHideFlags(
-			"Preview Camera", HideFlags.HideAndDontSave, typeof(Camera));
+		GameObject root = EditorUtility.CreateGameObjectWithHideFlags("Preview Root", HideFlags.HideAndDontSave);
+		GameObject camGO = EditorUtility.CreateGameObjectWithHideFlags("Preview Camera", HideFlags.HideAndDontSave, typeof(Camera));
 
 		// Position it far away so that it doesn't interfere with existing objects
 		root.transform.position = new Vector3(0f, 0f, 10000f);
 		root.layer = item.prefab.layer;
 
 		// Set up the camera
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+		Camera cam = camGO.camera;
+		cam.isOrthoGraphic = true;
+#else
 		Camera cam = camGO.GetComponent<Camera>();
+		cam.orthographic = true;
+#endif
 		cam.renderingPath = RenderingPath.Forward;
 		cam.clearFlags = CameraClearFlags.Skybox;
-		cam.orthographic = true;
 		cam.backgroundColor = new Color(0f, 0f, 0f, 0f);
 		cam.targetTexture = (item.tex as RenderTexture);
 		cam.enabled = false;
@@ -469,6 +482,7 @@ public class UIPrefabTool : EditorWindow
 		// Clean up everything
 		DestroyImmediate(camGO);
 		DestroyImmediate(root);
+#endif
 	}
 
 	/// <summary>
@@ -524,7 +538,11 @@ public class UIPrefabTool : EditorWindow
 
 		// Set the camera's properties
 		cam.cullingMask = mask;
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+		cam.isOrthoGraphic = true;
+#else
 		cam.orthographic = true;
+#endif
 		cam.transform.position = bounds.center;
 		cam.transform.rotation = Quaternion.LookRotation(camDir);
 
@@ -565,7 +583,11 @@ public class UIPrefabTool : EditorWindow
 
 		cam.transform.position = pos;
 		cam.transform.rotation = rot;
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+		cam.isOrthoGraphic = point.isOrthographic;
+#else
 		cam.orthographic = point.isOrthographic;
+#endif
 		cam.nearClipPlane = point.nearClip;
 		cam.farClipPlane = point.farClip;
 		cam.orthographicSize = point.orthoSize;
@@ -610,7 +632,11 @@ public class UIPrefabTool : EditorWindow
 			float.TryParse(parts[1], out far);
 			float.TryParse(parts[2], out fov);
 
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+			cam.isOrthoGraphic = false;
+#else
 			cam.orthographic = false;
+#endif
 			cam.nearClipPlane = near;
 			cam.farClipPlane = far;
 			cam.fieldOfView = fov;

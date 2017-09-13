@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -25,10 +25,39 @@ public class UISprite : UIBasicSprite
 	[System.NonSerialized] bool mSpriteSet = false;
 
 	/// <summary>
-	/// Retrieve the material used by the font.
+	/// Main texture is assigned on the atlas.
 	/// </summary>
 
-	public override Material material { get { return (mAtlas != null) ? mAtlas.spriteMaterial : null; } }
+	public override Texture mainTexture
+	{
+		get
+		{
+			var mat = (mAtlas != null) ? mAtlas.spriteMaterial : null;
+			return (mat != null) ? mat.mainTexture : null;
+		}
+		set
+		{
+			base.mainTexture = value;
+		}
+	}
+
+	/// <summary>
+	/// Material comes from the base class first, and sprite atlas last.
+	/// </summary>
+
+	public override Material material
+	{
+		get
+		{
+			var mat = base.material;
+			if (mat != null) return mat;
+			return (mAtlas != null ? mAtlas.spriteMaterial : null);
+		}
+		set
+		{
+			base.material = value;
+		}
+	}
 
 	/// <summary>
 	/// Atlas used by this widget.
@@ -134,6 +163,66 @@ public class UISprite : UIBasicSprite
 	}
 
 	/// <summary>
+	/// Whether a gradient will be applied.
+	/// </summary>
+
+	public bool applyGradient
+	{
+		get
+		{
+			return mApplyGradient;
+		}
+		set
+		{
+			if (mApplyGradient != value)
+			{
+				mApplyGradient = value;
+				MarkAsChanged();
+			}
+		}
+	}
+
+	/// <summary>
+	/// Top gradient color.
+	/// </summary>
+
+	public Color gradientTop
+	{
+		get
+		{
+			return mGradientTop;
+		}
+		set
+		{
+			if (mGradientTop != value)
+			{
+				mGradientTop = value;
+				if (mApplyGradient) MarkAsChanged();
+			}
+		}
+	}
+
+	/// <summary>
+	/// Bottom gradient color.
+	/// </summary>
+
+	public Color gradientBottom
+	{
+		get
+		{
+			return mGradientBottom;
+		}
+		set
+		{
+			if (mGradientBottom != value)
+			{
+				mGradientBottom = value;
+				if (mApplyGradient) MarkAsChanged();
+			}
+		}
+	}
+
+	/// <summary>
 	/// Sliced sprites generally have a border. X = left, Y = bottom, Z = right, W = top.
 	/// </summary>
 
@@ -163,11 +252,12 @@ public class UISprite : UIBasicSprite
 		{
 			if (type == Type.Sliced || type == Type.Advanced)
 			{
+				float ps = pixelSize;
 				Vector4 b = border * pixelSize;
 				int min = Mathf.RoundToInt(b.x + b.z);
 
 				UISpriteData sp = GetAtlasSprite();
-				if (sp != null) min += sp.paddingLeft + sp.paddingRight;
+				if (sp != null) min += Mathf.RoundToInt(ps * (sp.paddingLeft + sp.paddingRight));
 
 				return Mathf.Max(base.minWidth, ((min & 1) == 1) ? min + 1 : min);
 			}
@@ -185,11 +275,12 @@ public class UISprite : UIBasicSprite
 		{
 			if (type == Type.Sliced || type == Type.Advanced)
 			{
+				float ps = pixelSize;
 				Vector4 b = border * pixelSize;
 				int min = Mathf.RoundToInt(b.y + b.w);
 
 				UISpriteData sp = GetAtlasSprite();
-				if (sp != null) min += sp.paddingTop + sp.paddingBottom;
+				if (sp != null) min += Mathf.RoundToInt(ps * (sp.paddingTop + sp.paddingBottom));
 
 				return Mathf.Max(base.minHeight, ((min & 1) == 1) ? min + 1 : min);
 			}
@@ -220,6 +311,19 @@ public class UISprite : UIBasicSprite
 				int padBottom = mSprite.paddingBottom;
 				int padRight = mSprite.paddingRight;
 				int padTop = mSprite.paddingTop;
+
+				if (mType != Type.Simple)
+				{
+					float ps = pixelSize;
+
+					if (ps != 1f)
+					{
+						padLeft = Mathf.RoundToInt(ps * padLeft);
+						padBottom = Mathf.RoundToInt(ps * padBottom);
+						padRight = Mathf.RoundToInt(ps * padRight);
+						padTop = Mathf.RoundToInt(ps * padTop);
+					}
+				}
 
 				int w = mSprite.width + padLeft + padRight;
 				int h = mSprite.height + padBottom + padTop;
@@ -402,7 +506,7 @@ public class UISprite : UIBasicSprite
 	/// Virtual function called by the UIPanel that fills the buffers.
 	/// </summary>
 
-	public override void OnFill (BetterList<Vector3> verts, BetterList<Vector2> uvs, BetterList<Color32> cols)
+	public override void OnFill (List<Vector3> verts, List<Vector2> uvs, List<Color> cols)
 	{
 		Texture tex = mainTexture;
 		if (tex == null) return;
@@ -418,7 +522,7 @@ public class UISprite : UIBasicSprite
 		outer = NGUIMath.ConvertToTexCoords(outer, tex.width, tex.height);
 		inner = NGUIMath.ConvertToTexCoords(inner, tex.width, tex.height);
 
-		int offset = verts.size;
+		int offset = verts.Count;
 		Fill(verts, uvs, cols, outer, inner);
 
 		if (onPostFill != null)

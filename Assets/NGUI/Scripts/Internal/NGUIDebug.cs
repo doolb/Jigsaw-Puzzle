@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -29,11 +29,9 @@ public class NGUIDebug : MonoBehaviour
 		}
 		set
 		{
-			if (Application.isPlaying)
-			{
-				mRayDebug = value;
-				if (value) CreateInstance();
-			}
+			mRayDebug = value;
+			if (value && Application.isPlaying)
+				CreateInstance();
 		}
 	}
 
@@ -63,10 +61,7 @@ public class NGUIDebug : MonoBehaviour
 			mLines.Add(text);
 			CreateInstance();
 		}
-		else
-		{
-			Debug.Log(text);
-		}
+		else Debug.Log(text);
 	}
 
 	/// <summary>
@@ -92,6 +87,25 @@ public class NGUIDebug : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Add a new log entry.
+	/// </summary>
+
+	static public void Log (string s)
+	{
+		if (!string.IsNullOrEmpty(s))
+		{
+			string[] lines = s.Split('\n');
+			foreach (string st in lines) LogString(st);
+		}
+	}
+
+	/// <summary>
+	/// Clear the logged text.
+	/// </summary>
+
+	static public void Clear () { mLines.Clear(); }
+
+	/// <summary>
 	/// Draw bounds immediately. Won't be remembered for the next frame.
 	/// </summary>
 
@@ -105,22 +119,78 @@ public class NGUIDebug : MonoBehaviour
 		Debug.DrawLine(new Vector3(v1.x, v0.y, c.z), new Vector3(v1.x, v1.y, c.z), Color.red);
 		Debug.DrawLine(new Vector3(v0.x, v1.y, c.z), new Vector3(v1.x, v1.y, c.z), Color.red);
 	}
-	
+
 	void OnGUI()
 	{
-		if (mLines.Count == 0)
+		Rect rect = new Rect(5f, 5f, 1000f, 22f);
+
+		if (mRayDebug)
 		{
-			if (mRayDebug && UICamera.hoveredObject != null && Application.isPlaying)
-			{
-				GUILayout.Label("Last Hit: " + NGUITools.GetHierarchy(UICamera.hoveredObject).Replace("\"", ""));
-			}
+			UICamera.ControlScheme scheme = UICamera.currentScheme;
+			string text = "Scheme: " + scheme;
+			GUI.color = Color.black;
+			GUI.Label(rect, text);
+			rect.y -= 1f;
+			rect.x -= 1f;
+			GUI.color = Color.white;
+			GUI.Label(rect, text);
+			rect.y += 18f;
+			rect.x += 1f;
+
+			text = "Hover: " + NGUITools.GetHierarchy(UICamera.hoveredObject).Replace("\"", "");
+			GUI.color = Color.black;
+			GUI.Label(rect, text);
+			rect.y -= 1f;
+			rect.x -= 1f;
+			GUI.color = Color.white;
+			GUI.Label(rect, text);
+			rect.y += 18f;
+			rect.x += 1f;
+
+			text = "Selection: " + NGUITools.GetHierarchy(UICamera.selectedObject).Replace("\"", "");
+			GUI.color = Color.black;
+			GUI.Label(rect, text);
+			rect.y -= 1f;
+			rect.x -= 1f;
+			GUI.color = Color.white;
+			GUI.Label(rect, text);
+			rect.y += 18f;
+			rect.x += 1f;
+
+			text = "Controller: " + NGUITools.GetHierarchy(UICamera.controllerNavigationObject).Replace("\"", "");
+			GUI.color = Color.black;
+			GUI.Label(rect, text);
+			rect.y -= 1f;
+			rect.x -= 1f;
+			GUI.color = Color.white;
+			GUI.Label(rect, text);
+			rect.y += 18f;
+			rect.x += 1f;
+
+			text = "Active events: " + UICamera.CountInputSources();
+			if (UICamera.disableController) text += ", disabled controller";
+			if (UICamera.ignoreControllerInput) text += ", ignore controller";
+			if (UICamera.inputHasFocus) text += ", input focus";
+			GUI.color = Color.black;
+			GUI.Label(rect, text);
+			rect.y -= 1f;
+			rect.x -= 1f;
+			GUI.color = Color.white;
+			GUI.Label(rect, text);
+			rect.y += 18f;
+			rect.x += 1f;
 		}
-		else
+
+		for (int i = 0, imax = mLines.Count; i < imax; ++i)
 		{
-			for (int i = 0, imax = mLines.Count; i < imax; ++i)
-			{
-				GUILayout.Label(mLines[i]);
-			}
+			GUI.color = Color.black;
+			GUI.Label(rect, mLines[i]);
+			rect.y -= 1f;
+			rect.x -= 1f;
+			GUI.color = Color.white;
+			GUI.Label(rect, mLines[i]);
+			rect.y += 18f;
+			rect.x += 1f;
 		}
 	}
 }

@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -29,8 +29,21 @@ public class UI2DSpriteEditor : UIBasicSpriteEditor
 
 	protected override bool ShouldDrawProperties ()
 	{
+		GUI.changed = false;
 		SerializedProperty sp = NGUIEditorTools.DrawProperty("2D Sprite", serializedObject, "mSprite");
 
+#if !UNITY_4_3
+		if (GUI.changed)
+		{
+			UnityEngine.Sprite sprite = sp.objectReferenceValue as Sprite;
+
+			if (sprite != null)
+			{
+				SerializedProperty border = serializedObject.FindProperty("mBorder");
+				border.vector4Value = sprite.border;
+			}
+		}
+#endif
 		NGUISettings.sprite2D = sp.objectReferenceValue as Sprite;
 
 		NGUIEditorTools.DrawProperty("Material", serializedObject, "mMat");
@@ -38,6 +51,18 @@ public class UI2DSpriteEditor : UIBasicSpriteEditor
 		if (mSprite.material == null || serializedObject.isEditingMultipleObjects)
 		{
 			NGUIEditorTools.DrawProperty("Shader", serializedObject, "mShader");
+		}
+
+		NGUIEditorTools.DrawProperty("Pixel Size", serializedObject, "mPixelSize");
+
+		SerializedProperty fa = serializedObject.FindProperty("mFixedAspect");
+		bool before = fa.boolValue;
+		NGUIEditorTools.DrawProperty("Fixed Aspect", fa);
+		if (fa.boolValue != before) (target as UIWidget).drawRegion = new Vector4(0f, 0f, 1f, 1f);
+
+		if (fa.boolValue)
+		{
+			EditorGUILayout.HelpBox("Note that Fixed Aspect mode is not compatible with Draw Region modifications done by sliders and progress bars.", MessageType.Info);
 		}
 		return (sp.objectReferenceValue != null);
 	}

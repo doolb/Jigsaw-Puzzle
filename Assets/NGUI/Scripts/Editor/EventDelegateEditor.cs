@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using Entry = PropertyReferenceDrawer.Entry;
 
-public static class EventDelegateEditor
+static public class EventDelegateEditor
 {
 	/// <summary>
 	/// Collect a list of usable delegates from the specified target game object.
@@ -256,6 +256,8 @@ public static class EventDelegateEditor
 
 	static public void Field (Object undoObject, List<EventDelegate> list, string noTarget, string notValid, bool minimalistic)
 	{
+		if (list == null) return;
+
 		bool targetPresent = false;
 		bool isValid = false;
 

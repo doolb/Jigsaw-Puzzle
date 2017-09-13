@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Text;
@@ -85,7 +85,15 @@ public class TypewriterEffect : MonoBehaviour
 	/// Reset the typewriter effect to the beginning of the label.
 	/// </summary>
 
-	public void ResetToBeginning () { mReset = true; }
+	public void ResetToBeginning ()
+	{
+		Finish();
+		mReset = true;
+		mActive = true;
+		mNextChar = 0f;
+		mCurrentOffset = 0;
+		Update();
+	}
 
 	/// <summary>
 	/// Finish the typewriter operation and show all the text right away.
@@ -114,6 +122,7 @@ public class TypewriterEffect : MonoBehaviour
 	}
 
 	void OnEnable () { mReset = true; mActive = true; }
+	void OnDisable () { Finish(); }
 
 	void Update ()
 	{
@@ -130,28 +139,37 @@ public class TypewriterEffect : MonoBehaviour
 			if (keepFullDimensions && scrollView != null) scrollView.UpdatePosition();
 		}
 
-		while (mCurrentOffset < mFullText.Length && mNextChar <= RealTime.time)
+		if (string.IsNullOrEmpty(mFullText)) return;
+
+		var len = mFullText.Length;
+
+		while (mCurrentOffset < len && mNextChar <= RealTime.time)
 		{
 			int lastOffset = mCurrentOffset;
 			charsPerSecond = Mathf.Max(1, charsPerSecond);
 
 			// Automatically skip all symbols
-			while (NGUIText.ParseSymbol(mFullText, ref mCurrentOffset)) { }
+			if (mLabel.supportEncoding)
+				while (NGUIText.ParseSymbol(mFullText, ref mCurrentOffset)) { }
+
 			++mCurrentOffset;
+
+			// Reached the end? We're done.
+			if (mCurrentOffset > len) break;
 
 			// Periods and end-of-line characters should pause for a longer time.
 			float delay = 1f / charsPerSecond;
-			char c = (lastOffset < mFullText.Length) ? mFullText[lastOffset] : '\n';
+			char c = (lastOffset < len) ? mFullText[lastOffset] : '\n';
 
 			if (c == '\n')
 			{
 				delay += delayOnNewLine;
 			}
-			else if (lastOffset + 1 == mFullText.Length || mFullText[lastOffset + 1] <= ' ')
+			else if (lastOffset + 1 == len || mFullText[lastOffset + 1] <= ' ')
 			{
 				if (c == '.')
 				{
-					if (lastOffset + 2 < mFullText.Length && mFullText[lastOffset + 1] == '.' && mFullText[lastOffset + 2] == '.')
+					if (lastOffset + 2 < len && mFullText[lastOffset + 1] == '.' && mFullText[lastOffset + 2] == '.')
 					{
 						delay += delayOnPeriod * 3f;
 						lastOffset += 2;
@@ -192,7 +210,15 @@ public class TypewriterEffect : MonoBehaviour
 		}
 
 		// Alpha-based fading
-		if (mFade.size != 0)
+		if (mCurrentOffset >= len && mFade.size == 0)
+		{
+			mLabel.text = mFullText;
+			current = this;
+			EventDelegate.Execute(onFinished);
+			current = null;
+			mActive = false;
+		}
+		else if (mFade.size != 0)
 		{
 			for (int i = 0; i < mFade.size; )
 			{
@@ -209,7 +235,10 @@ public class TypewriterEffect : MonoBehaviour
 
 			if (mFade.size == 0)
 			{
-				if (keepFullDimensions) mLabel.text = mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset);
+				if (keepFullDimensions)
+				{
+					mLabel.text = mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset);
+				}
 				else mLabel.text = mFullText.Substring(0, mCurrentOffset);
 			}
 			else
@@ -239,13 +268,6 @@ public class TypewriterEffect : MonoBehaviour
 
 				mLabel.text = sb.ToString();
 			}
-		}
-		else if (mCurrentOffset == mFullText.Length)
-		{
-			current = this;
-			EventDelegate.Execute(onFinished);
-			current = null;
-			mActive = false;
 		}
 	}
 }

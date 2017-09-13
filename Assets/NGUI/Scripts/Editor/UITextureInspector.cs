@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -39,6 +39,16 @@ public class UITextureInspector : UIBasicSpriteEditor
 		EditorGUI.BeginDisabledGroup(mTex == null || mTex.mainTexture == null || serializedObject.isEditingMultipleObjects);
 
 		NGUIEditorTools.DrawRectProperty("UV Rect", serializedObject, "mRect");
+
+		sp = serializedObject.FindProperty("mFixedAspect");
+		bool before = sp.boolValue;
+		NGUIEditorTools.DrawProperty("Fixed Aspect", sp);
+		if (sp.boolValue != before) (target as UIWidget).drawRegion = new Vector4(0f, 0f, 1f, 1f);
+
+		if (sp.boolValue)
+		{
+			EditorGUILayout.HelpBox("Note that Fixed Aspect mode is not compatible with Draw Region modifications done by sliders and progress bars.", MessageType.Info);
+		}
 
 		EditorGUI.EndDisabledGroup();
 		return true;

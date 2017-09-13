@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 
@@ -12,9 +12,7 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class AnimatedAlpha : MonoBehaviour
 {
-#if !UNITY_3_5
 	[Range(0f, 1f)]
-#endif
 	public float alpha = 1f;
 
 	UIWidget mWidget;

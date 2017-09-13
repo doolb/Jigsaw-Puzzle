@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -19,9 +19,58 @@ public class UIAtlasMaker : EditorWindow
 	{
 		// Sprite texture -- original texture or a temporary texture
 		public Texture2D tex;
+
+		// Temporary game object -- used to prevent Unity from unloading the texture
+		public GameObject tempGO;
+
+		// Temporary material -- same usage as the temporary game object
+		public Material tempMat;
 		
 		// Whether the texture is temporary and should be deleted
 		public bool temporaryTexture = false;
+
+		/// <summary>
+		/// HACK: Prevent Unity from unloading temporary textures.
+		/// Discovered by "alexkring": http://www.tasharen.com/forum/index.php?topic=3079.45
+		/// </summary>
+
+		public void SetTexture (Color32[] newPixels, int newWidth, int newHeight)
+		{
+			Release();
+
+			temporaryTexture = true;
+
+			tex = new Texture2D(newWidth, newHeight);
+			tex.name = name;
+			tex.SetPixels32(newPixels);
+			tex.Apply();
+
+			tempMat = new Material(NGUISettings.atlas.spriteMaterial);
+			tempMat.hideFlags = HideFlags.HideAndDontSave;
+			tempMat.SetTexture("_MainTex", tex);
+			
+			tempGO = EditorUtility.CreateGameObjectWithHideFlags(name, HideFlags.HideAndDontSave, typeof(MeshRenderer));
+			tempGO.GetComponent<MeshRenderer>().sharedMaterial = tempMat;
+		}
+
+		/// <summary>
+		/// Release temporary resources.
+		/// </summary>
+
+		public void Release ()
+		{
+			if (temporaryTexture)
+			{
+				Object.DestroyImmediate(tempGO);
+				Object.DestroyImmediate(tempMat);
+				Object.DestroyImmediate(tex);
+
+				tempGO = null;
+				tempMat = null;
+				tex = null;
+				temporaryTexture = false;
+			}
+		}
 	}
 
 	Vector2 mScroll = Vector2.zero;
@@ -142,6 +191,9 @@ public class UIAtlasMaker : EditorWindow
 		for (int i = 0; i < sprites.Count; ++i)
 		{
 			Rect rect = NGUIMath.ConvertToPixels(rects[i], tex.width, tex.height, true);
+
+			// Apparently Unity can take the liberty of destroying temporary textures without any warning
+			if (textures[i] == null) return false;
 
 			// Make sure that we don't shrink the textures
 			if (Mathf.RoundToInt(rect.width) != textures[i].width) return false;
@@ -308,11 +360,8 @@ public class UIAtlasMaker : EditorWindow
 					}
 
 					// Create a new texture
-					sprite.temporaryTexture = true;
 					sprite.name = oldTex.name;
-					sprite.tex = new Texture2D(newWidth, newHeight);
-					sprite.tex.SetPixels32(newPixels);
-					sprite.tex.Apply();
+					sprite.SetTexture(newPixels, newWidth, newHeight);
 
 					// Remember the padding offset
 					sprite.SetPadding(xmin, ymin, oldWidth - newWidth - xmin, oldHeight - newHeight - ymin);
@@ -329,14 +378,7 @@ public class UIAtlasMaker : EditorWindow
 
 	static public void ReleaseSprites (List<SpriteEntry> sprites)
 	{
-		foreach (SpriteEntry se in sprites)
-		{
-			if (se.temporaryTexture)
-			{
-				NGUITools.Destroy(se.tex);
-				se.tex = null;
-			}
-		}
+		foreach (SpriteEntry se in sprites) se.Release();
 		Resources.UnloadUnusedAssets();
 	}
 
@@ -391,7 +433,7 @@ public class UIAtlasMaker : EditorWindow
 			UIAtlasMaker.ExtractSprites(atlas, sprites);
 			sprites.Add(se);
 			UIAtlasMaker.UpdateAtlas(atlas, sprites);
-			if (se.temporaryTexture) DestroyImmediate(se.tex);
+			se.Release();
 		}
 		else NGUIEditorTools.ImportTexture(atlas.texture, false, false, !atlas.premultipliedAlpha);
 		return se;
@@ -460,10 +502,7 @@ public class UIAtlasMaker : EditorWindow
 		SpriteEntry sprite = new SpriteEntry();
 		sprite.CopyFrom(es);
 		sprite.SetRect(0, 0, newWidth, newHeight);
-		sprite.temporaryTexture = true;
-		sprite.tex = new Texture2D(newWidth, newHeight);
-		sprite.tex.SetPixels32(newPixels);
-		sprite.tex.Apply();
+		sprite.SetTexture(newPixels, newWidth, newHeight);
 		return sprite;
 	}
 
@@ -531,13 +570,6 @@ public class UIAtlasMaker : EditorWindow
 		// Clear the read-only flag in texture file attributes
 		if (System.IO.File.Exists(newPath))
 		{
-#if !UNITY_4_1 && !UNITY_4_0 && !UNITY_3_5
-			if (!AssetDatabase.IsOpenForEdit(newPath))
-			{
-				Debug.LogError(newPath + " is not editable. Did you forget to do a check out?");
-				return false;
-			}
-#endif
 			System.IO.FileAttributes newPathAttrs = System.IO.File.GetAttributes(newPath);
 			newPathAttrs &= ~System.IO.FileAttributes.ReadOnly;
 			System.IO.File.SetAttributes(newPath, newPathAttrs);
@@ -708,7 +740,7 @@ public class UIAtlasMaker : EditorWindow
 		bool update = false;
 		bool replace = false;
 
-		NGUIEditorTools.SetLabelWidth(80f);
+		NGUIEditorTools.SetLabelWidth(84f);
 		GUILayout.Space(3f);
 
 		NGUIEditorTools.DrawHeader("Input", true);
@@ -813,16 +845,29 @@ public class UIAtlasMaker : EditorWindow
 			GUILayout.EndHorizontal();
 		}
 
+		//GUILayout.BeginHorizontal();
+		//NGUISettings.keepPadding = EditorGUILayout.Toggle("Keep Padding", NGUISettings.keepPadding, GUILayout.Width(100f));
+		//GUILayout.Label("or replace with trimmed pixels", GUILayout.MinWidth(70f));
+		//GUILayout.EndHorizontal();
+
+		#if !UNITY_5_6
 		GUILayout.BeginHorizontal();
 		NGUISettings.unityPacking = EditorGUILayout.Toggle("Unity Packer", NGUISettings.unityPacking, GUILayout.Width(100f));
 		GUILayout.Label("or custom packer", GUILayout.MinWidth(70f));
 		GUILayout.EndHorizontal();
+		#endif
 
 		GUILayout.BeginHorizontal();
 		NGUISettings.trueColorAtlas = EditorGUILayout.Toggle("Truecolor", NGUISettings.trueColorAtlas, GUILayout.Width(100f));
 		GUILayout.Label("force ARGB32 textures", GUILayout.MinWidth(70f));
 		GUILayout.EndHorizontal();
 
+		GUILayout.BeginHorizontal();
+		NGUISettings.autoUpgradeSprites = EditorGUILayout.Toggle("Auto-upgrade", NGUISettings.trueColorAtlas, GUILayout.Width(100f));
+		GUILayout.Label("replace textures with sprites", GUILayout.MinWidth(70f));
+		GUILayout.EndHorizontal();
+
+		#if !UNITY_5_6
 		if (!NGUISettings.unityPacking)
 		{
 			GUILayout.BeginHorizontal();
@@ -830,6 +875,7 @@ public class UIAtlasMaker : EditorWindow
 			GUILayout.Label("if on, forces a square atlas texture", GUILayout.MinWidth(70f));
 			GUILayout.EndHorizontal();
 		}
+		#endif
 
 #if UNITY_IPHONE || UNITY_ANDROID
 		GUILayout.BeginHorizontal();
@@ -1015,7 +1061,7 @@ public class UIAtlasMaker : EditorWindow
 				{
 					NGUIEditorTools.SelectSprite(selection);
 				}
-				else if (update || replace)
+				else if (NGUISettings.autoUpgradeSprites && (update || replace))
 				{
 					NGUIEditorTools.UpgradeTexturesToSprites(NGUISettings.atlas);
 					NGUIEditorTools.RepaintSprites();

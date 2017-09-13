@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -11,11 +11,7 @@ using UnityEditor;
 /// </summary>
 
 [CanEditMultipleObjects]
-#if UNITY_3_5
-[CustomEditor(typeof(UIWidgetContainer))]
-#else
 [CustomEditor(typeof(UIWidgetContainer), true)]
-#endif
 public class UIWidgetContainerEditor : Editor
 {
 	static int mHash = "WidgetContainer".GetHashCode();
@@ -38,7 +34,6 @@ public class UIWidgetContainerEditor : Editor
 	{
 		//NGUIEditorTools.HideMoveTool(true);
 		if (!UIWidget.showHandles) return;
-		if (UnityEditor.Tools.current != Tool.Move) return;
 
 		MonoBehaviour mb = target as MonoBehaviour;
 		if (mb.GetComponent<UIWidget>() != null) return;

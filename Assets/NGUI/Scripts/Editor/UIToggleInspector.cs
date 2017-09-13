@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -41,8 +41,36 @@ public class UIToggleInspector : UIWidgetContainerEditor
 		if (NGUIEditorTools.DrawMinimalisticHeader("State Transition"))
 		{
 			NGUIEditorTools.BeginContents(true);
-			NGUIEditorTools.DrawProperty("Sprite", serializedObject, "activeSprite");
-			NGUIEditorTools.DrawProperty("Animation", serializedObject, "activeAnimation");
+
+			SerializedProperty sprite = serializedObject.FindProperty("activeSprite");
+			SerializedProperty animator = serializedObject.FindProperty("animator");
+			SerializedProperty animation = serializedObject.FindProperty("activeAnimation");
+			SerializedProperty tween = serializedObject.FindProperty("tween");
+
+			if (sprite.objectReferenceValue != null)
+			{
+				NGUIEditorTools.DrawProperty("Sprite", sprite, false);
+				serializedObject.DrawProperty("invertSpriteState");
+			}
+			else if (animator.objectReferenceValue != null)
+			{
+				NGUIEditorTools.DrawProperty("Animator", animator, false);
+			}
+			else if (animation.objectReferenceValue != null)
+			{
+				NGUIEditorTools.DrawProperty("Animation", animation, false);
+			}
+			else if (tween.objectReferenceValue != null)
+			{
+				NGUIEditorTools.DrawProperty("Tween", tween, false);
+			}
+			else
+			{
+				NGUIEditorTools.DrawProperty("Sprite", serializedObject, "activeSprite");
+				NGUIEditorTools.DrawProperty("Animator", animator, false);
+				NGUIEditorTools.DrawProperty("Animation", animation, false);
+				NGUIEditorTools.DrawProperty("Tween", tween, false);
+			}
 
 			if (serializedObject.isEditingMultipleObjects)
 			{

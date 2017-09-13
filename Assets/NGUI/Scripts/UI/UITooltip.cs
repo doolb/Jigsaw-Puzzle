@@ -12,10 +12,12 @@ public class UITooltip : MonoBehaviour
 
 	public Camera uiCamera;
 	public UILabel text;
+	public GameObject tooltipRoot;
 	public UISprite background;
 	public float appearSpeed = 10f;
 	public bool scalingTransitions = true;
 
+	protected GameObject mTooltip;
 	protected Transform mTrans;
 	protected float mTarget = 0f;
 	protected float mCurrent = 0f;
@@ -52,6 +54,12 @@ public class UITooltip : MonoBehaviour
 
 	protected virtual void Update ()
 	{
+		if (mTooltip != UICamera.tooltipObject)
+		{
+			mTooltip = null;
+			mTarget = 0f;
+		}
+
 		if (mCurrent != mTarget)
 		{
 			mCurrent = Mathf.Lerp(mCurrent, mTarget, RealTime.deltaTime * appearSpeed);
@@ -96,10 +104,11 @@ public class UITooltip : MonoBehaviour
 		if (text != null && !string.IsNullOrEmpty(tooltipText))
 		{
 			mTarget = 1f;
+			mTooltip = UICamera.tooltipObject;
 			text.text = tooltipText;
 
 			// Orthographic camera positioning is trivial
-			mPos = Input.mousePosition;
+			mPos = UICamera.lastEventPosition;
 
 			Transform textTrans = text.transform;
 			Vector3 offset = textTrans.localPosition;
@@ -115,7 +124,7 @@ public class UITooltip : MonoBehaviour
 			if (background != null)
 			{
 				Vector4 border = background.border;
-				mSize.x += border.x + border.z + ( offset.x - border.x) * 2f;
+				mSize.x += border.x + border.z + (offset.x - border.x) * 2f;
 				mSize.y += border.y + border.w + (-offset.y - border.y) * 2f;
 
 				background.width = Mathf.RoundToInt(mSize.x);
@@ -145,7 +154,6 @@ public class UITooltip : MonoBehaviour
 				mPos = mTrans.localPosition;
 				mPos.x = Mathf.Round(mPos.x);
 				mPos.y = Mathf.Round(mPos.y);
-				mTrans.localPosition = mPos;
 			}
 			else
 			{
@@ -157,19 +165,36 @@ public class UITooltip : MonoBehaviour
 				mPos.x -= Screen.width * 0.5f;
 				mPos.y -= Screen.height * 0.5f;
 			}
+
+			mTrans.localPosition = mPos;
+
+			// Force-update all anchors below the tooltip
+			if (tooltipRoot != null) tooltipRoot.BroadcastMessage("UpdateAnchors");
+			else text.BroadcastMessage("UpdateAnchors");
 		}
-		else mTarget = 0f;
+		else
+		{
+			mTooltip = null;
+			mTarget = 0f;
+		}
 	}
 
 	/// <summary>
 	/// Show a tooltip with the specified text.
 	/// </summary>
 
-	static public void ShowText (string tooltipText)
-	{
-		if (mInstance != null)
-		{
-			mInstance.SetText(tooltipText);
-		}
-	}
+	[System.Obsolete("Use UITooltip.Show instead")]
+	static public void ShowText (string text) { if (mInstance != null) mInstance.SetText(text); }
+
+	/// <summary>
+	/// Show the tooltip.
+	/// </summary>
+
+	static public void Show (string text) { if (mInstance != null) mInstance.SetText(text); }
+	
+	/// <summary>
+	/// Hide the tooltip.
+	/// </summary>
+
+	static public void Hide () { if (mInstance != null) { mInstance.mTooltip = null; mInstance.mTarget = 0f; } }
 }

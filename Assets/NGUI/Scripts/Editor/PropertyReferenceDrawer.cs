@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -37,6 +37,18 @@ public class PropertyReferenceDrawer
 	/// </summary>
 
 	static public bool canConvert = true;
+
+	/// <summary>
+	/// Whether the property should be readable. Used to filter the property selection list.
+	/// </summary>
+
+	static public bool mustRead = false;
+
+	/// <summary>
+	/// Whether the property should be writable. Used to filter the property selection list.
+	/// </summary>
+
+	static public bool mustWrite = false;
 
 	/// <summary>
 	/// Collect a list of usable properties and fields.
@@ -127,6 +139,7 @@ public class PropertyReferenceDrawer
 			if (index == 0 && string.Equals(del, choice))
 				index = i;
 		}
+		//Array.Sort(names);
 		return names;
 	}
 
@@ -163,7 +176,7 @@ public class PropertyReferenceDrawer
 			int index = 0;
 
 			// Get all the properties on the target game object
-			List<Entry> list = GetProperties(comp.gameObject, true, true);
+			List<Entry> list = GetProperties(comp.gameObject, mustRead, mustWrite);
 
 			// We want the field to look like "Component.property" rather than just "property"
 			string current = PropertyReference.ToString(target.objectReferenceValue as Component, field.stringValue);

@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections;
@@ -92,6 +92,9 @@ public abstract class UITweener : MonoBehaviour
 	[HideInInspector]
 	public int tweenGroup = 0;
 
+	[Tooltip("By default, Update() will be used for tweening. Setting this to 'true' will make the tween happen in FixedUpdate() insted.")]
+	public bool useFixedUpdate = false;
+
 	/// <summary>
 	/// Event delegates called when the animation finishes.
 	/// </summary>
@@ -117,10 +120,12 @@ public abstract class UITweener : MonoBehaviour
 	{
 		get
 		{
+			if (duration == 0f) return 1000f;
+
 			if (mDuration != duration)
 			{
 				mDuration = duration;
-				mAmountPerDelta = Mathf.Abs((duration > 0f) ? 1f / duration : 1000f) * Mathf.Sign(mAmountPerDelta);
+				mAmountPerDelta = Mathf.Abs(1f / duration) * Mathf.Sign(mAmountPerDelta);
 			}
 			return mAmountPerDelta;
 		}
@@ -155,19 +160,22 @@ public abstract class UITweener : MonoBehaviour
 	/// Update as soon as it's started so that there is no delay.
 	/// </summary>
 
-	protected virtual void Start () { Update(); }
+	protected virtual void Start () { DoUpdate(); }
+	protected void Update () { if (!useFixedUpdate) DoUpdate(); }
+	protected void FixedUpdate () { if (useFixedUpdate) DoUpdate(); }
 
 	/// <summary>
 	/// Update the tweening factor and call the virtual update function.
 	/// </summary>
 
-	void Update ()
+	protected void DoUpdate ()
 	{
-		float delta = ignoreTimeScale ? RealTime.deltaTime : Time.deltaTime;
-		float time = ignoreTimeScale ? RealTime.time : Time.time;
+		float delta = ignoreTimeScale && !useFixedUpdate ? Time.unscaledDeltaTime : Time.deltaTime;
+		float time = ignoreTimeScale && !useFixedUpdate ? Time.unscaledTime : Time.time;
 
 		if (!mStarted)
 		{
+			delta = 0;
 			mStarted = true;
 			mStartTime = time + delay;
 		}
@@ -175,7 +183,7 @@ public abstract class UITweener : MonoBehaviour
 		if (time < mStartTime) return;
 
 		// Advance the sampling factor
-		mFactor += amountPerDelta * delta;
+		mFactor += (duration == 0f) ? 1f : amountPerDelta * delta;
 
 		// Loop style simply resets the play factor after it exceeds 1.
 		if (style == Style.Loop)
@@ -206,13 +214,11 @@ public abstract class UITweener : MonoBehaviour
 		{
 			mFactor = Mathf.Clamp01(mFactor);
 			Sample(mFactor, true);
+			enabled = false;
 
-			// Disable this script unless the function calls above changed something
-			if (duration == 0f || (mFactor == 1f && mAmountPerDelta > 0f || mFactor == 0f && mAmountPerDelta < 0f))
-				enabled = false;
-
-			if (current == null)
+			if (current != this)
 			{
+				UITweener before = current;
 				current = this;
 
 				if (onFinished != null)
@@ -227,7 +233,7 @@ public abstract class UITweener : MonoBehaviour
 					for (int i = 0; i < mTemp.Count; ++i)
 					{
 						EventDelegate ed = mTemp[i];
-						if (ed != null) EventDelegate.Add(onFinished, ed, ed.oneShot);
+						if (ed != null && !ed.oneShot) EventDelegate.Add(onFinished, ed, ed.oneShot);
 					}
 					mTemp = null;
 				}
@@ -236,7 +242,7 @@ public abstract class UITweener : MonoBehaviour
 				if (eventReceiver != null && !string.IsNullOrEmpty(callWhenFinished))
 					eventReceiver.SendMessage(callWhenFinished, this, SendMessageOptions.DontRequireReceiver);
 
-				current = null;
+				current = before;
 			}
 		}
 		else Sample(mFactor, false);
@@ -383,12 +389,18 @@ public abstract class UITweener : MonoBehaviour
 	/// Manually activate the tweening process, reversing it if necessary.
 	/// </summary>
 
-	public void Play (bool forward)
+	public virtual void Play (bool forward)
 	{
 		mAmountPerDelta = Mathf.Abs(amountPerDelta);
 		if (!forward) mAmountPerDelta = -mAmountPerDelta;
-		enabled = true;
-		Update();
+
+		if (!enabled)
+		{
+			enabled = true;
+			mStarted = false;
+		}
+
+		DoUpdate();
 	}
 
 	/// <summary>
@@ -431,7 +443,7 @@ public abstract class UITweener : MonoBehaviour
 	/// Starts the tweening operation.
 	/// </summary>
 
-	static public T Begin<T> (GameObject go, float duration) where T : UITweener
+	static public T Begin<T> (GameObject go, float duration, float delay = 0f) where T : UITweener
 	{
 		T comp = go.GetComponent<T>();
 #if UNITY_FLASH
@@ -450,23 +462,30 @@ public abstract class UITweener : MonoBehaviour
 			}
 		}
 
-		if (comp == null) comp = go.AddComponent<T>();
+		if (comp == null)
+		{
+			comp = go.AddComponent<T>();
+
+			if (comp == null)
+			{
+				Debug.LogError("Unable to add " + typeof(T) + " to " + NGUITools.GetHierarchy(go), go);
+				return null;
+			}
+		}
 #endif
 		comp.mStarted = false;
-		comp.duration = duration;
 		comp.mFactor = 0f;
-		comp.mAmountPerDelta = Mathf.Abs(comp.amountPerDelta);
+		comp.duration = duration;
+		comp.mDuration = duration;
+		comp.delay = delay;
+		comp.mAmountPerDelta = duration > 0f ? Mathf.Abs(1f / duration) : 1000f;
 		comp.style = Style.Once;
 		comp.animationCurve = new AnimationCurve(new Keyframe(0f, 0f, 0f, 1f), new Keyframe(1f, 1f, 1f, 0f));
 		comp.eventReceiver = null;
 		comp.callWhenFinished = null;
+		comp.onFinished.Clear();
+		if (comp.mTemp != null) comp.mTemp.Clear();
 		comp.enabled = true;
-
-		if (duration <= 0f)
-		{
-			comp.Sample(1f, true);
-			comp.enabled = false;
-		}
 		return comp;
 	}
 

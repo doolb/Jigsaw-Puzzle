@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -264,6 +264,27 @@ public class UIAtlas : MonoBehaviour
 			}
 		}
 		return null;
+	}
+
+	/// <summary>
+	/// Convenience function that returns the name of a random sprite that begins with the specified value.
+	/// </summary>
+
+	public string GetRandomSprite (string startsWith)
+	{
+		if (GetSprite(startsWith) == null)
+		{
+			System.Collections.Generic.List<UISpriteData> sprites = spriteList;
+			System.Collections.Generic.List<string> choices = new System.Collections.Generic.List<string>();
+
+			foreach (UISpriteData sd in sprites)
+			{
+				if (sd.name.StartsWith(startsWith))
+					choices.Add(sd.name);
+			}
+			return (choices.Count > 0) ? choices[UnityEngine.Random.Range(0, choices.Count)] : null;
+		}
+		return startsWith;
 	}
 
 	/// <summary>

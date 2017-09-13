@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +12,7 @@ using System.Reflection;
 /// Tools for the editor
 /// </summary>
 
-public static class NGUIEditorTools
+static public class NGUIEditorTools
 {
 	static Texture2D mBackdropTex;
 	static Texture2D mContrastTex;
@@ -55,7 +55,7 @@ public static class NGUIEditorTools
 		get
 		{
 			if (mContrastTex == null) mContrastTex = CreateCheckerTex(
-				new Color(0f, 0.0f, 0f, 0.5f),
+				new Color(0f, 0f, 0f, 0.5f),
 				new Color(1f, 1f, 1f, 0.5f));
 			return mContrastTex;
 		}
@@ -441,18 +441,20 @@ public static class NGUIEditorTools
 		TextureImporterSettings settings = new TextureImporterSettings();
 		ti.ReadTextureSettings(settings);
 
-		if (force || !settings.readable || settings.npotScale != TextureImporterNPOTScale.None
-#if !UNITY_3_5 && !UNITY_4_0 && !UNITY_4_1
-			|| settings.alphaIsTransparency
-#endif
-			)
+		if (force || !settings.readable || settings.npotScale != TextureImporterNPOTScale.None || settings.alphaIsTransparency)
 		{
 			settings.readable = true;
-			if (NGUISettings.trueColorAtlas) settings.textureFormat = TextureImporterFormat.ARGB32;
-			settings.npotScale = TextureImporterNPOTScale.None;
-#if !UNITY_3_5 && !UNITY_4_0 && !UNITY_4_1
-			settings.alphaIsTransparency = false;
+#if !UNITY_4_7 && !UNITY_5_3 && !UNITY_5_4
+			if (NGUISettings.trueColorAtlas)
+			{
+				var platform = ti.GetDefaultPlatformTextureSettings();
+				platform.format = TextureImporterFormat.RGBA32;
+			}
+#else
+			if (NGUISettings.trueColorAtlas) settings.textureFormat = TextureImporterFormat.AutomaticTruecolor;
 #endif
+			settings.npotScale = TextureImporterNPOTScale.None;
+			settings.alphaIsTransparency = false;
 			ti.SetTextureSettings(settings);
 			AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 		}
@@ -466,26 +468,38 @@ public static class NGUIEditorTools
 	static bool MakeTextureAnAtlas (string path, bool force, bool alphaTransparency)
 	{
 		if (string.IsNullOrEmpty(path)) return false;
-		TextureImporter ti = AssetImporter.GetAtPath(path) as TextureImporter;
+		var ti = AssetImporter.GetAtPath(path) as TextureImporter;
 		if (ti == null) return false;
 
-		TextureImporterSettings settings = new TextureImporterSettings();
+		var settings = new TextureImporterSettings();
 		ti.ReadTextureSettings(settings);
 
-		if (force ||
-			settings.readable ||
+		if (force || settings.readable ||
+#if UNITY_5_5_OR_NEWER
+			ti.maxTextureSize < 4096 ||
+			(NGUISettings.trueColorAtlas && ti.textureCompression != TextureImporterCompression.Uncompressed) ||
+#else
 			settings.maxTextureSize < 4096 ||
+#endif
 			settings.wrapMode != TextureWrapMode.Clamp ||
 			settings.npotScale != TextureImporterNPOTScale.ToNearest)
 		{
 			settings.readable = false;
+#if !UNITY_4_7 && !UNITY_5_3 && !UNITY_5_4
+			ti.maxTextureSize = 4096;
+#else
 			settings.maxTextureSize = 4096;
+#endif
 			settings.wrapMode = TextureWrapMode.Clamp;
 			settings.npotScale = TextureImporterNPOTScale.ToNearest;
 
 			if (NGUISettings.trueColorAtlas)
 			{
+#if UNITY_5_5_OR_NEWER
+				ti.textureCompression = TextureImporterCompression.Uncompressed;
+#else
 				settings.textureFormat = TextureImporterFormat.ARGB32;
+#endif
 				settings.filterMode = FilterMode.Trilinear;
 			}
 
@@ -832,7 +846,7 @@ public static class NGUIEditorTools
 	/// Draw the specified sprite.
 	/// </summary>
 
-	public static void DrawTexture (Texture2D tex, Rect rect, Rect uv, Color color)
+	static public void DrawTexture (Texture2D tex, Rect rect, Rect uv, Color color)
 	{
 		DrawTexture(tex, rect, uv, color, null);
 	}
@@ -841,7 +855,7 @@ public static class NGUIEditorTools
 	/// Draw the specified sprite.
 	/// </summary>
 
-	public static void DrawTexture (Texture2D tex, Rect rect, Rect uv, Color color, Material mat)
+	static public void DrawTexture (Texture2D tex, Rect rect, Rect uv, Color color, Material mat)
 	{
 		int w = Mathf.RoundToInt(tex.width * uv.width);
 		int h = Mathf.RoundToInt(tex.height * uv.height);
@@ -1421,9 +1435,18 @@ public static class NGUIEditorTools
 	/// Helper function that draws a serialized property.
 	/// </summary>
 
-	static public SerializedProperty DrawProperty (SerializedObject serializedObject, string property, params GUILayoutOption[] options)
+	static public SerializedProperty DrawProperty (this SerializedObject serializedObject, string property, params GUILayoutOption[] options)
 	{
 		return DrawProperty(null, serializedObject, property, false, options);
+	}
+
+	/// <summary>
+	/// Helper function that draws a serialized property.
+	/// </summary>
+
+	static public SerializedProperty DrawProperty (this SerializedObject serializedObject, string property, string label, params GUILayoutOption[] options)
+	{
+		return DrawProperty(label, serializedObject, property, false, options);
 	}
 
 	/// <summary>
@@ -1439,7 +1462,7 @@ public static class NGUIEditorTools
 	/// Helper function that draws a serialized property.
 	/// </summary>
 
-	static public SerializedProperty DrawPaddedProperty (SerializedObject serializedObject, string property, params GUILayoutOption[] options)
+	static public SerializedProperty DrawPaddedProperty (this SerializedObject serializedObject, string property, params GUILayoutOption[] options)
 	{
 		return DrawProperty(null, serializedObject, property, true, options);
 	}
@@ -1466,17 +1489,46 @@ public static class NGUIEditorTools
 			if (NGUISettings.minimalisticLook) padding = false;
 
 			if (padding) EditorGUILayout.BeginHorizontal();
-			
-			if (label != null) EditorGUILayout.PropertyField(sp, new GUIContent(label), options);
+
+			if (sp.isArray && sp.type != "string") DrawArray(serializedObject, property, label ?? property);
+			else if (label != null) EditorGUILayout.PropertyField(sp, new GUIContent(label), options);
 			else EditorGUILayout.PropertyField(sp, options);
 
-			if (padding) 
+			if (padding)
 			{
 				NGUIEditorTools.DrawPadding();
 				EditorGUILayout.EndHorizontal();
 			}
 		}
+		else Debug.LogWarning("Unable to find property " + property);
 		return sp;
+	}
+
+	/// <summary>
+	/// Helper function that draws an array property.
+	/// </summary>
+
+	static public void DrawArray (this SerializedObject obj, string property, string title)
+	{
+		SerializedProperty sp = obj.FindProperty(property + ".Array.size");
+
+		if (sp != null && NGUIEditorTools.DrawHeader(title))
+		{
+			NGUIEditorTools.BeginContents();
+			int size = sp.intValue;
+			int newSize = EditorGUILayout.IntField("Size", size);
+			if (newSize != size) obj.FindProperty(property + ".Array.size").intValue = newSize;
+
+			EditorGUI.indentLevel = 1;
+
+			for (int i = 0; i < newSize; i++)
+			{
+				SerializedProperty p = obj.FindProperty(string.Format("{0}.Array.data[{1}]", property, i));
+				if (p != null) EditorGUILayout.PropertyField(p);
+			}
+			EditorGUI.indentLevel = 0;
+			NGUIEditorTools.EndContents();
+		}
 	}
 
 	/// <summary>
@@ -1595,17 +1647,18 @@ public static class NGUIEditorTools
 	/// Just like NGUIMath.Raycast, but doesn't rely on having a camera.
 	/// </summary>
 
-	static public BetterList<UIWidget> SceneViewRaycast (Vector2 mousePos)
+	static public List<UIWidget> SceneViewRaycast (Vector2 mousePos)
 	{
-		BetterList<UIWidget> list = new BetterList<UIWidget>();
+		List<UIWidget> list = new List<UIWidget>();
 
-		for (int i = 0; i < UIPanel.list.size; ++i)
+		for (int i = 0; i < UIPanel.list.Count; ++i)
 		{
-			UIPanel p = UIPanel.list.buffer[i];
+			UIPanel p = UIPanel.list[i];
 
-			for (int b = 0; b < p.widgets.size; ++b)
+			for (int b = 0; b < p.widgets.Count; ++b)
 			{
-				UIWidget w = p.widgets.buffer[b];
+				UIWidget w = p.widgets[b];
+				if (!w.isVisible) continue;
 				Vector3[] corners = w.worldCorners;
 				if (SceneViewDistanceToRectangle(corners, mousePos) == 0f)
 					list.Add(w);
@@ -1628,15 +1681,15 @@ public static class NGUIEditorTools
 	static public bool SelectWidget (GameObject start, Vector2 pos, bool inFront)
 	{
 		GameObject go = null;
-		BetterList<UIWidget> widgets = SceneViewRaycast(pos);
-		if (widgets == null || widgets.size == 0) return false;
+		List<UIWidget> widgets = SceneViewRaycast(pos);
+		if (widgets == null || widgets.Count == 0) return false;
 		bool found = false;
 
 		if (!inFront)
 		{
 			if (start != null)
 			{
-				for (int i = 0; i < widgets.size; ++i)
+				for (int i = 0; i < widgets.Count; ++i)
 				{
 					UIWidget w = widgets[i];
 
@@ -1654,7 +1707,7 @@ public static class NGUIEditorTools
 		{
 			if (start != null)
 			{
-				for (int i = widgets.size; i > 0; )
+				for (int i = widgets.Count; i > 0; )
 				{
 					UIWidget w = widgets[--i];
 
@@ -1666,7 +1719,7 @@ public static class NGUIEditorTools
 					go = w.cachedGameObject;
 				}
 			}
-			if (!found) go = widgets[widgets.size - 1].cachedGameObject;
+			if (!found) go = widgets[widgets.Count - 1].cachedGameObject;
 		}
 
 		if (go != null && go != start)
@@ -1711,7 +1764,12 @@ public static class NGUIEditorTools
 	static public void HideMoveTool (bool hide)
 	{
 #if !UNITY_4_3
-		UnityEditor.Tools.hidden = hide && (UnityEditor.Tools.current == UnityEditor.Tool.Move) &&
+		UnityEditor.Tools.hidden = hide &&
+ #if !UNITY_4_5
+			(UnityEditor.Tools.current == UnityEditor.Tool.Rect) &&
+ #else
+			(UnityEditor.Tools.current == UnityEditor.Tool.Move) &&
+ #endif
 			UIWidget.showHandlesWithMoveTool && !NGUISettings.showTransformHandles;
 #endif
 	}
@@ -1852,17 +1910,17 @@ public static class NGUIEditorTools
 
 	static public void ShowSpriteSelectionMenu (Vector2 screenPos)
 	{
-		BetterList<UIWidget> widgets = NGUIEditorTools.SceneViewRaycast(screenPos);
-		BetterList<UIWidgetContainer> containers = new BetterList<UIWidgetContainer>();
-		BetterList<MenuEntry> entries = new BetterList<MenuEntry>();
-		BetterList<UIPanel> panels = new BetterList<UIPanel>();
+		List<UIWidget> widgets = NGUIEditorTools.SceneViewRaycast(screenPos);
+		List<UIWidgetContainer> containers = new List<UIWidgetContainer>();
+		List<MenuEntry> entries = new List<MenuEntry>();
+		List<UIPanel> panels = new List<UIPanel>();
 
 		bool divider = false;
 		UIWidget topWidget = null;
 		UIPanel topPanel = null;
 
 		// Process widgets and their containers in the raycast order
-		for (int i = 0; i < widgets.size; ++i)
+		for (int i = 0; i < widgets.Count; ++i)
 		{
 			UIWidget w = widgets[i];
 			if (topWidget == null) topWidget = w;
@@ -1901,7 +1959,7 @@ public static class NGUIEditorTools
 				}
 			}
 
-			string name = (i + 1 == widgets.size) ? (w.name + " (top-most)") : w.name;
+			string name = (i + 1 == widgets.Count) ? (w.name + " (top-most)") : w.name;
 			entries.Add(new MenuEntry(name, w.gameObject));
 			divider = false;
 		}
@@ -1910,7 +1968,7 @@ public static class NGUIEditorTools
 		NGUIContextMenu.AddCommonItems(Selection.activeGameObject);
 
 		// Add widgets to the menu in the reverse order so that they are shown with the top-most widget first (on top)
-		for (int i = entries.size; i > 0; )
+		for (int i = entries.Count; i > 0; )
 		{
 			MenuEntry ent = entries[--i];
 
@@ -2181,5 +2239,48 @@ public static class NGUIEditorTools
 	{
 		if (!NGUISettings.minimalisticLook)
 			GUILayout.Space(18f);
+	}
+
+	static System.Collections.Generic.Dictionary<string, TextureImporterType> mOriginal = new Dictionary<string, TextureImporterType>();
+
+	/// <summary>
+	/// Force the texture to be readable. Returns the asset database path to the texture.
+	/// </summary>
+
+	static public string MakeReadable (this Texture2D tex, bool readable = true)
+	{
+		string path = AssetDatabase.GetAssetPath(tex);
+
+		if (!string.IsNullOrEmpty(path))
+		{
+			TextureImporter textureImporter = AssetImporter.GetAtPath(path) as TextureImporter;
+
+			if (textureImporter != null && textureImporter.isReadable != readable)
+			{
+				textureImporter.isReadable = readable;
+
+				if (readable)
+				{
+					mOriginal[path] = textureImporter.textureType;
+#if UNITY_5_5_OR_NEWER
+					textureImporter.textureType = TextureImporterType.Default;
+#else
+					textureImporter.textureType = TextureImporterType.Image;
+#endif
+				}
+				else
+				{
+					TextureImporterType type;
+
+					if (mOriginal.TryGetValue(path, out type))
+					{
+						textureImporter.textureType = type;
+						mOriginal.Remove(path);
+					}
+				}
+				AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+			}
+		}
+		return path;
 	}
 }

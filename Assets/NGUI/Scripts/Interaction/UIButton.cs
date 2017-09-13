@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -88,7 +88,11 @@ public class UIButton : UIButtonColor
 		get
 		{
 			if (!enabled) return false;
-			Collider col = GetComponent<Collider>();
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+			Collider col = collider;
+#else
+			Collider col = gameObject.GetComponent<Collider>();
+#endif
 			if (col && col.enabled) return true;
 			Collider2D c2d = GetComponent<Collider2D>();
 			return (c2d && c2d.enabled);
@@ -97,12 +101,16 @@ public class UIButton : UIButtonColor
 		{
 			if (isEnabled != value)
 			{
-				Collider col = GetComponent<Collider>();
-
+#if UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7
+				Collider col = collider;
+#else
+				Collider col = gameObject.GetComponent<Collider>();
+#endif
 				if (col != null)
 				{
 					col.enabled = value;
-					SetState(value ? State.Normal : State.Disabled, false);
+					UIButton[] buttons = GetComponents<UIButton>();
+					foreach (UIButton btn in buttons) btn.SetState(value ? State.Normal : State.Disabled, false);
 				}
 				else
 				{
@@ -111,7 +119,8 @@ public class UIButton : UIButtonColor
 					if (c2d != null)
 					{
 						c2d.enabled = value;
-						SetState(value ? State.Normal : State.Disabled, false);
+						UIButton[] buttons = GetComponents<UIButton>();
+						foreach (UIButton btn in buttons) btn.SetState(value ? State.Normal : State.Disabled, false);
 					}
 					else enabled = value;
 				}
@@ -132,6 +141,7 @@ public class UIButton : UIButtonColor
 		}
 		set
 		{
+			if (!mInitDone) OnInit();
 			if (mSprite != null && !string.IsNullOrEmpty(mNormalSprite) && mNormalSprite == mSprite.spriteName)
 			{
 				mNormalSprite = value;
@@ -159,6 +169,7 @@ public class UIButton : UIButtonColor
 		}
 		set
 		{
+			if (!mInitDone) OnInit();
 			if (mSprite2D != null && mNormalSprite2D == mSprite2D.sprite2D)
 			{
 				mNormalSprite2D = value;
@@ -200,18 +211,7 @@ public class UIButton : UIButtonColor
 #endif
 		if (isEnabled)
 		{
-			if (mInitDone)
-			{
-				if (UICamera.currentScheme == UICamera.ControlScheme.Controller)
-				{
-					OnHover(UICamera.selectedObject == gameObject);
-				}
-				else if (UICamera.currentScheme == UICamera.ControlScheme.Mouse)
-				{
-					OnHover(UICamera.hoveredObject == gameObject);
-				}
-				else SetState(State.Normal, false);
-			}
+			if (mInitDone) OnHover(UICamera.hoveredObject == gameObject);
 		}
 		else SetState(State.Disabled, true);
 	}
@@ -242,7 +242,7 @@ public class UIButton : UIButtonColor
 
 	protected virtual void OnClick ()
 	{
-		if (current == null && isEnabled)
+		if (current == null && isEnabled && UICamera.currentTouchID != -2 && UICamera.currentTouchID != -3)
 		{
 			current = this;
 			EventDelegate.Execute(onClick);
@@ -263,7 +263,7 @@ public class UIButton : UIButtonColor
 			switch (state)
 			{
 				case State.Normal: SetSprite(mNormalSprite); break;
-				case State.Hover: SetSprite(hoverSprite); break;
+				case State.Hover: SetSprite(string.IsNullOrEmpty(hoverSprite) ? mNormalSprite : hoverSprite); break;
 				case State.Pressed: SetSprite(pressedSprite); break;
 				case State.Disabled: SetSprite(disabledSprite); break;
 			}
@@ -273,7 +273,7 @@ public class UIButton : UIButtonColor
 			switch (state)
 			{
 				case State.Normal: SetSprite(mNormalSprite2D); break;
-				case State.Hover: SetSprite(hoverSprite2D); break;
+				case State.Hover: SetSprite(hoverSprite2D == null ? mNormalSprite2D : hoverSprite2D); break;
 				case State.Pressed: SetSprite(pressedSprite2D); break;
 				case State.Disabled: SetSprite(disabledSprite2D); break;
 			}

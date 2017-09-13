@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using UnityEditor;
@@ -10,6 +10,12 @@ using UnityEditor;
 [CustomEditor(typeof(UICamera))]
 public class UICameraEditor : Editor
 {
+	enum EventsGo
+	{
+		Colliders,
+		Rigidbodies,
+	}
+
 	public override void OnInspectorGUI ()
 	{
 		UICamera cam = target as UICamera;
@@ -30,6 +36,16 @@ public class UICameraEditor : Editor
 			if (val != et.intValue) et.intValue = val;
 		}
 
+		SerializedProperty ev = serializedObject.FindProperty("eventsGoToColliders");
+
+		if (ev != null)
+		{
+			bool val = ev.boolValue;
+			bool newVal = EventsGo.Colliders == (EventsGo)EditorGUILayout.EnumPopup("Events go to...",
+				ev.boolValue ? EventsGo.Colliders : EventsGo.Rigidbodies);
+			if (val != newVal) ev.boolValue = newVal;
+		}
+
 		if (UICamera.eventHandler != cam)
 		{
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("eventReceiverMask"), new GUIContent("Event Mask"));
@@ -44,6 +60,8 @@ public class UICameraEditor : Editor
 		}
 		else
 		{
+			serializedObject.DrawProperty("processEventsIn");
+
 			SerializedProperty mouse = serializedObject.FindProperty("useMouse");
 			SerializedProperty touch = serializedObject.FindProperty("useTouch");
 			SerializedProperty keyboard = serializedObject.FindProperty("useKeyboard");
@@ -52,21 +70,35 @@ public class UICameraEditor : Editor
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("eventReceiverMask"), new GUIContent("Event Mask"));
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("debug"));
 
+			GUILayout.BeginHorizontal();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("commandClick"), GUILayout.Width(140f));
+			GUILayout.EndHorizontal();
+
 			EditorGUI.BeginDisabledGroup(!mouse.boolValue && !touch.boolValue);
 			{
 				EditorGUILayout.PropertyField(serializedObject.FindProperty("allowMultiTouch"));
 			}
 			EditorGUI.EndDisabledGroup();
 
-			EditorGUI.BeginDisabledGroup(!mouse.boolValue);
+			EditorGUI.BeginDisabledGroup(!(mouse.boolValue && (touch.boolValue || controller.boolValue)));
 			{
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("stickyTooltip"));
-
-				GUILayout.BeginHorizontal();
-				EditorGUILayout.PropertyField(serializedObject.FindProperty("tooltipDelay"));
-				GUILayout.Label("seconds", GUILayout.MinWidth(60f));
-				GUILayout.EndHorizontal();
+				EditorGUILayout.PropertyField(serializedObject.FindProperty("autoHideCursor"));
 			}
+			EditorGUI.EndDisabledGroup();
+
+			EditorGUI.BeginDisabledGroup(!mouse.boolValue);
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("stickyTooltip"));
+			EditorGUI.EndDisabledGroup();
+
+			GUILayout.BeginHorizontal();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("longPressTooltip"));
+			GUILayout.EndHorizontal();
+
+			EditorGUI.BeginDisabledGroup(!mouse.boolValue);
+			GUILayout.BeginHorizontal();
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("tooltipDelay"));
+			GUILayout.Label("seconds", GUILayout.MinWidth(60f));
+			GUILayout.EndHorizontal();
 			EditorGUI.EndDisabledGroup();
 
 			GUILayout.BeginHorizontal();
@@ -129,8 +161,10 @@ public class UICameraEditor : Editor
 			{
 				NGUIEditorTools.BeginContents();
 				{
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("horizontalAxisName"), new GUIContent("Horizontal"));
-					EditorGUILayout.PropertyField(serializedObject.FindProperty("verticalAxisName"), new GUIContent("Vertical"));
+					EditorGUILayout.PropertyField(serializedObject.FindProperty("horizontalAxisName"), new GUIContent("Navigate X"));
+					EditorGUILayout.PropertyField(serializedObject.FindProperty("verticalAxisName"), new GUIContent("Navigate Y"));
+					EditorGUILayout.PropertyField(serializedObject.FindProperty("horizontalPanAxisName"), new GUIContent("Pan X"));
+					EditorGUILayout.PropertyField(serializedObject.FindProperty("verticalPanAxisName"), new GUIContent("Pan Y"));
 					EditorGUILayout.PropertyField(serializedObject.FindProperty("scrollAxisName"), new GUIContent("Scroll"));
 					EditorGUILayout.PropertyField(serializedObject.FindProperty("submitKey0"), new GUIContent("Submit 1"));
 					EditorGUILayout.PropertyField(serializedObject.FindProperty("submitKey1"), new GUIContent("Submit 2"));

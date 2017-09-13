@@ -1,7 +1,7 @@
-﻿//----------------------------------------------
+﻿//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.IO;
@@ -10,7 +10,7 @@ using System.IO;
 /// This class contains NGUI's extensions to Unity Editor's functionality.
 /// </summary>
 
-public static class NGUIEditorExtensions
+static public class NGUIEditorExtensions
 {
 	/// <summary>
 	/// Render the camera into a render texture. If the camera has a render texture assigned, it will be re-used.
@@ -32,7 +32,11 @@ public static class NGUIEditorExtensions
 		{
 			rt = new RenderTexture(width, height, 1);
 			rt.hideFlags = HideFlags.HideAndDontSave;
+#if UNITY_5_5_OR_NEWER
 			rt.autoGenerateMips = false;
+#else
+			rt.generateMips = false;
+#endif
 			rt.format = RenderTextureFormat.ARGB32;
 			rt.filterMode = FilterMode.Trilinear;
 			rt.anisoLevel = 4;
@@ -82,3 +86,28 @@ public static class NGUIEditorExtensions
 		return true;
 	}
 }
+
+#if !UNITY_4_3 && !UNITY_4_5 && !UNITY_4_6 && !UNITY_4_7
+// Unity 5 bug fix. Source: http://www.tasharen.com/forum/index.php?topic=13231.0
+internal class Unity5DynamicLabelWorkAround : UnityEditor.AssetModificationProcessor
+{
+	static string[] OnWillSaveAssets (string[] paths)
+	{
+		// Older versions: UnityEditor.EditorApplication.currentScene
+#if UNITY_5_0 || UNITY_5_1 || UNITY_5_2
+		string current = UnityEditor.EditorApplication.currentScene;
+#else
+		string current = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+#endif
+		foreach (var path in paths)
+		{
+			if (path == current)
+			{
+				UILabel[] labels = Object.FindObjectsOfType<UILabel>();
+				for (int i = 0, imax = labels.Length; i < imax; ++i) labels[i].MarkAsChanged();
+			}
+		}
+		return paths;
+	}
+}
+#endif

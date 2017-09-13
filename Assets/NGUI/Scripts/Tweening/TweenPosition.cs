@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 
@@ -66,6 +66,25 @@ public class TweenPosition : UITweener
 	static public TweenPosition Begin (GameObject go, float duration, Vector3 pos)
 	{
 		TweenPosition comp = UITweener.Begin<TweenPosition>(go, duration);
+		comp.from = comp.value;
+		comp.to = pos;
+
+		if (duration <= 0f)
+		{
+			comp.Sample(1f, true);
+			comp.enabled = false;
+		}
+		return comp;
+	}
+
+	/// <summary>
+	/// Start the tweening operation.
+	/// </summary>
+
+	static public TweenPosition Begin (GameObject go, float duration, Vector3 pos, bool worldSpace)
+	{
+		TweenPosition comp = UITweener.Begin<TweenPosition>(go, duration);
+		comp.worldSpace = worldSpace;
 		comp.from = comp.value;
 		comp.to = pos;
 

@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2017 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -182,15 +182,24 @@ public class UIPlayAnimation : MonoBehaviour
 	void OnPress (bool isPressed)
 	{
 		if (!enabled) return;
+		if (UICamera.currentTouchID == -2 || UICamera.currentTouchID == -3) return;
 		if ( trigger == Trigger.OnPress ||
 			(trigger == Trigger.OnPressTrue && isPressed) ||
 			(trigger == Trigger.OnPressFalse && !isPressed))
 			Play(isPressed, dualState);
 	}
 
-	void OnClick () { if (enabled && trigger == Trigger.OnClick) Play(true, false); }
+	void OnClick ()
+	{
+		if (UICamera.currentTouchID == -2 || UICamera.currentTouchID == -3) return;
+		if (enabled && trigger == Trigger.OnClick) Play(true, false);
+	}
 
-	void OnDoubleClick () { if (enabled && trigger == Trigger.OnDoubleClick) Play(true, false); }
+	void OnDoubleClick ()
+	{
+		if (UICamera.currentTouchID == -2 || UICamera.currentTouchID == -3) return;
+		if (enabled && trigger == Trigger.OnDoubleClick) Play(true, false);
+	}
 
 	void OnSelect (bool isSelected)
 	{
@@ -268,6 +277,18 @@ public class UIPlayAnimation : MonoBehaviour
 			}
 		}
 	}
+
+	/// <summary>
+	/// Play the tween forward.
+	/// </summary>
+
+	public void PlayForward () { Play(true); }
+
+	/// <summary>
+	/// Play the tween in reverse.
+	/// </summary>
+
+	public void PlayReverse () { Play(false); }
 
 	/// <summary>
 	/// Callback triggered when each tween executed by this script finishes.

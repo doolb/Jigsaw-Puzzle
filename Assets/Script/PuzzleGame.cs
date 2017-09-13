@@ -82,11 +82,24 @@ public class PuzzleGame : Puzzle
     /// </summary>
     GameObject originImage;
 
-    // 是否需要重新开始游戏
-    public bool needRestart = false;
+    /// <summary>
+    /// 是否需要重新开始游戏
+    /// </summary>
+    bool needRestart = false;
 
-    // 游戏结束事件
+    /// <summary>
+    /// 游戏结束事件
+    /// </summary>
     public List<EventDelegate> onGameEnd = new List<EventDelegate>();
+
+    public bool canContinue
+    {
+        get
+        {
+            return !(needRestart ||!pieceCreated);
+        }
+    }
+
     #endregion
 
     #region 重载函数

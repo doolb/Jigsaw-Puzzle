@@ -15,38 +15,68 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 记录菜单是否显示
     /// </summary>
-    bool show = true;
+    public bool show = true;
 
     /// <summary>
     /// 开始按钮 文本 对象
     /// </summary>
-    UILabel startLabel;
+    public UILabel startLabel;
+
+    /// <summary>
+    /// 开始按钮 对象
+    /// </summary>
+    public UIButton startButton;
 
     /// <summary>
     /// 重新开始游戏的按钮
     /// </summary>
-    GameObject restartButton;
+    public GameObject restartButton;
 
     /// <summary>
     /// 背景列表
     /// </summary>
     public UIPopupList backgroundList;
 
-    #region 事件
+    /// <summary>
+    /// 个数列表
+    /// </summary>
+    public UIPopupList countList;
 
     /// <summary>
-    /// 开始游戏事件
+    /// 图像列表
     /// </summary>
-    public List<EventDelegate> onStartGame = new List<EventDelegate>();
+    public UIPopupList imageList;
 
     /// <summary>
-    /// 重新开始游戏
+    /// 形状列表
     /// </summary>
-    public List<EventDelegate> onReStartGame = new List<EventDelegate>();
+    public UIPopupList shapeList;
+
+    /// <summary>
+    /// 风格列表
+    /// </summary>
+    public UIPopupList styleList;
+
+    /// <summary>
+    /// 是否显示原图
+    /// </summary>
+    public UIToggle imageToggle;
 
 
-    #endregion
+    /// <summary>
+    /// 拼图旋转转换
+    /// </summary>
+    public UIToggle rotateToggle;
 
+    /// <summary>
+    /// 是否显示所有
+    /// </summary>
+    public UIToggle showAllToggle;
+
+    /// <summary>
+    /// 平铺拼图按钮
+    /// </summary>
+    public UIButton tileButton;
 
     /// <summary>
     /// 初始化
@@ -59,11 +89,46 @@ public class MenuControl : MonoBehaviour
         // 设置动画
         playAnim.target = GetComponent<Animation>();
 
-        // 注册 ngui 事件
-        RegistryCallback();
+        // 开始按钮
+        Transform start = transform.Find("Button - Start");
+        // 获取开始控制 对象
+        startButton = start.GetComponent<UIButton>();
+        // 获取开始按钮 文本对象
+        startLabel = start.Find("Label").GetComponent<UILabel>();
 
-        // 注册 游戏结束 事件
-        GameLoader.puzzleGame.onGameEnd.Add(new EventDelegate(GameEnd));
+
+        // 获取 重新开始按钮
+        restartButton = transform.Find("Button - ReStart").gameObject;
+
+
+        // 获取 背景 列表
+        backgroundList = transform.Find("Pop Up List - Background").GetComponent<UIPopupList>();
+
+        // 寻找 是否 显示原始图像
+        imageToggle = transform.Find("Check Box - Show Original Image").GetComponent<UIToggle>();
+
+        // 寻找 是否 旋转拼图  单选框
+        rotateToggle = transform.Find("Check Box - Rotate Piece").GetComponent<UIToggle>();
+
+        // 寻找 拼图个数 列表
+        countList = transform.Find("Pop Up List -  Piece Count").GetComponent<UIPopupList>();
+
+        // 寻找 拼图图像 列表
+        imageList = transform.Find("Pop Up List - Piece Image").GetComponent<UIPopupList>();
+
+        // 寻找 拼图形状 列表, 并注册 事件
+        shapeList = transform.Find("Pop Up List - Piece Shape").GetComponent<UIPopupList>();
+
+        // 寻找 拼图风格 列表, 并注册 事件
+        styleList = transform.Find("Pop Up List - Piece Style").GetComponent<UIPopupList>();
+
+        // 寻找 是否显示所有拼图 按钮, 并注册 事件
+        showAllToggle = transform.Find("Toggle Button - Show All").GetComponent<UIToggle>();
+
+        // 寻找 平铺拼图 按钮, 并注册 事件
+        tileButton = transform.Find("Button - Tile Piece").GetComponent<UIButton>();
+
+
     }
 
     /// <summary>
@@ -77,12 +142,6 @@ public class MenuControl : MonoBehaviour
 
         // 播放显示动画
         playAnim.Play(false);
-
-        // 暂停游戏
-        GameLoader.puzzleGame.Pause();
-
-        // 隐藏 UI
-        GameLoader.uiControl.Hide();
     }
 
     /// <summary>
@@ -96,90 +155,16 @@ public class MenuControl : MonoBehaviour
 
         // 播放隐藏动画
         playAnim.Play(true);
-
-        // 继续游戏
-        GameLoader.puzzleGame.Continue();
-
-        // 显示 UI
-        GameLoader.uiControl.Show();
     }
 
-    /// <summary>
-    /// 游戏结束 时 回调
-    /// </summary>
-    public void GameEnd()
-    {
-        // 更新按钮显示
-        UpdateButton();
-    }
-
-    #region ngui callback
-
-    /// <summary>
-    /// 注册 ngui 事件
-    /// </summary>
-    void RegistryCallback()
-    {
-        // 寻找开始按钮
-        Transform startButton = transform.Find("Button - Start");
-
-        // 注册 开始游戏 事件
-        startButton.GetComponent<UIButton>().onClick.Add(new EventDelegate(StartGame));
-
-        // 寻找开始按钮 文本对象
-        startLabel = startButton.Find("Label").GetComponent<UILabel>();
-
-
-        // 寻找 背景 列表, 并注册 事件
-        transform.Find("Pop Up List - Background").GetComponent<UIPopupList>().onChange.Add(new EventDelegate(ChangeBackground));
-
-        // 寻找 是否 显示原始图像 , 并注册 事件
-        transform.Find("Check Box - Show Original Image").GetComponent<UIToggle>().onChange.Add(new EventDelegate(ToggleImage));
-
-        // 寻找 是否 旋转拼图  单选框, 并注册 事件
-        transform.Find("Check Box - Rotate Piece").GetComponent<UIToggle>().onChange.Add(new EventDelegate(ToggleRotate));
-
-        // 寻找 拼图个数 列表, 并注册 事件
-        transform.Find("Pop Up List -  Piece Count").GetComponent<UIPopupList>().onChange.Add(new EventDelegate(ChangeCount));
-
-        // 寻找 拼图图像 列表, 并注册 事件
-        transform.Find("Pop Up List - Piece Image").GetComponent<UIPopupList>().onChange.Add(new EventDelegate(ChangeImage));
-
-        // 寻找 拼图形状 列表, 并注册 事件
-        transform.Find("Pop Up List - Piece Shape").GetComponent<UIPopupList>().onChange.Add(new EventDelegate(ChangeShape));
-
-        // 寻找 拼图风格 列表, 并注册 事件
-        transform.Find("Pop Up List - Piece Style").GetComponent<UIPopupList>().onChange.Add(new EventDelegate(ChangeStyle));
-
-        // 寻找 是否显示所有拼图 按钮, 并注册 事件
-        transform.Find("Toggle Button - Show All").GetComponent<UIToggle>().onChange.Add(new EventDelegate(ToggleShow));
-
-        // 寻找 平铺拼图 按钮, 并注册 事件
-        transform.Find("Button - Tile Piece").GetComponent<UIButton>().onClick.Add(new EventDelegate(TilePiece));
-
-
-        // 寻找开始按钮，并注册事件
-        restartButton = transform.Find("Button - ReStart").gameObject;
-        restartButton.GetComponent<UIButton>().onClick.Add(new EventDelegate(() => 
-        { for (int i = 0; i < onReStartGame.Count; i++) onReStartGame[i].Execute(); }));
-    }
 
     /// <summary>
     /// 根据游戏状态，更新按钮文本
     /// </summary>
-    public void UpdateButton()
+    public void UpdateButton(bool canContinue)
     {
-        // 如果没有创建拼图，或者需要重新创建
-        if (GameLoader.puzzleGame.needRestart ||
-            !GameLoader.puzzleGame.pieceCreated)
-        {
-            // 更新按钮 为 "开始"
-            startLabel.text = "开始";
-
-            // 显示重新开始 按钮
-            restartButton.SetActive(false);
-        }
-        else
+        // 是否可以继续游戏
+        if (canContinue)
         {
             // 更新按钮 为 "继续"
             startLabel.text = "继续";
@@ -187,155 +172,14 @@ public class MenuControl : MonoBehaviour
             // 隐藏重新开始 按钮
             restartButton.SetActive(true);
         }
-    }
-
-    /// <summary>
-    /// 开始游戏
-    /// </summary>
-    public void StartGame()
-    {
-        // 隐藏菜单
-        Hide();
-
-        // 开始游戏
-        GameLoader.puzzleGame.StartGame();
-
-        // 更新按钮文本
-        UpdateButton();
-
-        // 通知开始游戏事件
-        for (int i = 0; i < onStartGame.Count; i++)
-            onStartGame[i].Execute();
-    }
-
-    /// <summary>
-    /// 更改背景
-    /// </summary>
-    public void ChangeBackground()
-    {
-        // 更改背景
-        GameLoader.background.ChangeBackground(UIPopupList.current.value);
-    }
-
-    /// <summary>
-    /// 更改拼图个数
-    /// </summary>
-    public void ChangeCount()
-    {
-        // 更改拼图个数
-        GameLoader.puzzleGame.SetPieceCount(GetPieceCount(int.Parse(UIPopupList.current.value.Trim())));
-
-        // 更新按钮文本
-        UpdateButton();
-    }
-
-    /// <summary>
-    /// 把拼图总个数，转换为 两个数的乘积
-    /// </summary>
-    /// <param name="count">要转换个数</param>
-    /// <returns></returns>
-    public Vector2 GetPieceCount(int count)
-    {
-        // 默认 为 （6，4）
-        int x = 6, y = 4;
-        switch (count)
+        else
         {
-            // 24 = 6 x 4
-            case 24: x = 6; y = 4; break;
+            // 更新按钮 为 "开始"
+            startLabel.text = "开始";
 
-            // 48 = 8 x 6
-            case 48: x = 8; y = 6; break;
-
-            // 63 = 9 x 7
-            case 63: x = 9; y = 7; break;
-
-            // 108 = 12 x 9
-            case 108: x = 12; y = 9; break;
-
-            // 192 = 16 x 12
-            case 192: x = 16; y = 12; break;
-
-            // 300 = 25 x 12
-            case 300: x = 25; y = 12; break;
-
-            // 520 = 26 x 20
-            case 520: x = 26; y = 20; break;
-
-            // 768 = 32 x 24
-            case 768: x = 32; y = 24; break;
+            // 显示重新开始 按钮
+            restartButton.SetActive(false);
         }
-
-        // 返回个数
-        return new Vector2(x, y);
     }
 
-    /// <summary>
-    /// 更改拼图图像
-    /// </summary>
-    public void ChangeImage()
-    {
-        // 更改拼图图像
-        GameLoader.puzzleGame.SetPieceImage(UIPopupList.current.value);
-    }
-
-    /// <summary>
-    /// 更改拼图形状
-    /// </summary>
-    public void ChangeShape()
-    {
-        // 更改拼图形状
-        GameLoader.puzzleGame.SetPieceShape(UIPopupList.current.value);
-    }
-
-
-    /// <summary>
-    /// 更改拼图风格
-    /// </summary>
-    public void ChangeStyle()
-    {
-        // 更改拼图风格
-        GameLoader.puzzleGame.SetPieceStyle(UIPopupList.current.value);
-    }
-
-    /// <summary>
-    /// 切换是否显示全就拼图
-    /// </summary>
-    public void ToggleShow()
-    {
-        // 切换是否显示全就拼图
-        GameLoader.puzzleGame.ShowAllOrNot(UIToggle.current.value);
-    }
-
-    /// <summary>
-    /// 平铺拼图
-    /// </summary>
-    public void TilePiece()
-    {
-        // 平铺拼图
-        GameLoader.puzzleGame.TilePiece();
-    }
-
-    /// <summary>
-    /// 切换显示原图
-    /// </summary>
-    public void ToggleImage()
-    {
-        // 切换显示原图
-        GameLoader.puzzleGame.ToggleImage(UIToggle.current.value);
-    }
-
-    /// <summary>
-    /// 切换旋转
-    /// </summary>
-    public void ToggleRotate()
-    {
-        // 切换旋转
-        GameLoader.puzzleGame.ToggleRotate(UIToggle.current.value);
-
-        // 更新按钮
-        UpdateButton();
-    }
-
-
-    #endregion
 }

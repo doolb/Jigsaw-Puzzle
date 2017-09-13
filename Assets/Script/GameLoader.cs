@@ -116,6 +116,9 @@ public class GameLoader : MonoBehaviour
         // 加载 拼图游戏 预制体，并挂载游戏脚本
         puzzleGame = Instantiate<GameObject>(Resources.Load("Puzzle") as GameObject).
             AddComponent<PuzzleGame>();
+
+        // 暂停游戏
+        puzzleGame.Pause();
     }
 
     /// <summary>
@@ -154,6 +157,7 @@ public class GameLoader : MonoBehaviour
 
     void BuildEvent()
     {
+        MenuEvent();
 
         // 获取视口显示对象
         Transform viewWindow = uiControl.transform.Find("View Window");
@@ -189,9 +193,9 @@ public class GameLoader : MonoBehaviour
         // 注册 菜单控制 事件
         uiControl.onShowMenu.Add(new EventDelegate(menuControl.Show));
 
-        // 注册开始游戏事件
-        menuControl.onStartGame.Add(new EventDelegate(uiControl.Show));
-
+        
+        // 游戏结束 时更新菜单控制
+        puzzleGame.onGameEnd.Add(new EventDelegate(() => menuControl.UpdateButton(false)));
 
         // 注册 游戏结束 事件
         puzzleGame.onGameEnd.Add(new EventDelegate(() => uiControl.ShowFinish(puzzleGame.record.ToString())));
@@ -203,7 +207,129 @@ public class GameLoader : MonoBehaviour
         recordControl.onHide.Add(new EventDelegate(menuControl.Show));
     }
 
+    /// <summary>
+    /// 关联菜单事件
+    /// </summary>
+    void MenuEvent()
+    {
+        // 开始游戏
+        menuControl.startButton.onClick.Add(new EventDelegate(() =>
+            {
+                // 隐藏菜单
+                menuControl.Hide();
 
+                // 开始游戏
+                puzzleGame.StartGame();
+
+                // 更新按钮文本
+                menuControl.UpdateButton(puzzleGame.canContinue);
+
+                // 显示菜单按钮
+                uiControl.Show();
+
+            }));
+
+        // 重新开始游戏
+        menuControl.restartButton.GetComponent<UIButton>().onClick.Add(new EventDelegate(puzzleGame.ReStart));
+
+        // 更改背景
+        menuControl.backgroundList.onChange.Add(new EventDelegate(()=>
+            {
+                // 获取背景名
+                string name = UIPopupList.current.value;
+
+                // 更新背景
+                background.ChangeBackground(name);
+
+                // 保存背景名
+                dataManager.gameData.background = name;
+            }));
+
+        // 切换原图显示
+        menuControl.imageToggle.onChange.Add(new EventDelegate(() =>
+            {
+                // 获取设置
+                bool show = UIToggle.current.value;
+                
+                // 切换原图显示
+                puzzleGame.ToggleImage(show);
+
+                // 保存设置
+                dataManager.gameData.showImage = show;
+            }));
+
+        // 转换拼图旋转
+        menuControl.rotateToggle.onChange.Add(new EventDelegate(() =>
+            {
+                // 获取设置
+                bool rotate = UIToggle.current.value;
+
+                // 转换拼图旋转
+                puzzleGame.ToggleRotate(rotate);
+
+                // 保存设置
+                dataManager.gameData.rotatePuzzle = rotate;
+                menuControl.UpdateButton(puzzleGame.canContinue);
+            }));
+
+        // 设置拼图个数
+        menuControl.countList.onChange.Add(new EventDelegate(() =>
+            {
+                // 获取个数
+                string s = UIPopupList.current.value;
+                int i = int.Parse(s);
+                Vector2 count = GetPieceCount(i);
+
+                // 设置个数
+                puzzleGame.SetPieceCount(count);
+
+                // 保存个数
+                dataManager.gameData.pieceCount = i;
+
+                menuControl.UpdateButton(puzzleGame.canContinue);
+            }));
+
+        // 设置拼图图像
+        menuControl.imageList.onChange.Add(new EventDelegate(() =>
+            {
+                // 获取名字
+                string img = UIPopupList.current.value;
+
+                // 设置图像
+                puzzleGame.SetPieceImage(img);
+
+                // 保存名字
+                dataManager.gameData.pieceImage = img;
+            }));
+
+        menuControl.shapeList.onChange.Add(new EventDelegate(() =>
+            {
+                // 获取名字
+                string name = UIPopupList.current.value;
+
+                puzzleGame.SetPieceShape(name);
+
+                // 
+                dataManager.gameData.pieceShape = name;
+            }));
+
+        menuControl.styleList.onChange.Add(new EventDelegate(() =>
+            {
+                string name = UIPopupList.current.value;
+
+                puzzleGame.SetPieceStyle(name);
+
+                dataManager.gameData.pieceStyle = name;
+            }));
+
+
+        menuControl.showAllToggle.onChange.Add(new EventDelegate(() =>
+            {
+                puzzleGame.ShowAllOrNot(UIToggle.current.value);
+            }));
+
+        menuControl.tileButton.onClick.Add(new EventDelegate(puzzleGame.TilePiece));
+    }
     #endregion
 
     /// <summary>
@@ -214,9 +340,14 @@ public class GameLoader : MonoBehaviour
         // 挂载数据管理脚本
         dataManager = gameObject.AddComponent<GameDataManager>();
 
-        Transform menu = uiRoot3D.transform.Find("Panel - Menu(Clone)");
+        menuControl.countList.value = dataManager.gameData.pieceCount.ToString();
+        menuControl.imageList.value = dataManager.gameData.pieceImage;
+        menuControl.shapeList.value = dataManager.gameData.pieceShape;
+        menuControl.styleList.value = dataManager.gameData.pieceStyle;
+        menuControl.rotateToggle.value = dataManager.gameData.rotatePuzzle;
 
-        menu.Find("Pop Up List - Background").GetComponent<UIPopupList>().value = dataManager.gameData.background;
+        menuControl.backgroundList.value = dataManager.gameData.background;
+
         
     }
 
@@ -225,4 +356,46 @@ public class GameLoader : MonoBehaviour
     {
         dataManager.Save();
     }
+
+
+    /// <summary>
+    /// 把拼图总个数，转换为 两个数的乘积
+    /// </summary>
+    /// <param name="count">要转换个数</param>
+    /// <returns></returns>
+    Vector2 GetPieceCount(int count)
+    {
+        // 默认 为 （6，4）
+        int x = 6, y = 4;
+        switch (count)
+        {
+            // 24 = 6 x 4
+            case 24: x = 6; y = 4; break;
+
+            // 48 = 8 x 6
+            case 48: x = 8; y = 6; break;
+
+            // 63 = 9 x 7
+            case 63: x = 9; y = 7; break;
+
+            // 108 = 12 x 9
+            case 108: x = 12; y = 9; break;
+
+            // 192 = 16 x 12
+            case 192: x = 16; y = 12; break;
+
+            // 300 = 25 x 12
+            case 300: x = 25; y = 12; break;
+
+            // 520 = 26 x 20
+            case 520: x = 26; y = 20; break;
+
+            // 768 = 32 x 24
+            case 768: x = 32; y = 24; break;
+        }
+
+        // 返回个数
+        return new Vector2(x, y);
+    }
+
 }

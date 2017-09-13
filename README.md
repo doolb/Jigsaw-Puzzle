@@ -55,3 +55,6 @@
 ### 2017.9.11
 * add support to change game camera view
 * smooth move the camera in viewport
+
+### 2017.9.13
+* can save game setting

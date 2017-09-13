@@ -30,6 +30,8 @@ public class GameData
     public string pieceShape;
     public string pieceStyle;
 
+    public bool showImage;
+    public bool rotatePuzzle;
 
     public List<string> records = new List<string>();
 
@@ -41,6 +43,9 @@ public class GameData
         pieceImage = "img";
         pieceShape = "normal";
         pieceStyle = "none";
+
+        showImage = false;
+        rotatePuzzle = false;
     }
 }
 

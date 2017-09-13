@@ -67,7 +67,7 @@ public class DragablePlane : MonoBehaviour
     /// <summary>
     /// 初始化
     /// </summary>
-    protected virtual void Start()
+    protected virtual void Awake()
     {
         // 获取 collider 对象
         collider = GetComponent<BoxCollider>();

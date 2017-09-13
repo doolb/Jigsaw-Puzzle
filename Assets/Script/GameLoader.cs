@@ -17,10 +17,6 @@ public class GameLoader : MonoBehaviour
     /// </summary>
     public GameObject uiRoot3D;
 
-    /// <summary>
-    /// 游戏背景
-    /// </summary>
-    public static Background background;
 
     /// <summary>
     /// ui 控制脚本
@@ -84,28 +80,16 @@ public class GameLoader : MonoBehaviour
     /// </summary>
     void LoadScene()
     {
-        // 加载背景
-        LoadBackground();
-
-        // 加载游戏
-        LoadGame();
 
         // 加载视口控制
         LoadView();
 
+        // 加载游戏
+        LoadGame();
+
         // 加载 UI
         LoadUI();
 
-    }
-
-    /// <summary>
-    /// 加载背景
-    /// </summary>
-    void LoadBackground()
-    {
-        // 加载背景预制体, 并挂载控制脚本
-        background = Instantiate<GameObject>(Resources.Load("Background") as GameObject).
-            AddComponent<Background>();
     }
 
     /// <summary>
@@ -239,7 +223,7 @@ public class GameLoader : MonoBehaviour
                 string name = UIPopupList.current.value;
 
                 // 更新背景
-                background.ChangeBackground(name);
+                puzzleGame.SetBackground(name);
 
                 // 保存背景名
                 dataManager.gameData.background = name;

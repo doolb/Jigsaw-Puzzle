@@ -9,6 +9,12 @@ public class PuzzleGame : Puzzle
 {
     #region 变量
 
+    /// <summary>
+    /// 背景渲染对象
+    /// </summary>
+    SpriteRenderer background;
+
+
     [Header("旋转")]
 
     /// <summary>
@@ -107,18 +113,21 @@ public class PuzzleGame : Puzzle
     /// <summary>
     /// 初始化
     /// </summary>
-    protected override void Start()
+    protected override void Awake()
     {
-        base.Start();
+        base.Awake();
+
+        // 获取背景渲染对象
+        background = transform.Find("Background").GetComponent<SpriteRenderer>();
 
         // 停止 时间更新
         Time.timeScale = 0f;
 
         // 获取原图对象
-        originImage = transform.GetChild(0).gameObject;
+        originImage = transform.Find("Origin Image").gameObject;
 
         //获取平铺的起始位置
-        tileOrigin = transform.GetChild(1).position;
+        tileOrigin = transform.Find("Tile Origin").position;
 
     }
 
@@ -375,14 +384,19 @@ public class PuzzleGame : Puzzle
     /// <param name="name">新的拼图图像名字</param>
     public void SetPieceImage(string name)
     {
+
+
         // 加载新的拼图图像
         pieceImage = Resources.Load<Sprite>("Image/" + name);
 
         // 更新拼图原图的显示
-        transform.GetChild(0).gameObject.GetComponent<Renderer>().material.SetTexture("_MainTex", pieceImage.texture);
+        originImage.GetComponent<SpriteRenderer>().sprite = pieceImage;
 
         // 更新拼图的大小
         ReSize();
+
+        // 更新原图的大小
+        originImage.transform.localScale = new Vector3(100 * displayRatio.x, 100 * displayRatio.y, 1);
 
         // 如果已经创建拼图，更新所有拼图图像
         if (pieceCreated) UpdatePieceImage();
@@ -454,6 +468,15 @@ public class PuzzleGame : Puzzle
     {
         // 切换 图像的显示
         originImage.SetActive(show);
+    }
+
+    /// <summary>
+    /// 设置背景
+    /// </summary>
+    /// <param name="name">背景名</param>
+    public void SetBackground(string name)
+    {
+        background.sprite = Resources.Load<Sprite>("Image/" + name);
     }
     #endregion
 

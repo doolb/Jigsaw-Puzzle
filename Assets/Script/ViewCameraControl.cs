@@ -20,11 +20,6 @@ public class ViewCameraControl : DragablePlane
     SpriteRenderer rend;
 
     /// <summary>
-    /// 可视化视口摄像头
-    /// </summary>
-    Camera viewCam;
-
-    /// <summary>
     /// 最大的摄像头视口范围
     /// </summary>
     float maxViewSize;
@@ -62,7 +57,7 @@ public class ViewCameraControl : DragablePlane
     /// <summary>
     /// 覆盖 基类 的 Start
     /// </summary>
-    protected override void Start()
+    protected override void Awake()
     {
         // 只需要 collider
         collider = GetComponent<BoxCollider>();
@@ -80,8 +75,6 @@ public class ViewCameraControl : DragablePlane
         // 保存当前的缩放大小
         maxImageSize = viewArea.transform.localScale.x;
 
-        // 获取 视口可视化摄像头
-        viewCam = cam;
 
     }
 
@@ -199,7 +192,7 @@ public class ViewCameraControl : DragablePlane
         pause = !show;
 
         // 显示或 隐藏  Camera
-        viewCam.enabled = show;
+        cam.enabled = show;
 
         // 显示或 隐藏  图像显示
         rend.enabled = show;

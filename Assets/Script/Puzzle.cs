@@ -11,7 +11,7 @@ public class Puzzle : DragablePlane
     /// <summary>
     /// 第一块 拼图 的索引
     /// </summary>
-    public int firstPieceIndex = 2;
+    public int firstPieceIndex = 3;
 
     [Header("Piece")]
 
@@ -109,9 +109,9 @@ public class Puzzle : DragablePlane
     /// <summary>
     /// 初始化
     /// </summary>
-    protected override void Start()
+    protected override void Awake()
     {
-        base.Start();
+        base.Awake();
 
 
         // 启动单实例

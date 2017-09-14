@@ -15,23 +15,12 @@ public class PuzzleGame : PuzzleManager
     SpriteRenderer background;
 
 
-    [Header("旋转")]
+
 
     /// <summary>
-    /// 拼图最少的旋转个数
+    /// 保存随机数的缓存
     /// </summary>
-    public int minCount = 1;
-
-    /// <summary>
-    /// 拼图最少的旋转个数
-    /// </summary>
-    public int maxCount = 5;
-
-    /// <summary>
-    /// 是否旋转
-    /// </summary>
-    public static bool isRotate;
-
+    List<int> randomBuffer = new List<int>();
 
     /// <summary>
     /// 用户新的 “是否旋转” 选择
@@ -48,13 +37,6 @@ public class PuzzleGame : PuzzleManager
     /// 是否显示所有拼图
     /// </summary>
     bool isShowAll;
-
-
-
-    /// <summary>
-    /// 保存随机数的缓存
-    /// </summary>
-    List<int> randomBuffer = new List<int>();
 
     /// <summary>
     /// 新的拼图块数

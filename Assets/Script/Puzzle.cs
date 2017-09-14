@@ -134,10 +134,7 @@ public class Puzzle
     /// <summary>
     /// 是否完全拼图
     /// </summary>
-    public bool finish
-    {
-        get { return connectedPieces[0].Count == totalCount; }
-    }
+    public bool finish;
 
     /// <summary>
     /// 缓存邻居拼图
@@ -171,6 +168,8 @@ public class Puzzle
     /// </summary>
     public void Reset()
     {
+        finish = false;
+
         // 遍历所有拼图
         for(int i=0;i<count.x ;i++)
         {
@@ -227,22 +226,31 @@ public class Puzzle
     /// <param name="piece">移动的拼图</param>
     public void MoveEnd(GameObject piece)
     {
-
         // 获取当前拼图 在 连接表 中索引
         int index = piece.GetComponent<Piece>().connectedListID;
+
+        // 拼图是否已经完成
+        if (connectedPieces[index].Count == totalCount)
+            return;
 
         // 遍历所有连接的拼图
         foreach(GameObject go in connectedPieces[index])
         {
             // 如果添加邻居成功，返回
-            if(AddNeighbor(piece))
-                return;
+            if (AddNeighbor(go))
+                break;
+        }
+
+        // 拼图完成
+        if (connectedPieces[piece.GetComponent<Piece>().connectedListID].Count == totalCount)
+        {
+            finish = true;
         }
     }
     #endregion
 
 
-    #region 其它函数
+    #region 拼图函数
 
 
     /// <summary>

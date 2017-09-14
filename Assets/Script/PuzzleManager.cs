@@ -7,10 +7,23 @@ public class PuzzleManager : DragablePlane
     public Puzzle puzzle;
 
 
+
+
+    /// <summary>
+    /// 当前顺序的最大值
+    /// </summary>
+    int maxDepth = 0;
+
     /// <summary>
     /// 第一块 拼图 的索引
     /// </summary>
     public int firstPieceIndex = 3;
+
+
+    /// <summary>
+    /// 拼图是否已经创建
+    /// </summary>
+    public bool pieceCreated;
 
 
     /// <summary>
@@ -28,11 +41,12 @@ public class PuzzleManager : DragablePlane
     /// </summary>
     public Texture markImage;
 
+    
+    [Header("大小")]
     /// <summary>
-    /// 自动连接 的最大 距离
+    /// 可以 连接 的 最大 距离
     /// </summary>
     public float largestSize = 30.0f;
-
 
     /// <summary>
     /// 计算显示 的 标准尺寸
@@ -61,10 +75,21 @@ public class PuzzleManager : DragablePlane
     public Vector2 displaySize;
 
 
+    [Header("旋转")]
     /// <summary>
-    /// 拼图是否已经创建
+    /// 拼图最少的旋转个数
     /// </summary>
-    public bool pieceCreated;
+    public int minCount = 1;
+
+    /// <summary>
+    /// 拼图最少的旋转个数
+    /// </summary>
+    public int maxCount = 5;
+
+    /// <summary>
+    /// 是否旋转
+    /// </summary>
+    public static bool isRotate;
 
 
     /// <summary>
@@ -146,8 +171,26 @@ public class PuzzleManager : DragablePlane
     /// <param name="go">激活的拼图对象</param>
     protected override void ActiveObject(GameObject go)
     {
-        // 通知 激活的拼图 
-        go.GetComponent<Piece>().OnSelect();
+        Piece piece = go.GetComponent<Piece>();
+
+        // 选中的不是最上层的对象
+        if(piece.order != maxDepth)
+        {
+            maxDepth ++;
+
+            // 更新所有连接拼图的 顺序
+            foreach(GameObject obj in puzzle.connectedPieces[piece.connectedListID])
+            {
+                obj.GetComponent<Piece>().order = maxDepth;
+            }
+        }
+
+        // 是否旋转，并是否按下 "Fire2" 按钮
+        if (isRotate && Input.GetButton("Fire2"))
+        {
+            // 顺时针旋转 90 度
+            go.transform.localEulerAngles -= new Vector3(0, 0, 90);
+        }
     }
 
     /// <summary>
@@ -186,6 +229,9 @@ public class PuzzleManager : DragablePlane
 
     #endregion
 
+
+    #region 管理拼图显示函数
+
     /// <summary>
     /// 生成拼图
     /// </summary>
@@ -193,7 +239,7 @@ public class PuzzleManager : DragablePlane
     {
 
         // 设置 拼图 的最大 优先值
-        Piece.maxDepth = puzzle.totalCount + 1;
+        maxDepth = puzzle.totalCount + 1;
 
         // 生成 （x,y) 个 拼图块
         for (int i = 0; i < puzzle.count.x; i++)
@@ -263,38 +309,140 @@ public class PuzzleManager : DragablePlane
         // 激活对象
         child.SetActive(true);
 
-        // 初始化 拼图
-        Piece piece = child.GetComponent<Piece>();
-        if (piece == null) piece = child.AddComponent<Piece>();
-
-        piece.puzzle = puzzle;
-
-        piece.Init(x, y);
-
-
-        // 设置材质
-        Vector2 offset = pieceScale / 2f;
-
-        // 获取图像渲染对象
-        SpriteRenderer rend = child.GetComponent<SpriteRenderer>();
-
-        // 设置图像 uv
-        rend.material.mainTextureScale = pieceScale * 2;
-        rend.material.mainTextureOffset =
-            new Vector2(x * pieceScale.x - offset.x, y * pieceScale.y - offset.y);
-
-        // 设置拼图图像
-        rend.sprite = pieceImage;
-
-        // 设置拼图形状
-        rend.material.SetTexture("_MarkTex", markImage);
-
         // 随机位置
         child.transform.position = new Vector3(
                                         Random.Range(-0.15f, 0.15f) * collider.size.x,
                                         Random.Range(-0.15f, 0.15f) * collider.size.y,
                                         0);
+
+
+
+
+        // 初始化 拼图
+        Piece piece = child.GetComponent<Piece>();
+        if (piece == null) piece = child.AddComponent<Piece>();
+
+        
+        piece.puzzle = puzzle;
+
+        piece.Init(x, y);
+
+
+
+        // 获取图像渲染对象
+        SpriteRenderer rend = child.GetComponent<SpriteRenderer>();
+
+        // 设置材质
+        Vector2 offset = pieceScale / 2f;
+
+
+        // 设置拼图图像
+        rend.sprite = pieceImage;
+        // 设置图像 uv
+        rend.material.mainTextureScale = pieceScale * 2;
+        rend.material.mainTextureOffset =
+            new Vector2(x * pieceScale.x - offset.x, y * pieceScale.y - offset.y);
+
+
+        // 设置拼图形状
+        rend.material.SetTexture("_MarkTex", markImage);
+
+        // 计算拼图形状
+        piece.isAtEdge = CalcMarkOffset(piece.id, out offset);
+        
+        // 设置拼图偏移
+        rend.material.SetTextureOffset("_MarkTex", offset);
     }
+
+
+    /// <summary>
+    /// 计算拼图形状 贴图的 uv 偏移
+    /// </summary>
+    /// <param name="id">拼图的 id </param>
+    /// <param name="offset">返回计算后的 偏移 </param>
+    /// <returns>拼图是否在边界上</returns>
+    bool CalcMarkOffset(Count id,out Vector2 offset)
+    {
+        // 默认在边界上
+        bool isAtEdge = true;
+
+        // 当前的偏移值
+        offset = Vector2.zero;
+
+        // 左边界
+        if (id.x == 0)
+        {
+            // 左下角, uv = (0,0)
+            if (id.y == 0) goto _end_;
+
+            // 左上角, uv = (0,0.25)
+            if (id.y == puzzle.count.y - 1) { offset.y = 0.25f; goto _end_; };
+
+            // 在贴图的第 2 列的位置
+            offset.x = 0.25f;
+
+            // 交替设置 y 的偏移
+            offset.y = id.y % 2 == 1 ? 0.25f : 0.0f;
+        }
+        // 右边界
+        else if (id.x == puzzle.count.x - 1)
+        {
+
+            // 右下角, uv = (0,0.5)
+            if (id.y == 0) { offset.y = 0.5f; goto _end_; }
+
+            // 右上角, uv = (0,0.75)
+            if (id.y == puzzle.count.y - 1) { offset.y = 0.75f; goto _end_; };
+
+            // 在贴图的第 2 列的位置
+            offset.x = 0.25f;
+
+            // 交替设置 y 的偏移
+            offset.y = id.y % 2 == 1 ? 0.75f : 0.5f;
+        }
+
+
+        // 不用判断角落了
+        // 下边界
+        else if (id.y == 0)
+        {
+            // 在贴图的第 3 列的位置
+            offset.x = 0.5f;
+
+            // 交替设置 y 的偏移
+            offset.y = id.x % 2 == 1 ? 0.25f : 0f;
+        }
+        // 上边界
+        else if (id.y == puzzle.count.y - 1)
+        {
+            // 在贴图的第 3 列的位置
+            offset.x = 0.5f;
+
+            // 交替设置 y 的偏移
+            offset.y = id.x % 2 == 1 ? 0.75f : 0.5f;
+        }
+        // 其它地方
+        else
+        {
+            // 在贴图的第 4 列的位置
+            offset.x = 0.75f;
+
+            // 交替设置 y 的偏移
+            offset.y = id.x % 2 == 1 ? 0.25f : 0f;
+            offset.y += id.y % 2 == 1 ? 0f : 0.5f;
+
+            // 当前不在边界上
+            isAtEdge = false;
+        }
+
+
+
+    _end_:
+
+        // 返回 uv 偏移
+        return isAtEdge;
+    }
+
 
     /// <summary>
     /// 检查 拼图的 显示
@@ -372,5 +520,7 @@ public class PuzzleManager : DragablePlane
 
         }
     }
+
+    #endregion
 
 }

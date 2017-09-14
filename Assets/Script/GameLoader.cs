@@ -182,7 +182,16 @@ public class GameLoader : MonoBehaviour
         puzzleGame.onGameEnd.Add(new EventDelegate(() => menuControl.UpdateButton(false)));
 
         // 注册 游戏结束 事件
-        puzzleGame.onGameEnd.Add(new EventDelegate(() => uiControl.ShowFinish(puzzleGame.record.ToString())));
+        puzzleGame.onGameEnd.Add(new EventDelegate(() => 
+            {
+                string msg = puzzleGame.record.ToString();
+
+                // 显示结束界面
+                uiControl.ShowFinish(msg);
+
+                // 保存纪录
+                dataManager.gameData.records.Add(msg);
+            }));
 
         // 结束界面 显示结束后，显示 纪录
         uiControl.onFinishEnd.Add(new EventDelegate(() => recordControl.Show<Record>(puzzleGame.record)));
@@ -332,7 +341,7 @@ public class GameLoader : MonoBehaviour
 
         menuControl.backgroundList.value = dataManager.gameData.background;
 
-        
+        recordControl.Add<string>(dataManager.gameData.records);
     }
 
 

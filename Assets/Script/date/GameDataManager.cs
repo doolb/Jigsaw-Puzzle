@@ -1,8 +1,3 @@
-//=========================================================================================================
-//Note: Data Managing.
-//Date Created: 2012/04/17 by 风宇冲
-//Date Modified: 2012/12/14 by 风宇冲
-//=========================================================================================================
 using UnityEngine;
 using System.Collections;
 using System.IO;
@@ -23,18 +18,50 @@ public class GameData
     /// </summary>
     public string key;
 
+    /// <summary>
+    /// 背景名
+    /// </summary>
     public string background;
 
+    /// <summary>
+    /// 拼图个数
+    /// </summary>
     public int pieceCount;
+
+    /// <summary>
+    /// 拼图图像
+    /// </summary>
     public string pieceImage;
+
+    /// <summary>
+    /// 拼图形状
+    /// </summary>
     public string pieceShape;
+
+    /// <summary>
+    /// 拼图风格
+    /// </summary>
     public string pieceStyle;
 
+    /// <summary>
+    /// 是否显示原图
+    /// </summary>
     public bool showImage;
+
+    /// <summary>
+    /// 是否旋转拼图
+    /// </summary>
     public bool rotatePuzzle;
 
+    /// <summary>
+    /// 游戏纪录
+    /// </summary>
     public List<string> records = new List<string>();
 
+
+    /// <summary>
+    /// 构造函数，设置默认值
+    /// </summary>
     public GameData()
     {
         background = "bg1";
@@ -69,8 +96,12 @@ public class GameDataManager : MonoBehaviour
     /// </summary>
     public GameData gameData;
 
-    public void Awake()
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    void Awake()
     {
+        // 新建游戏数数据
         gameData = new GameData();
 
         // 设定密钥，根据具体平台设定
@@ -80,26 +111,47 @@ public class GameDataManager : MonoBehaviour
         Load();
     }
 
-    //存档时调用的函数//
+    /// <summary>
+    /// 卸载时保存数据
+    /// </summary>
+    void OnDestroy()
+    {
+        Save();
+    }
+
+    /// <summary>
+    /// 保存数据
+    /// </summary>
     public void Save()
     {
+        // 获取文件名
         string gameDataFile = GetDataPath() + "/" + dataFileName;
+
+        // 序列化对象
         string dataString = xs.SerializeObject(gameData, typeof(GameData));
+
+        // 写入到文件中
         xs.CreateXML(gameDataFile, dataString);
     }
 
     /// <summary>
-    /// 读档时调用的函数
+    /// 加载数据
     /// </summary>
-    public void Load()
+    void Load()
     {
+        // 获取文件名
         string gameDataFile = GetDataPath() + "/" + dataFileName;
+
+        // 判断文件是否存在
         if (File.Exists(gameDataFile))
         {
+            // 加载文件
             string dataString = xs.LoadXML(gameDataFile);
+
+            // 反序列化对象
             GameData gameDataFromXML = xs.DeserializeObject(dataString, typeof(GameData)) as GameData;
 
-            //是合法存档//
+            // 是否是合法存档
             if (gameDataFromXML.key == gameData.key)
             {
                 gameData = gameDataFromXML;

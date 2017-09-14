@@ -9,6 +9,14 @@ using UnityEngine;
 public class RecordControl : MonoBehaviour
 {
     /// <summary>
+    /// 游戏数据
+    /// </summary>
+    GameData data
+    {
+        get { return GameLoader.instance.dataManager.gameData; }
+    }
+
+    /// <summary>
     /// 界面隐藏 事件
     /// </summary>
     public List<EventDelegate> onHide = new List<EventDelegate>();
@@ -46,6 +54,9 @@ public class RecordControl : MonoBehaviour
 
         // 获取保存纪录的对象
         recordsView = transform.Find("Scroll View - Scores").gameObject;
+
+        // 加载纪录
+        Add<string>(data.records);
     }
 
 

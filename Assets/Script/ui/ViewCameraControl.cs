@@ -54,6 +54,8 @@ public class ViewCameraControl : DragablePlane
     /// </summary>
     float deltaTime;
 
+    #region 初始化
+
     /// <summary>
     /// 覆盖 基类 的 Start
     /// </summary>
@@ -76,8 +78,44 @@ public class ViewCameraControl : DragablePlane
         maxImageSize = viewArea.transform.localScale.x;
 
 
+
     }
 
+
+    public void Init(Transform viewCamera, Transform ui)
+    {
+        // 获取视口显示对象
+        Transform viewWindow = ui.Find("View Window");
+
+        // 关联视口控制事件
+        viewWindow.Find("Zoom Bar").GetComponent<UISlider>().onChange.Add(new EventDelegate(OnZoom));
+
+        // 获取视口显示组件
+        UIViewport viewport = viewCamera.GetComponent<UIViewport>();
+
+        // 关联左上角
+        viewport.topLeft = viewWindow.transform.Find("TopLeft");
+
+        // 关联右下角
+        viewport.bottomRight = viewWindow.transform.Find("BottomRight");
+
+
+        // 关联视口显示和隐藏
+        GameLoader.instance.uiControl.transform.Find("Check Box - View").GetComponent<UIToggle>().onChange.Add(new EventDelegate(() =>
+        {
+            // 获取是否显示视口
+            bool show = UIToggle.current.value;
+
+            // 切换视口显示
+            Toggle(show);
+
+            // 转换ui显示
+            GameLoader.instance.uiControl.ToggleView(show);
+        }));
+
+
+    }
+    #endregion
     /// <summary>
     /// 每帧执行一次， 不受时间控制
     /// </summary>
@@ -131,7 +169,7 @@ public class ViewCameraControl : DragablePlane
 
     }
 
-    
+
 
     bool MoveValue()
     {

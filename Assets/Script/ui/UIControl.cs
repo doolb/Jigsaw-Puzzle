@@ -8,14 +8,22 @@ using UnityEngine;
 public class UIControl : MonoBehaviour
 {
     /// <summary>
-    /// 结束界面动画结束 事件
+    /// 游戏对象
     /// </summary>
-    public List<EventDelegate> onFinishEnd = new List<EventDelegate>();
+    PuzzleGame game
+    {
+        get { return GameLoader.instance.puzzleGame; }
+    }
 
     /// <summary>
-    /// 显示菜单 事件
+    /// 数据对象
     /// </summary>
-    public List<EventDelegate> onShowMenu = new List<EventDelegate>();
+    GameData data
+    {
+        get { return GameLoader.instance.dataManager.gameData; }
+    }
+
+
 
     /// <summary>
     /// 结束面板
@@ -43,6 +51,8 @@ public class UIControl : MonoBehaviour
     /// </summary>
     GameObject viewWindow;
 
+    #region 初始化
+
     /// <summary>
     /// 初始化
     /// </summary>
@@ -53,13 +63,7 @@ public class UIControl : MonoBehaviour
         finish = transform.Find("Finish").gameObject;
         finish.SetActive(false);
 
-        // 添加 动画结束 事件
-        finish.GetComponent<TweenAlpha>().onFinished.Add(new EventDelegate(() =>
-            {
-                // 通知 结束界面动画结束
-                for (int i = 0; i < onFinishEnd.Count; i++)
-                    onFinishEnd[i].Execute();
-            }));
+
 
         // 获取文本对象
         infoLabel = finish.transform.Find("Label - Info").GetComponent<UILabel>();
@@ -67,27 +71,66 @@ public class UIControl : MonoBehaviour
         // 获取 显示时间 对象
         time = transform.Find("Label - Time").GetComponent<UILabel>();
 
-        // 注册 菜单控制 事件
+        // 菜单 按钮
         buttonMenu = transform.Find("Button - Menu").gameObject;
-        buttonMenu.GetComponent<UIButton>().onClick.Add(new EventDelegate(() =>
-            {
 
-                // 隐藏菜单按钮
-                Hide();
-
-                // 通知显示菜单 事件
-                for (int i = 0; i < onShowMenu.Count; i++)
-                    onShowMenu[i].Execute();
-            }));
-        // 隐藏菜单按钮
+        // 默认隐藏菜单按钮
         buttonMenu.SetActive(false);
 
 
         // 获取 视口显示窗口
         viewWindow = transform.Find("View Window").gameObject;
+
+
+
+    }
+
+    public void Init()
+    {
+        // 点击菜单事件
+        buttonMenu.GetComponent<UIButton>().onClick.Add(new EventDelegate(game.Pause));
+
+
+        // 添加 动画结束 事件
+        finish.GetComponent<TweenAlpha>().onFinished.Add(new EventDelegate(() =>
+        {
+            // 结束界面 显示结束后，显示 纪录
+            GameLoader.instance.recordControl.Show<Record>(game.record);
+
+            // 关闭纪录界面后显示菜单
+            GameLoader.instance.recordControl.onHide.Add(new EventDelegate(GameLoader.instance.menuControl.Show));
+        }));
+
+
+
+        // 关联进行游戏事件
+        game.onGameRun.Add(new EventDelegate(Show));
+
+        // 关联暂停游戏事件
+        game.onGamePause.Add(new EventDelegate(Hide));
+
+        // 注册 游戏结束 事件
+        game.onGameEnd.Add(new EventDelegate(() =>
+        {
+            string msg = game.record.ToString();
+
+            // 显示结束界面
+            ShowFinish(msg);
+
+            // 保存纪录
+            data.records.Add(msg);
+        }));
+
     }
 
 
+    #endregion
+
+    void FixedUpdate()
+    {
+        // 显示时间
+        ShowTime(game.gameTime);
+    }
 
     #region 公共函数
     /// <summary>

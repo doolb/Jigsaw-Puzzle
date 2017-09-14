@@ -52,7 +52,7 @@ public class PuzzleGame : PuzzleManager
     /// <summary>
     /// 移动的次数
     /// </summary>
-    public int moveCount = 0;
+    int moveCount = 0;
 
     /// <summary>
     /// 记录开始的时间
@@ -75,18 +75,30 @@ public class PuzzleGame : PuzzleManager
     /// </summary>
     bool needRestart = false;
 
-    /// <summary>
-    /// 游戏结束事件
-    /// </summary>
-    public List<EventDelegate> onGameEnd = new List<EventDelegate>();
+
 
     public bool canContinue
     {
         get
         {
-            return !(needRestart ||!pieceCreated);
+            return !(needRestart || !pieceCreated);
         }
     }
+
+    /// <summary>
+    /// 游戏结束事件
+    /// </summary>
+    public List<EventDelegate> onGameEnd = new List<EventDelegate>();
+
+    /// <summary>
+    /// 游戏进行事件
+    /// </summary>
+    public List<EventDelegate> onGameRun = new List<EventDelegate>();
+
+    /// <summary>
+    /// 游戏暂停事件
+    /// </summary>
+    public List<EventDelegate> onGamePause = new List<EventDelegate>();
 
     #endregion
 
@@ -178,9 +190,9 @@ public class PuzzleGame : PuzzleManager
     #region 游戏控制
 
     /// <summary>
-    /// 开始游戏
+    /// 运行游戏
     /// </summary>
-    public void StartGame()
+    public void Run()
     {
         // 如果不需要重新开始游戏，并且拼图没有创建
         if (!needRestart && pieceCreated)
@@ -191,6 +203,32 @@ public class PuzzleGame : PuzzleManager
         }
 
         ReStart();
+    }
+
+    /// <summary>
+    /// 暂停游戏
+    /// </summary>
+    public void Pause()
+    {
+        // 停止时间更新
+        Time.timeScale = 0f;
+
+        // 通知游戏暂停
+        for (int i = 0; i < onGamePause.Count; i++)
+            onGamePause[i].Execute();
+    }
+
+    /// <summary>
+    /// 继续游戏
+    /// </summary>
+    public void Continue()
+    {
+        // 恢复时间更新
+        Time.timeScale = 1f;
+
+        // 通知游戏进行
+        for (int i = 0; i < onGameRun.Count; i++)
+            onGameRun[i].Execute();
     }
 
     /// <summary>
@@ -229,25 +267,13 @@ public class PuzzleGame : PuzzleManager
 
         // 可以继续游戏
         needRestart = false;
+
+        // 通知游戏进行
+        for (int i = 0; i < onGameRun.Count; i++)
+            onGameRun[i].Execute();
     }
 
-    /// <summary>
-    /// 暂停游戏
-    /// </summary>
-    public void Pause()
-    {
-        // 停止时间更新
-        Time.timeScale = 0f;
-    }
 
-    /// <summary>
-    /// 继续游戏
-    /// </summary>
-    public void Continue()
-    {
-        // 恢复时间更新
-        Time.timeScale = 1f;
-    }
     #endregion
 
     #region 拼图控制
@@ -279,7 +305,7 @@ public class PuzzleGame : PuzzleManager
             if (!child.activeSelf) continue;
 
             // 是否没有和其它块相连
-            if ( child.GetComponent<Piece>().connectedCount == 1)
+            if (child.GetComponent<Piece>().connectedCount == 1)
             {
                 // 计算 平铺的 行 和 列
                 int x = count / maxVCount;

@@ -34,7 +34,7 @@ public struct Count
     /// </summary>
     /// <param name="_x">x</param>
     /// <param name="_y">y</param>
-    public Count(int _x,int _y)
+    public Count(int _x, int _y)
     {
         x = _x;
         y = _y;
@@ -182,9 +182,9 @@ public class Puzzle
         finish = false;
 
         // 遍历所有拼图
-        for(int i=0;i<count.x ;i++)
+        for (int i = 0; i < count.x; i++)
         {
-            for(int j=0;j<count.y;j++)
+            for (int j = 0; j < count.y; j++)
             {
                 // 获取 第 (x,y)个拼图
                 GameObject child = GetPiece(i, j);
@@ -226,10 +226,10 @@ public class Puzzle
         int index = piece.GetComponent<Piece>().connectedListID;
 
         // 移动所有连接的拼图
-        foreach(GameObject go in connectedPieces[index])
+        foreach (GameObject go in connectedPieces[index])
             go.transform.position += delta;
     }
-    
+
     /// <summary>
     /// 移动一个拼图结束
     /// </summary>
@@ -244,7 +244,7 @@ public class Puzzle
             return;
 
         // 遍历所有连接的拼图
-        foreach(GameObject go in connectedPieces[index])
+        foreach (GameObject go in connectedPieces[index])
         {
             // 如果添加邻居成功，返回
             if (AddNeighbor(go))
@@ -269,12 +269,12 @@ public class Puzzle
     /// <param name="x"></param>
     /// <param name="y"></param>
     /// <returns></returns>
-    GameObject GetPiece(int x,int y)
+    GameObject GetPiece(int x, int y)
     {
         return manager.GetPiece(x, y);
     }
 
-    
+
 
     /// <summary>
     /// 获取最近的邻居
@@ -374,7 +374,7 @@ public class Puzzle
         }
     }
 
-    
+
 
     /// <summary>
     /// 添加邻居
@@ -402,7 +402,7 @@ public class Puzzle
             return false;
 
         // 计算要移动的偏移
-        Vector3 offset = GetNeighborOffset(piece.transform.position,neighbor.transform.position, type);
+        Vector3 offset = GetNeighborOffset(piece.transform.position, neighbor.transform.position, type);
 
         // 移动拼图
         Move(neighbor, offset);
@@ -413,7 +413,7 @@ public class Puzzle
 
         // 连接邻居
         ConnectNeighbor(piece, neighbor);
-        
+
 
         // 添加成功
         return true;
@@ -583,7 +583,7 @@ public class Puzzle
 
 
 
-    
+
 
     #endregion
 

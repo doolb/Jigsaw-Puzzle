@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 控制拼图对象生成和显示
+/// </summary>
 public class PuzzleManager : DragablePlane
 {
+    /// <summary>
+    /// 拼图逻辑对象
+    /// </summary>
     public Puzzle puzzle;
-
-
 
 
     /// <summary>

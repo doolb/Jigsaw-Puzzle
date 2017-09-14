@@ -142,6 +142,10 @@ public class MenuControl : MonoBehaviour
 
         // 播放显示动画
         playAnim.Play(false);
+
+        // 暂停时间更新
+        Time.timeScale = 0;
+
     }
 
     /// <summary>
@@ -155,6 +159,9 @@ public class MenuControl : MonoBehaviour
 
         // 播放隐藏动画
         playAnim.Play(true);
+
+        // 恢复时间更新
+        Time.timeScale = 1;
     }
 
 

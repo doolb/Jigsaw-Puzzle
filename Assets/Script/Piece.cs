@@ -14,6 +14,9 @@ public class Piece : MonoBehaviour
 
     #region 变量
 
+    /// <summary>
+    /// 拼图逻辑管理对象
+    /// </summary>
     public Puzzle puzzle;
 
     /// <summary>
@@ -47,6 +50,7 @@ public class Piece : MonoBehaviour
     {
         get { return puzzle.connectedPieces[connectedListID].Count; }
     }
+
     /// <summary>
     /// 拼图对象的顺序
     /// </summary>

@@ -96,6 +96,9 @@ public enum NeighborType
 /// </summary>
 public class Puzzle
 {
+    /// <summary>
+    /// 拼图显示管理对象
+    /// </summary>
     PuzzleManager manager;
 
 
@@ -128,11 +131,18 @@ public class Puzzle
         get { return manager.displayRatio; }
     }
 
+    /// <summary>
+    /// 拼图图像 宽度
+    /// </summary>
     public float imageX { get { return manager.pieceImage.texture.width; } }
+
+    /// <summary>
+    /// 拼图图像 高度
+    /// </summary>
     public float imageY { get { return manager.pieceImage.texture.height; } }
 
     /// <summary>
-    /// 是否完全拼图
+    /// 是否完成拼图
     /// </summary>
     public bool finish;
 
@@ -147,7 +157,7 @@ public class Puzzle
     List<NeighborType> neighborTypes = new List<NeighborType>();
 
     /// <summary>
-    /// 保存所有拼图的连接表
+    /// 保存所有拼图的连接表的列表
     /// </summary>
     public List<List<GameObject>> connectedPieces = new List<List<GameObject>>();
 
@@ -168,6 +178,7 @@ public class Puzzle
     /// </summary>
     public void Reset()
     {
+        // 设置拼图为未完成
         finish = false;
 
         // 遍历所有拼图
@@ -178,12 +189,11 @@ public class Puzzle
                 // 获取 第 (x,y)个拼图
                 GameObject child = GetPiece(i, j);
 
-                // 获取拼图块控制脚本
-                Piece piece = child.GetComponent<Piece>();
+                int id = i * count.y + j;
 
                 // 判断列表个数是否足够
                 List<GameObject> list = null;
-                if (piece.connectedListID >= connectedPieces.Count)
+                if (id >= connectedPieces.Count)
                 {
                     // 新建一个列表
                     list = new List<GameObject>();
@@ -193,7 +203,7 @@ public class Puzzle
                 }
                 // 直接获取列表
                 else
-                    list = connectedPieces[piece.connectedListID];
+                    list = connectedPieces[id];
 
                 // 清空列表
                 list.Clear();

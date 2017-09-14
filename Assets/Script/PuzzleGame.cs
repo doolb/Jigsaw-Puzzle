@@ -300,16 +300,16 @@ public class PuzzleGame : PuzzleManager
     /// 设置拼图块数
     /// </summary>
     /// <param name="count">新的拼图块数</param>
-    public void SetPieceCount(Count count)
+    public void SetPieceCount(Count c)
     {
         // 保存新的块数
-        newPieceCount = puzzle.count;
+        newPieceCount = c;
 
         // 游戏是否未开始
         if (!pieceCreated)
         {
             // 设置成新的块数
-            count = newPieceCount;
+            puzzle.count = newPieceCount;
 
             // 更新拼图大小
             ReSize();
@@ -317,7 +317,7 @@ public class PuzzleGame : PuzzleManager
         }
 
         // 判断是否需要重新开始游戏
-        needRestart = newPieceCount != count;
+        needRestart = newPieceCount != puzzle.count;
     }
 
     /// <summary>

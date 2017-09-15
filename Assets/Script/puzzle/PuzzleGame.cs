@@ -12,7 +12,7 @@ public class PuzzleGame : PuzzleManager
     /// <summary>
     /// 背景渲染对象
     /// </summary>
-    SpriteRenderer background;
+    UITexture background;
 
 
 
@@ -30,7 +30,7 @@ public class PuzzleGame : PuzzleManager
     /// <summary>
     /// 平铺拼图的 起始 位置
     /// </summary>
-    Vector3 tileOrigin;
+    Transform tileOrigin;
 
 
     /// <summary>
@@ -112,7 +112,7 @@ public class PuzzleGame : PuzzleManager
         base.Awake();
 
         // 获取背景渲染对象
-        background = transform.Find("Background").GetComponent<SpriteRenderer>();
+        background = transform.Find("Background").GetComponent<UITexture>();
 
         // 停止 时间更新
         Time.timeScale = 0f;
@@ -121,7 +121,7 @@ public class PuzzleGame : PuzzleManager
         originImage = transform.Find("Origin Image").gameObject;
 
         //获取平铺的起始位置
-        tileOrigin = transform.Find("Tile Origin").position;
+        tileOrigin = transform.Find("Tile Origin");
 
         ReSize();
     }
@@ -311,7 +311,7 @@ public class PuzzleGame : PuzzleManager
                 int y = count % maxVCount;
 
                 // 移动到新位置
-                child.transform.position = tileOrigin +
+                child.transform.localPosition = tileOrigin.localPosition +
                     new Vector3(x * pieceSize.x * 1.2f,
                                 y * pieceSize.y * 1.2f, 0);
                 // 计数 加 1
@@ -484,7 +484,7 @@ public class PuzzleGame : PuzzleManager
     /// <param name="name">背景名</param>
     public void SetBackground(string name)
     {
-        background.sprite = Resources.Load<Sprite>("Image/" + name);
+        background.mainTexture = Resources.Load<Texture>("Image/" + name);
     }
     #endregion
 
@@ -528,8 +528,11 @@ public class PuzzleGame : PuzzleManager
         for (int i = 0; i < puzzle.count.x; i++)
             for (int j = 0; j < puzzle.count.y; j++)
             {
+                UITexture tex = GetPiece(i, j).GetComponent<UITexture>();
                 // 设置 拼图 为新的形状
-                GetPiece(i, j).GetComponent<Renderer>().material.SetTexture("_MarkTex", markImage);
+                tex.material.SetTexture("_MarkTex", markImage);
+                tex.enabled = false;
+                tex.enabled = true;
             }
     }
 
@@ -550,7 +553,10 @@ public class PuzzleGame : PuzzleManager
 
                 // 更新 拼图 的大小
                 child.GetComponent<Piece>().ReSize();
+
             }
+
+
     }
 
     /// <summary>

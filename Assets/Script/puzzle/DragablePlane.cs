@@ -243,8 +243,9 @@ public class DragablePlane : MonoBehaviour
         // 如果没找到，返回 false
         if (n == 0) return false;
 
+
         // 记录最大对象，和最大的 优先值
-        int max = 0, maxOrder = 0;
+        int max = -1, maxOrder = -1;
 
         // 循环遍历所有的结果
         for (int i = 0; i < n; i++)
@@ -260,6 +261,9 @@ public class DragablePlane : MonoBehaviour
                 max = i;
             }
         }
+
+        if (max == -1) return false;
+
 
         // 找到一个最近的
         hit = raycastHitCache[max];

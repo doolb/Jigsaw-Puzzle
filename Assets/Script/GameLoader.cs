@@ -18,36 +18,49 @@ public class GameLoader : MonoBehaviour
     public GameObject uiRoot3D;
 
 
+    /// <summary>
+    /// 游戏 ui root 对象
+    /// </summary>
+    public GameObject uiRootGame;
+
+
     public static GameLoader instance;
+
 
     /// <summary>
     /// ui 控制脚本
     /// </summary>
+    [HideInInspector]
     public UIControl uiControl;
 
     /// <summary>
     /// 菜单控制脚本
     /// </summary>
+    [HideInInspector]
     public MenuControl menuControl;
 
     /// <summary>
     /// 记录控制脚本
     /// </summary>
+    [HideInInspector]
     public RecordControl recordControl;
 
     /// <summary>
     /// 游戏控制脚本
     /// </summary>
+    [HideInInspector]
     public PuzzleGame puzzleGame;
 
     /// <summary>
     /// 视口控制对象
     /// </summary>
+    [HideInInspector]
     public ViewCameraControl viewControl;
 
     /// <summary>
     /// 数据管理对象
     /// </summary>
+    [HideInInspector]
     public GameDataManager dataManager;
 
     /// <summary>
@@ -94,7 +107,7 @@ public class GameLoader : MonoBehaviour
         LoadUI();
 
         // 加载视口控制
-        LoadView();
+        //LoadView();
 
         // 加载游戏
         LoadGame();
@@ -106,7 +119,7 @@ public class GameLoader : MonoBehaviour
         uiControl.Init();
 
         // 初始化 视口控制脚本
-        viewControl.Init(transform, uiRoot.transform.Find("Panel - UI"));
+        //viewControl.Init(transform, uiRoot.transform.Find("Panel - UI"));
 
         // 暂停游戏
         puzzleGame.Pause();
@@ -118,9 +131,10 @@ public class GameLoader : MonoBehaviour
     void LoadGame()
     {
         // 加载 拼图游戏 预制体，并挂载游戏脚本
-        puzzleGame = Instantiate<GameObject>(Resources.Load("Puzzle") as GameObject).
-            AddComponent<PuzzleGame>();
+        puzzleGame = NGUITools.AddChild(uiRootGame,Resources.Load<GameObject>("Puzzle")).AddComponent<PuzzleGame>();
 
+        // 设置游戏摄像机
+        puzzleGame.cam = transform.Find("Camera").GetComponent<Camera>();
     }
 
     /// <summary>
@@ -145,11 +159,13 @@ public class GameLoader : MonoBehaviour
     // 加载视图
     void LoadView()
     {
+        return;
         // 加载视图预制体，并挂载脚本
         viewControl = Instantiate<GameObject>(Resources.Load<GameObject>("Main Camera Control")).AddComponent<ViewCameraControl>();
 
         // 设置 摄像头
         viewControl.cam = GetComponent<Camera>();
+        viewControl.Toggle(false);
 
     }
     #endregion

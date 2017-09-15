@@ -188,6 +188,8 @@ public class Piece : MonoBehaviour
         // 设置默认值
         markOffset = Vector2.zero;
 
+        isAtEdge = true;
+
         // 左边界
         if (id.x == 0)
         {

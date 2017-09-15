@@ -13,11 +13,6 @@ public class PuzzleManager : DragablePlane
     public Puzzle puzzle;
 
     /// <summary>
-    /// ngui uiroot 对象
-    /// </summary>
-    public UIRoot uiroot;
-
-    /// <summary>
     /// 当前顺序的最大值
     /// </summary>
     int maxDepth = 0;
@@ -89,6 +84,11 @@ public class PuzzleManager : DragablePlane
 
 
     /// <summary>
+    /// 摄像机大小
+    /// </summary>
+    public float camSize;
+
+    /// <summary>
     /// 碰撞测试的 缓存大小
     /// </summary>
     protected override int raycastHitCacheSize
@@ -114,8 +114,6 @@ public class PuzzleManager : DragablePlane
             puzzle = new Puzzle(this);
 
         base.Awake();
-
-        MakePuzzle();
     }
 
 
@@ -285,6 +283,27 @@ public class PuzzleManager : DragablePlane
         // 更新 拼图标准缩放值
         pieceScale.x = 1 / (float)puzzle.count.x;
         pieceScale.y = 1 / (float)puzzle.count.y;
+
+
+        // 新的摄像机大小
+        camSize = pieceImage.width / 810.0f;
+
+        // 判断摄像机大小是否更改
+        if( cam.orthographicSize != camSize)
+        {
+            // 获取更新偏移
+            float offset = camSize / cam.orthographicSize;
+
+            // 设置新的大小
+            cam.orthographicSize = camSize;
+
+            // 更新拼图的显示
+            for(int x=0;x<puzzle.count.x ;x++)
+                for(int y=0;y<puzzle.count.y;y++)
+                {
+                    GetPiece(x, y).transform.localPosition *= offset;
+                }
+        }
     }
 
     /// <summary>
@@ -401,4 +420,17 @@ public class PuzzleManager : DragablePlane
 
     #endregion
 
+
+    IEnumerator SmoothCameraSize(float target)
+    {
+        float delta = target - cam.orthographicSize;
+        float once = delta /10;
+
+        for(int i=0;i<10;i++)
+        {
+            cam.orthographicSize += once;
+
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
 }

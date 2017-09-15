@@ -124,7 +124,6 @@ public class PuzzleGame : PuzzleManager
         tileOrigin = transform.Find("Tile Origin").position;
 
         ReSize();
-
     }
 
     /// <summary>
@@ -313,8 +312,8 @@ public class PuzzleGame : PuzzleManager
 
                 // 移动到新位置
                 child.transform.position = tileOrigin +
-                    new Vector3(x * displaySize.x * 1.2f,
-                                y * displaySize.y * 1.2f, 0);
+                    new Vector3(x * pieceSize.x * 1.2f,
+                                y * pieceSize.y * 1.2f, 0);
                 // 计数 加 1
                 count++;
             }
@@ -396,16 +395,16 @@ public class PuzzleGame : PuzzleManager
 
 
         // 加载新的拼图图像
-        pieceImage = Resources.Load<Sprite>("Image/" + name);
+        pieceImage = Resources.Load<Texture>("Image/" + name);
 
         // 更新拼图原图的显示
-        originImage.GetComponent<SpriteRenderer>().sprite = pieceImage;
+        originImage.GetComponent<UITexture>().mainTexture = pieceImage;
 
         // 更新拼图的大小
         ReSize();
 
         // 更新原图的大小
-        originImage.transform.localScale = new Vector3(100 * displayRatio.x, 100 * displayRatio.y, 1);
+        originImage.transform.localScale = new Vector3(pieceImage.width / 2, pieceImage.height / 2, 1);
 
         // 如果已经创建拼图，更新所有拼图图像
         if (pieceCreated) UpdatePieceImage();
@@ -547,7 +546,7 @@ public class PuzzleGame : PuzzleManager
                 GameObject child = GetPiece(i, j);
 
                 // 设置 拼图 为新的图像
-                child.GetComponent<SpriteRenderer>().sprite = pieceImage;
+                child.GetComponent<UITexture>().mainTexture = pieceImage;
 
                 // 更新 拼图 的大小
                 child.GetComponent<Piece>().ReSize();

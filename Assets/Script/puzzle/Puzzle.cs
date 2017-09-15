@@ -120,26 +120,19 @@ public class Puzzle
     /// </summary>
     public Vector2 size
     {
-        get { return manager.displaySize; }
+        get { return manager.pieceSize; }
     }
 
-    /// <summary>
-    /// 拼图缩放比率
-    /// </summary>
-    public Vector2 display
-    {
-        get { return manager.displayRatio; }
-    }
 
     /// <summary>
     /// 拼图图像 宽度
     /// </summary>
-    public float imageX { get { return manager.pieceImage.texture.width; } }
+    public float imageX { get { return manager.pieceImage.width; } }
 
     /// <summary>
     /// 拼图图像 高度
     /// </summary>
-    public float imageY { get { return manager.pieceImage.texture.height; } }
+    public float imageY { get { return manager.pieceImage.height; } }
 
     /// <summary>
     /// 是否完成拼图
@@ -216,10 +209,10 @@ public class Puzzle
 
 
     /// <summary>
-    /// 移动拼图，包括相连的其它拼图
+    /// 移动拼图，包括相连的其它拼图,使用的是世界坐标
     /// </summary>
     /// <param name="piece">要移动的拼图</param>
-    /// <param name="delta">要移动的距离</param>
+    /// <param name="delta">要移动的距离，世界坐标</param>
     public void Move(GameObject piece, Vector3 delta)
     {
         // 获取当前拼图 在 连接表 中索引
@@ -228,6 +221,23 @@ public class Puzzle
         // 移动所有连接的拼图
         foreach (GameObject go in connectedPieces[index])
             go.transform.position += delta;
+    }
+
+    /// <summary>
+    /// 移动拼图，包括相连的其它拼图,使用的是局部坐标
+    /// </summary>
+    /// <param name="piece">要移动的拼图</param>
+    /// <param name="delta">要移动的距离，局部坐标</param>
+    public void LocalMove(GameObject piece, Vector3 delta)
+    {
+        // 获取当前拼图 在 连接表 中索引
+        int index = piece.GetComponent<Piece>().connectedListID;
+
+        // 移动所有连接的拼图
+        foreach (GameObject go in connectedPieces[index])
+            go.transform.localPosition += delta;
+
+        Debug.Log("move " + delta);
     }
 
     /// <summary>
@@ -292,7 +302,7 @@ public class Puzzle
         {
             type = neighborTypes[i];
             // 如果可以连接，返回
-            if (IsClosedToConnect(go.transform.position, neighborCache[i].transform.position, type))
+            if (IsClosedToConnect(go.transform.localPosition, neighborCache[i].transform.localPosition, type))
             {
                 return neighborCache[i];
             }
@@ -397,15 +407,11 @@ public class Puzzle
             return false;
 
 
-        // 是否足够接近
-        if (!IsClosedToConnect(piece.transform.position, neighbor.transform.position, type))
-            return false;
-
         // 计算要移动的偏移
-        Vector3 offset = GetNeighborOffset(piece.transform.position, neighbor.transform.position, type);
+        Vector3 offset = GetNeighborOffset(piece.transform.localPosition, neighbor.transform.localPosition, type);
 
         // 移动拼图
-        Move(neighbor, offset);
+        LocalMove(neighbor, offset);
 
         // 打印邻居信息
         Debug.Log("Neighbor is at " + type + "\nmy :" + piece.GetComponent<Piece>() + " other :" + neighbor.GetComponent<Piece>());

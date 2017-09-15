@@ -147,8 +147,8 @@ public class DragablePlane : MonoBehaviour
 
         // 碰撞尝试的最大距离
         float maxDis = Vector3.Distance(
-            cam.transform.position,
-            transform.position) * 2;
+            cam.transform.localPosition,
+            transform.localPosition) * 2;
 
 
         // 是否按下按钮
@@ -170,7 +170,7 @@ public class DragablePlane : MonoBehaviour
                 if (FindClosetChild(out hit, ray, maxDis))
                 {
                     // 选中当前的对象
-                    activeObject = hit.transform.gameObject;
+                    activeObject = hit.collider.gameObject;
 
                     // 记录当前的坐标
                     activePoint = hit.point;
@@ -250,7 +250,7 @@ public class DragablePlane : MonoBehaviour
         for (int i = 0; i < n; i++)
         {
             // 获取当前对象的顺先值
-            int newOrder = RaycastHitOrder(raycastHitCache[i].transform.gameObject);
+            int newOrder = RaycastHitOrder(raycastHitCache[i].collider.gameObject);
 
             // 是否是最大的
             if (newOrder > maxOrder)

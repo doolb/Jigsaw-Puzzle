@@ -58,9 +58,12 @@
 			// 计算顶点
 			o.pos = mul(UNITY_MATRIX_MVP, i.vertex);
 
+			// 把原图移动到中心
+			_MainTex_ST.zw -= _MainTex_ST.xy / 4;
+			
 			// 计算 拼图图像纹理 uv
 			o.uv = TRANSFORM_TEX(i.uv, _MainTex);
-
+			
 			// 计算 拼图图像纹理 uv
 			o.muv = TRANSFORM_TEX(i.uv, _MarkTex);
 

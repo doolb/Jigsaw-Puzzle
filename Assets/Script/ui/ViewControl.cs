@@ -106,7 +106,11 @@ public class ViewControl : MonoBehaviour
             {
                 // 缩放 可视化对象
                 visual.transform.localScale = Vector3.one * maxViewSize * zoom * 0.81f;
+                
+                // 缩放 拖拽范围
                 transform.localScale = visual.transform.localScale;
+
+                // 缩放 视口范围
                 viewport.fullSize = 9 * maxViewSize * zoom;
             }));
     }
@@ -126,8 +130,6 @@ public class ViewControl : MonoBehaviour
 
         // 缩放 可视化对象
         visual.transform.localScale = Vector3.one * maxViewSize * zoom * 0.9f;
-
-        transform.localScale = visual.transform.localScale;
     }
 
     /// <summary>

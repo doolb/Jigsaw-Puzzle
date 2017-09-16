@@ -124,11 +124,16 @@ public class UIControl : MonoBehaviour
         // 缩放视口事件
         viewWindow.transform.Find("Zoom Bar").GetComponent<UISlider>().onChange.Add(new EventDelegate(() =>
             {
-                // 暂停游戏
-                Time.timeScale = 0;
 
                 // 缩放视口
                 GameLoader.instance.viewControl.Zoom(UISlider.current.value);
+
+                // 是否 最开始的更改
+                if (UISlider.current.value == 1) return;
+
+                // 暂停游戏
+                Time.timeScale = 0;
+
 
             }));
 

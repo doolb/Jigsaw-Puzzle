@@ -49,7 +49,7 @@ public class PuzzleManager : DragablePlane
     /// </summary>
     public Texture markImage;
 
-    
+
     [Header("大小")]
     /// <summary>
     /// 可以 连接 的 最大 距离
@@ -101,7 +101,7 @@ public class PuzzleManager : DragablePlane
     {
 
         // 加载拼图预制体
-        if(piecePrefab == null)
+        if (piecePrefab == null)
             piecePrefab = Resources.Load("Piece") as GameObject;
 
         // 加载材质预制体
@@ -173,12 +173,12 @@ public class PuzzleManager : DragablePlane
         Piece piece = go.GetComponent<Piece>();
 
         // 选中的不是最上层的对象
-        if(piece.order != maxDepth)
+        if (piece.order != maxDepth)
         {
-            maxDepth ++;
+            maxDepth++;
 
             // 更新所有连接拼图的 顺序
-            foreach(GameObject obj in puzzle.connectedPieces[piece.connectedListID])
+            foreach (GameObject obj in puzzle.connectedPieces[piece.connectedListID])
             {
                 obj.GetComponent<Piece>().order = maxDepth;
             }
@@ -289,7 +289,7 @@ public class PuzzleManager : DragablePlane
         camSize = pieceImage.width / 810.0f;
 
         // 判断摄像机大小是否更改
-        if( cam.orthographicSize != camSize)
+        if (cam.orthographicSize != camSize)
         {
             // 获取更新偏移
             float offset = camSize / cam.orthographicSize;
@@ -298,8 +298,8 @@ public class PuzzleManager : DragablePlane
             cam.orthographicSize = camSize;
 
             // 更新拼图的显示
-            for(int x=0;x<puzzle.count.x ;x++)
-                for(int y=0;y<puzzle.count.y;y++)
+            for (int x = 0; x < puzzle.count.x; x++)
+                for (int y = 0; y < puzzle.count.y; y++)
                 {
                     GetPiece(x, y).transform.localPosition *= offset;
                 }
@@ -321,7 +321,7 @@ public class PuzzleManager : DragablePlane
 
         // 随机位置
         child.transform.localPosition = new Vector3(
-                                        ( Random.value -0.5f) * pieceImage.width * 1.2f,
+                                        (Random.value - 0.5f) * pieceImage.width * 1.2f,
                                         (Random.value - 0.5f) * pieceImage.height * 1.2f,
                                         0);
 
@@ -424,9 +424,9 @@ public class PuzzleManager : DragablePlane
     IEnumerator SmoothCameraSize(float target)
     {
         float delta = target - cam.orthographicSize;
-        float once = delta /10;
+        float once = delta / 10;
 
-        for(int i=0;i<10;i++)
+        for (int i = 0; i < 10; i++)
         {
             cam.orthographicSize += once;
 

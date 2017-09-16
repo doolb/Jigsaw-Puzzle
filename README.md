@@ -65,3 +65,6 @@
 
 ### 2017.9.15
 * move game to ngui
+
+### 2017.9.16
+* build ui for control game view

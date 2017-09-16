@@ -272,7 +272,7 @@ public class PuzzleManager : DragablePlane
     /// <summary>
     /// 重设拼图的大小
     /// </summary>
-    protected void ReSize()
+    protected virtual void ReSize()
     {
         // 如果 拼图对象为空，返回
         if (pieceImage == null) return;

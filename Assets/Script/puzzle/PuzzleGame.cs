@@ -100,6 +100,11 @@ public class PuzzleGame : PuzzleManager
     /// </summary>
     public List<EventDelegate> onGamePause = new List<EventDelegate>();
 
+    /// <summary>
+    /// 更新大小事件
+    /// </summary>
+    public List<EventDelegate> onResize = new List<EventDelegate>();
+
     #endregion
 
     #region 重载函数
@@ -180,6 +185,18 @@ public class PuzzleGame : PuzzleManager
             for (int i = 0; i < onGameEnd.Count; i++)
                 onGameEnd[i].Execute();
         }
+    }
+
+
+
+    // 重载 更新大小函数
+    protected override void ReSize()
+    {
+        base.ReSize();
+
+        // 通知 更新大小事件
+        for (int i = 0; i < onResize.Count; i++)
+            onResize[i].Execute();
     }
 
     #endregion

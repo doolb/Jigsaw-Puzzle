@@ -8,22 +8,29 @@ using UnityEngine;
 public class GameLoader : MonoBehaviour
 {
     /// <summary>
-    /// ngui ui 根对象
+    /// ui 根对象
     /// </summary>
     public GameObject uiRoot;
 
     /// <summary>
-    /// ngui 3d ui 根对象
+    /// 3d ui 根对象
     /// </summary>
     public GameObject uiRoot3D;
-
 
     /// <summary>
     /// 游戏 ui root 对象
     /// </summary>
     public GameObject uiRootGame;
 
+    /// <summary>
+    /// 视口 ui root 对象
+    /// </summary>
+    public GameObject uiRootView;
 
+
+    /// <summary>
+    /// 单一实例
+    /// </summary>
     public static GameLoader instance;
 
 
@@ -46,16 +53,17 @@ public class GameLoader : MonoBehaviour
     public RecordControl recordControl;
 
     /// <summary>
+    /// 视口控制脚本
+    /// </summary>
+    [HideInInspector]
+    public ViewControl viewControl;
+
+    /// <summary>
     /// 游戏控制脚本
     /// </summary>
     [HideInInspector]
     public PuzzleGame puzzleGame;
 
-    /// <summary>
-    /// 视口控制对象
-    /// </summary>
-    [HideInInspector]
-    public ViewCameraControl viewControl;
 
     /// <summary>
     /// 数据管理对象
@@ -80,6 +88,8 @@ public class GameLoader : MonoBehaviour
 
         // 挂载数据管理脚本
         dataManager = gameObject.AddComponent<GameDataManager>();
+
+
 
         // 加载场景
         LoadScene();
@@ -106,20 +116,17 @@ public class GameLoader : MonoBehaviour
         // 加载 UI
         LoadUI();
 
-        // 加载视口控制
-        //LoadView();
-
         // 加载游戏
         LoadGame();
+
+        // 加载视口
+        LoadView();
 
         // 初始化 菜单控制脚本
         menuControl.Init();
 
         // 初始化 UI控制脚本
         uiControl.Init();
-
-        // 初始化 视口控制脚本
-        //viewControl.Init(transform, uiRoot.transform.Find("Panel - UI"));
 
         // 暂停游戏
         puzzleGame.Pause();
@@ -134,7 +141,7 @@ public class GameLoader : MonoBehaviour
         puzzleGame = NGUITools.AddChild(uiRootGame,Resources.Load<GameObject>("Puzzle")).AddComponent<PuzzleGame>();
 
         // 设置游戏摄像机
-        puzzleGame.cam = transform.Find("Camera").GetComponent<Camera>();
+        puzzleGame.cam = uiRootGame.transform.Find("Camera").GetComponent<Camera>();    
     }
 
     /// <summary>
@@ -154,19 +161,13 @@ public class GameLoader : MonoBehaviour
 
     }
 
-
-
-    // 加载视图
+    /// <summary>
+    /// 加载视口
+    /// </summary>
     void LoadView()
     {
-        return;
-        // 加载视图预制体，并挂载脚本
-        viewControl = Instantiate<GameObject>(Resources.Load<GameObject>("Main Camera Control")).AddComponent<ViewCameraControl>();
-
-        // 设置 摄像头
-        viewControl.cam = GetComponent<Camera>();
-        viewControl.Toggle(false);
-
+        viewControl = NGUITools.AddChild(uiRootView, Resources.Load<GameObject>("View Control")).AddComponent<ViewControl>();
     }
+
     #endregion
 }

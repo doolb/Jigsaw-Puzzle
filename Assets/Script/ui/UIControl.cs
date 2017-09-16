@@ -121,6 +121,35 @@ public class UIControl : MonoBehaviour
             data.records.Add(msg);
         }));
 
+        // 缩放视口事件
+        viewWindow.transform.Find("Zoom Bar").GetComponent<UISlider>().onChange.Add(new EventDelegate(() =>
+            {
+                // 暂停游戏
+                Time.timeScale = 0;
+
+                // 缩放视口
+                GameLoader.instance.viewControl.Zoom(UISlider.current.value);
+
+            }));
+
+        // 视口缩放结束事件
+        viewWindow.transform.Find("Zoom Bar").GetComponent<UISlider>().onDragFinished += () =>
+            {
+                Time.timeScale = 1;
+            };
+
+        // 转换显示事件
+        transform.Find("Check Box - View").GetComponent<UIToggle>().onChange.Add(new EventDelegate(() =>
+            {
+                // 获取值
+                bool show = UIToggle.current.value;
+
+                // 显示或 隐藏  视口
+                viewWindow.SetActive(show);
+
+                // 转换显示
+                GameLoader.instance.viewControl.Toggle(show);
+            }));
     }
 
 
@@ -166,13 +195,6 @@ public class UIControl : MonoBehaviour
         else
             // 显示时间
             time.text = t.ToString("F1");
-    }
-
-    // 显示或 隐藏  视口
-    public void ToggleView(bool show)
-    {
-        // 显示或 隐藏  视口
-        viewWindow.SetActive(show);
     }
 
     /// <summary>

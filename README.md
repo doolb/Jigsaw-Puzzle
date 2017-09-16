@@ -62,3 +62,6 @@
 
 ### 2017.9.14
 * can save game record
+
+### 2017.9.15
+* move game to ngui

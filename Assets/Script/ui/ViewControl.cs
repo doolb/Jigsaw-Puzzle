@@ -108,7 +108,7 @@ public class ViewControl : MonoBehaviour
                 visual.transform.localScale = Vector3.one * maxViewSize * zoom * 0.81f;
                 
                 // 缩放 拖拽范围
-                transform.localScale = visual.transform.localScale;
+                transform.localScale = visual.transform.localScale * 1.5f;
 
                 // 缩放 视口范围
                 viewport.fullSize = 9 * maxViewSize * zoom;

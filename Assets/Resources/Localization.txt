@@ -15,3 +15,24 @@ a,		特效1
 bg1,	背景1
 bg2,	背景2
 bg3,	背景3
+
+
+start,	开始
+continue,	继续
+restart,	重新开始
+
+showOrg,	显示原图
+isRotate,	是否旋转
+
+showAll,	显示全部
+showEdge,	显示边界
+
+pieceCount,	拼图块数
+pieceShape,	拼图形状
+pieceImage,	拼图图像
+pieceStyle,	拼图风格
+
+background,	背景
+
+myRecord,	我的纪录
+close,	关闭

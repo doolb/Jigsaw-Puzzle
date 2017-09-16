@@ -36,7 +36,7 @@ public class MenuControl : MonoBehaviour
     /// <summary>
     /// 开始按钮 文本 对象
     /// </summary>
-    UILabel startLabel;
+    UILocalize startLabel;
 
     /// <summary>
     /// 开始按钮 对象
@@ -113,7 +113,7 @@ public class MenuControl : MonoBehaviour
         // 获取开始控制 对象
         startButton = start.GetComponent<UIButton>();
         // 获取开始按钮 文本对象
-        startLabel = start.Find("Label").GetComponent<UILabel>();
+        startLabel = start.Find("Label").GetComponent<UILocalize>();
 
 
         // 重新开始按钮
@@ -380,7 +380,11 @@ public class MenuControl : MonoBehaviour
         if (canContinue)
         {
             // 更新按钮 为 "继续"
-            startLabel.text = "继续";
+            startLabel.key = "continue";
+
+            // 刷新显示
+            startLabel.enabled = false;
+            startLabel.enabled = true;
 
             // 隐藏重新开始 按钮
             restartButton.SetActive(true);
@@ -388,8 +392,11 @@ public class MenuControl : MonoBehaviour
         else
         {
             // 更新按钮 为 "开始"
-            startLabel.text = "开始";
+            startLabel.key = "start";
 
+            // 刷新显示
+            startLabel.enabled = false;
+            startLabel.enabled = true;
             // 显示重新开始 按钮
             restartButton.SetActive(false);
         }

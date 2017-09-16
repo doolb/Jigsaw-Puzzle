@@ -25,6 +25,11 @@ public class ViewControl : MonoBehaviour
     GameObject visual;
 
 
+    /// <summary>
+    /// 视口摄像机的显示
+    /// </summary>
+    UIViewport viewport;
+
 
     /// <summary>
     /// 最大的摄像头视口范围
@@ -67,6 +72,7 @@ public class ViewControl : MonoBehaviour
 
         // 加载拖拽脚本
         drag = gameObject.AddComponent<DragCameraVisual>();
+        drag.enabled = false;
         // 设置目标摄像头
         drag.draggableCamera = dragg;
 
@@ -86,7 +92,7 @@ public class ViewControl : MonoBehaviour
 
 
         // 设置视口摄像机的显示
-        UIViewport viewport = transform.parent.Find("Camera").GetComponent<UIViewport>();
+        viewport = transform.parent.Find("Camera").GetComponent<UIViewport>();
         // 获取视口显示对象
         Transform viewWindow = GameLoader.instance.uiRoot.transform.Find("Panel - UI").Find("View Window");
         // 关联左上角
@@ -100,6 +106,8 @@ public class ViewControl : MonoBehaviour
             {
                 // 缩放 可视化对象
                 visual.transform.localScale = Vector3.one * maxViewSize * zoom * 0.81f;
+                transform.localScale = visual.transform.localScale;
+                viewport.fullSize = 9 * maxViewSize * zoom;
             }));
     }
 
@@ -118,6 +126,8 @@ public class ViewControl : MonoBehaviour
 
         // 缩放 可视化对象
         visual.transform.localScale = Vector3.one * maxViewSize * zoom * 0.9f;
+
+        transform.localScale = visual.transform.localScale;
     }
 
     /// <summary>

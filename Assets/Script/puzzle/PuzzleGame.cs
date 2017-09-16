@@ -16,7 +16,6 @@ public class PuzzleGame : PuzzleManager
 
 
 
-
     /// <summary>
     /// 保存随机数的缓存
     /// </summary>
@@ -76,7 +75,9 @@ public class PuzzleGame : PuzzleManager
     bool needRestart = false;
 
 
-
+    /// <summary>
+    /// 是否可以继续游戏
+    /// </summary>
     public bool canContinue
     {
         get
@@ -84,6 +85,11 @@ public class PuzzleGame : PuzzleManager
             return !(needRestart || !pieceCreated);
         }
     }
+
+    /// <summary>
+    /// 背景对象
+    /// </summary>
+    Transform back;
 
     /// <summary>
     /// 游戏结束事件
@@ -117,7 +123,8 @@ public class PuzzleGame : PuzzleManager
         base.Awake();
 
         // 获取背景渲染对象
-        background = transform.Find("Background").GetComponent<UITexture>();
+        back = transform.Find("Background");
+        background = back.GetComponent<UITexture>();
 
         // 停止 时间更新
         Time.timeScale = 0f;
@@ -193,6 +200,9 @@ public class PuzzleGame : PuzzleManager
     protected override void ReSize()
     {
         base.ReSize();
+
+        // 更新背景大小
+        back.localScale = 5 * Vector3.one * camSize;
 
         // 通知 更新大小事件
         for (int i = 0; i < onResize.Count; i++)

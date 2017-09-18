@@ -63,6 +63,8 @@ public class ViewControl : MonoBehaviour
         UIDraggableCamera dragg = target.gameObject.AddComponent<UIDraggableCamera>();
         // 设置拖拽范围
         dragg.rootForBounds = GameLoader.instance.uiRootView.transform;
+        // 设置拖拽速度
+        dragg.scale = Vector2.one * 3;
 
         // 加载辅助显示对象
         visual = NGUITools.AddChild(target.gameObject, Resources.Load<GameObject>("Camera Visualize"));

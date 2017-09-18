@@ -76,6 +76,8 @@ public class GameLoader : MonoBehaviour
     /// </summary>
     void Awake()
     {
+        if (!enabled) return;
+
         // 启动单实例
         if (instance == null) instance = this;
 
